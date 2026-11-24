@@ -1,0 +1,199 @@
+/* Admin – musikquizet (quizdelen av docs/design/AdminKontroll.dc.html). */
+.quiz-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.quiz-panel__main {
+  grid-column: span 2;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .quiz-panel__main {
+    grid-column: auto;
+  }
+}
+
+.quiz-panel__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.quiz-panel__left {
+  color: var(--color-text);
+}
+
+.quiz-panel__question {
+  font-size: 30px;
+}
+
+.quiz-answers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quiz-answer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+  border: 2px solid var(--color-surface-2);
+}
+
+.quiz-answer--right {
+  border-color: var(--color-green);
+  background: var(--color-green-dark);
+}
+
+.quiz-answer__meta {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-text-subtle);
+}
+
+.quiz-answer--right .quiz-answer__meta {
+  color: var(--color-green);
+}
+
+.quiz-answer__text {
+  font-size: 22px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.quiz-answer__image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.quiz-playback {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-2);
+}
+
+.quiz-playback__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.quiz-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.quiz-panel__next {
+  flex-grow: 1;
+  justify-content: flex-start;
+  height: auto;
+  min-height: 72px;
+  padding: 12px 24px;
+}
+
+.quiz-panel__next-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.quiz-panel__next-sub {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-on-gold-muted);
+}
+
+.quiz-panel__done {
+  flex-grow: 1;
+  padding: 16px 20px;
+  border-radius: var(--radius-xl);
+  background: var(--color-green-dark);
+  color: var(--color-green);
+  font-weight: 800;
+}
+
+.quiz-panel__side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.quiz-panel__side section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quiz-next {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quiz-next__item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+  border: 2px solid var(--color-surface-2);
+}
+
+.quiz-next__item--song {
+  border-style: dashed;
+  border-color: var(--color-green);
+}
+
+.quiz-next__tag {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-gold);
+}
+
+.quiz-next__item--song .quiz-next__tag {
+  color: var(--color-green);
+}
+
+.quiz-next__text {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.quiz-waiting {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

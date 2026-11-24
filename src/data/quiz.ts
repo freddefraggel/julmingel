@@ -1,6 +1,6 @@
 import { get, ref, serverTimestamp, update } from 'firebase/database'
-import type { EventSecret, QuestionTiming } from '../types'
-import { eventPath } from './db'
+import type { Answer, Choice, EventSecret, QuestionTiming } from '../types'
+import { eventPath, subscribe, type OnError } from './db'
 import { firebase } from './firebase'
 
 /**
@@ -21,4 +21,23 @@ export function openQuestion(eventId: string, qId: string, durationMs: number): 
 export async function getQuizTimes(eventId: string): Promise<Record<string, QuestionTiming>> {
   const snapshot = await get(ref(firebase().db, eventPath(eventId, 'secret', 'quizTimes')))
   return (snapshot.val() as EventSecret['quizTimes'] | null) ?? {}
+}
+
+/** Svaren på en fråga, uid → { choice, at }. Bara admin får läsa alla. */
+export function subscribeAnswers(
+  eventId: string,
+  qId: string,
+  callback: (answers: Record<string, Answer>) => void,
+  onError?: OnError,
+): () => void {
+  return subscribe<Record<string, Answer>>(eventPath(eventId, 'answers', qId), (answers) => callback(answers ?? {}), onError)
+}
+
+/** Facit, qId → rätt svar. Bara admin får läsa det. */
+export function subscribeCorrect(
+  eventId: string,
+  callback: (correct: Record<string, Choice>) => void,
+  onError?: OnError,
+): () => void {
+  return subscribe<Record<string, Choice>>(eventPath(eventId, 'secret', 'correct'), (correct) => callback(correct ?? {}), onError)
 }
