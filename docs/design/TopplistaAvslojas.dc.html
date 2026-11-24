@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<title>Topplista avslöjas</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&amp;family=Nunito:wght@400;600;700;800&amp;display=swap">
+<style>
+body{margin:0;font-family:'Nunito',sans-serif;color:#F7ECDC}
+.bulbs{filter:drop-shadow(0 0 3px rgba(232,176,75,.55))}.bulbs ellipse{animation:tw 2.6s ease-in-out infinite}.bulbs ellipse:nth-child(3n+2){animation-delay:.9s}.bulbs ellipse:nth-child(3n){animation-delay:1.7s}@keyframes tw{0%,100%{opacity:1}50%{opacity:.4}}@media (prefers-reduced-motion:reduce){.bulbs ellipse{animation:none}}
+.candy{height:6px;border-radius:3px;background:repeating-linear-gradient(135deg,#F7ECDC 0 6px,#C4454F 6px 12px)}
+a{color:#E8B04B}a:hover{color:#F3C873}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; background: #2B1015; padding: 48px 24px 28px; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 14px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #E8B04B">Musikquiz</span>
+<h1 style="margin: 0; font-family: 'Fraunces', serif; font-size: 36px; font-weight: 700; color: #F7ECDC">Topplista</h1>
+<div class="candy" aria-hidden="true" style="width: 64px"></div>
+
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<sc-for list="{{ top }}" as="t" hint-placeholder-count="4">
+<div style="{{ t.box }}">
+<span style="width: 28px; font-size: 20px; font-weight: 800; color: #E8B04B">{{ t.pos }}</span>
+<span style="{{ t.nameStyle }}">{{ t.name }}</span>
+<span style="font-size: 17px; font-weight: 800; color: #F7ECDC">{{ t.pts }}</span>
+<sc-if value="{{ t.shown }}" hint-placeholder-val="{{ false }}"><span style="display: flex; align-items: center; gap: 3px; width: 40px; justify-content: flex-end; font-size: 15px; font-weight: 800; color: #E8B04B"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z" fill="#E8B04B"></path></svg>{{ t.st }}</span></sc-if>
+</div>
+</sc-for>
+</div>
+
+<div style="height: 1px; background: #5A2C34"></div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<sc-for list="{{ rest }}" as="r" hint-placeholder-count="5">
+<div style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 16px; border-radius: 12px; background: #3D1A20">
+<span style="width: 28px; font-size: 16px; font-weight: 800; color: #B89C88">{{ r.pos }}</span>
+<span style="flex-grow: 1; font-size: 16px; font-weight: 700; color: #F7ECDC">{{ r.name }}</span>
+<span style="font-size: 16px; font-weight: 800; color: #F7ECDC">{{ r.pts }} p</span>
+<span style="display: flex; align-items: center; gap: 3px; width: 40px; justify-content: flex-end; font-size: 15px; font-weight: 800; color: #E8B04B"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z" fill="#E8B04B"></path></svg>{{ r.st }}</span>
+</div>
+</sc-for>
+</div>
+<span style="text-align: center; font-size: 14px; color: #B89C88">+ 9 till längre ner</span>
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 390px; height: 36px; pointer-events: none">
+<svg width="390" height="36" viewBox="0 0 390 36">
+<path d="M0 6Q48.75 22 97.5 6T195 6T292.5 6T390 6" fill="none" stroke="#7A4A50" stroke-width="1.5"></path>
+<g class="bulbs">
+<ellipse cx="16" cy="16.4" rx="4" ry="5.5" fill="#E8B04B"></ellipse>
+<ellipse cx="48.5" cy="20" rx="4" ry="5.5" fill="#C4454F"></ellipse>
+<ellipse cx="81" cy="16.5" rx="4" ry="5.5" fill="#8FBF9A"></ellipse>
+<ellipse cx="113.5" cy="16.4" rx="4" ry="5.5" fill="#F7ECDC"></ellipse>
+<ellipse cx="146" cy="20" rx="4" ry="5.5" fill="#E8B04B"></ellipse>
+<ellipse cx="178.5" cy="16.5" rx="4" ry="5.5" fill="#C4454F"></ellipse>
+<ellipse cx="211" cy="16.4" rx="4" ry="5.5" fill="#8FBF9A"></ellipse>
+<ellipse cx="243.5" cy="20" rx="4" ry="5.5" fill="#F7ECDC"></ellipse>
+<ellipse cx="276" cy="16.5" rx="4" ry="5.5" fill="#E8B04B"></ellipse>
+<ellipse cx="308.5" cy="16.4" rx="4" ry="5.5" fill="#C4454F"></ellipse>
+<ellipse cx="341" cy="20" rx="4" ry="5.5" fill="#8FBF9A"></ellipse>
+<ellipse cx="373.5" cy="16.5" rx="4" ry="5.5" fill="#F7ECDC"></ellipse>
+</g>
+</svg>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const top = [[1, '?', '', 0], [2, '?', '', 0], [3, '?', '', 0], [4, 'Johan', '8 p', 15]];
+return {
+top: top.map((t) => {
+const hidden = t[1] === '?';
+return {
+pos: t[0],
+name: t[1],
+pts: t[2],
+st: t[3],
+shown: !hidden,
+box: 'display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 16px; border-radius: 14px; ' + (hidden ? 'background: #3D1A20; border: 2px dashed #5A2C34' : 'background: #4A222A; border: 2px solid #E8B04B'),
+nameStyle: 'flex-grow: 1; font-size: 18px; font-weight: 800; color: ' + (hidden ? '#B89C88' : '#F7ECDC')
+};
+}),
+rest: [['Maja', 7, 16], ['Lisa', 6, 14], ['Oskar', 6, 11], ['Karin', 5, 12], ['Per', 5, 9]].map((p, i) => ({ pos: i + 5, name: p[0], pts: p[1], st: p[2] }))
+};
+}
+}
+</script>
+</body>
+</html>

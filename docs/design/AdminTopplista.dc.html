@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<title>Admin – avslöja topplistan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&amp;family=Nunito:wght@400;600;700;800&amp;display=swap">
+<style>
+body{margin:0;font-family:'Nunito',sans-serif;color:#F7ECDC}
+a{color:#E8B04B}a:hover{color:#F3C873}
+button{font-family:'Nunito',sans-serif;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; box-sizing: border-box; background: #2B1015; padding: 28px 32px; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<div style="display: flex; align-items: center; gap: 12px">
+<span style="font-family: 'Fraunces', serif; font-size: 28px; font-weight: 700">Topplista · Musikquiz</span>
+<span style="font-size: 13px; font-weight: 800; padding: 5px 10px; border-radius: 999px; background: #4A222A; color: #D9C3AE; letter-spacing: 0.08em; text-transform: uppercase">Admin</span>
+</div>
+<span style="font-size: 16px; font-weight: 700; color: #D9C3AE">Gästernas mobiler avslöjas i samma takt</span>
+</div>
+<div style="flex-grow: 1; display: flex; gap: 24px; min-height: 0">
+<div style="width: 620px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px">
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #B89C88">Topp 4</span>
+<sc-for list="{{ top }}" as="t" hint-placeholder-count="4">
+<div style="{{ t.box }}">
+<span style="{{ t.badge }}">{{ t.pos }}</span>
+<sc-if value="{{ t.shown }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1">
+<span style="{{ t.nameStyle }}">{{ t.name }}</span>
+<span style="{{ t.subStyle }}">{{ t.pts }} poäng · {{ t.st }} stjärnor</span>
+</div>
+</sc-if>
+<sc-if value="{{ t.hidden }}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1">
+<span style="font-family: 'Fraunces', serif; font-size: 30px; font-weight: 700; color: #B89C88">?</span>
+<span style="font-size: 15px; color: #B89C88">{{ t.waitText }}</span>
+</div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 12px; min-width: 0">
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #B89C88">Plats 5–18 · visas direkt · lika poäng: flest stjärnor går före</span>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{ rest }}" as="r" hint-placeholder-count="14">
+<div style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px; border-radius: 12px; background: #3D1A20">
+<span style="width: 24px; font-weight: 800; color: #E8B04B">{{ r.pos }}</span>
+<span style="flex-grow: 1; font-size: 15px; font-weight: 700">{{ r.name }}</span>
+<span style="font-size: 15px; font-weight: 800; color: #F7ECDC">{{ r.pts }} p</span>
+<span style="display: flex; align-items: center; gap: 3px; width: 44px; justify-content: flex-end; font-size: 14px; font-weight: 800; color: #E8B04B"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z" fill="#E8B04B"></path></svg>{{ r.st }}</span>
+</div>
+</sc-for>
+</div>
+<div style="flex-grow: 1"></div>
+<button type="button" onClick="{{ next }}" style="height: 80px; border-radius: 20px; border: none; background: #E8B04B; color: #2B1015; font-size: 24px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 12px">
+{{ nextLabel }}
+<svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2B1015" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { step: 0 };
+}
+renderVals() {
+const all = [['Erik', 11, 24], ['Anna', 10, 22], ['Sara', 9, 19], ['Johan', 8, 15], ['Maja', 7, 16], ['Lisa', 6, 14], ['Oskar', 6, 11], ['Karin', 5, 12], ['Per', 5, 9], ['Elin', 4, 9], ['Ali', 4, 7], ['Fredrik', 3, 8], ['Nora', 3, 5], ['Viktor', 2, 6], ['Ida', 2, 4], ['Hugo', 2, 3], ['Tove', 1, 3], ['Leo', 1, 1]];
+const step = this.state.step;
+const labels = ['Avslöja 4:an', 'Avslöja 3:an', 'Avslöja 2:an', 'Avslöja vinnaren!', 'Börja om'];
+const top = [0, 1, 2, 3].map((i) => {
+const pos = i + 1;
+const shown = step >= 5 - pos;
+const winner = pos === 1 && shown;
+return {
+pos: pos,
+name: all[i][0],
+pts: all[i][1],
+st: all[i][2],
+shown: shown,
+hidden: !shown,
+waitText: 'Plats ' + pos + ' avslöjas snart',
+box: 'display: flex; align-items: center; gap: 18px; height: 112px; box-sizing: border-box; padding: 0 22px; border-radius: 20px; ' + (winner ? 'background: #E8B04B; border: 2px solid #E8B04B' : shown ? 'background: #4A222A; border: 2px solid #4A222A' : 'background: #3D1A20; border: 2px dashed #5A2C34'),
+badge: 'width: 56px; height: 56px; border-radius: 28px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; background: ' + (winner ? '#2B1015' : '#2B1015') + '; color: ' + (winner ? '#E8B04B' : shown ? '#F7ECDC' : '#B89C88'),
+nameStyle: "font-family: 'Fraunces', serif; font-size: 34px; font-weight: 700; color: " + (winner ? '#2B1015' : '#F7ECDC'),
+subStyle: 'font-size: 16px; font-weight: 700; color: ' + (winner ? '#4A222A' : '#D9C3AE')
+};
+});
+return {
+top: top,
+rest: all.slice(4).map((p, i) => ({ pos: i + 5, name: p[0], pts: p[1], st: p[2] })),
+nextLabel: labels[step],
+next: () => this.setState({ step: step >= 4 ? 0 : step + 1 })
+};
+}
+}
+</script>
+</body>
+</html>
