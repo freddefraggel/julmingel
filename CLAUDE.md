@@ -32,7 +32,7 @@ Kräver Node och Java 21 (för Firebase Emulator Suite).
   - Appens databas i emulatorns översikt: http://127.0.0.1:4000/database/demo-glogg-mingel-default-rtdb/data (översikten kan visa en annan, tom instans som standard)
   - `#/design` visar grundkomponenterna, bara i utvecklingsläge
   - `VITE_FIREBASE_EMULATOR=false` kör mot det riktiga projektet i stället
-- `npm test`: Vitest (routing, komponenter, kodstruktur; poängräkning tillkommer i #18)
+- `npm test`: Vitest (routing, komponenter, kodstruktur, poängräkning i `src/scoring.ts`)
 - `npm run test:rules`: databasreglerna testas mot emulatorn (`tests/rules/`)
 - `npm run build`: typkontroll (`tsc -b`) och Vite-bygge till `dist/`
 - `npm run deploy:rules`: `firebase deploy --only database` till projektet i `.firebaserc`
