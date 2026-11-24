@@ -18,4 +18,4 @@ export {
 export { getAssets, removeAsset, saveAsset, subscribeAssets } from './assets'
 export { subscribeOwnGuest } from './guests'
 export { subscribeOwnRatings } from './ratings'
-export { loadPreparation, newConfigId, savePreparation, setGloggImage, type Preparation } from './prepare'
+export { loadPreparation, newConfigId, savePreparation, setAnswerImage, setGloggImage, type Preparation } from './prepare'

@@ -30,6 +30,7 @@ const preparation: Preparation = {
   },
   joinCode: 'glogg',
   numbers: { vanlig: { '1': 'g1', '2': 'g2' }, alkfri: { '1': 'g3' } },
+  correct: null,
   phase: 'registration',
 }
 
@@ -178,5 +179,113 @@ describe('Förbered kvällen', () => {
       </MemoryRouter>,
     )
     expect(await screen.findByRole('alert')).toHaveTextContent('Kunde inte hämta kvällen ”demo”')
+  })
+})
+
+describe('Musikquiz', () => {
+  const TRACK = 'spotify:track:2FRnf9qhLbvw8fu4IBXx78'
+  const withQuiz: Preparation = {
+    ...preparation,
+    config: {
+      ...preparation.config!,
+      songs: { s1: { order: 1, spotifyUri: TRACK, title: 'Last Christmas', startMs: 30_000, secondsPerQuestion: 30 } },
+      questions: {
+        q1: { songId: 's1', order: 1, text: 'Årtal?', answerType: 'text', options: { A: '1984', B: '1985', C: '1986', D: '1987' } },
+      },
+    },
+    correct: { q1: 'A' },
+  }
+
+  const quiz = () => screen.getByRole('heading', { name: /^Musikquiz/ }).closest('.card') as HTMLElement
+
+  it('visar översikten och den valda låtens fält', async () => {
+    await open(withQuiz)
+    expect(screen.getByRole('heading', { name: 'Musikquiz · 1 låt · 1 fråga' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Spotify-länk')).toHaveValue(TRACK)
+    expect(screen.getByLabelText('Starta vid')).toHaveValue('0:30')
+    expect(screen.getByLabelText('Svar A är rätt')).toBeChecked()
+    expect(screen.getByLabelText('Svar B')).toHaveValue('1985')
+  })
+
+  it('lägger till en låt med en fråga och sparar facit bara i secret/correct', async () => {
+    await open()
+    fireEvent.click(within(quiz()).getByRole('button', { name: '+ Ny låt' }))
+    fireEvent.change(screen.getByLabelText('Spotify-länk'), {
+      target: { value: 'https://open.spotify.com/track/2FRnf9qhLbvw8fu4IBXx78?si=x' },
+    })
+    fireEvent.change(screen.getByLabelText('Starta vid'), { target: { value: '0:45' } })
+    fireEvent.change(screen.getByLabelText('Fråga'), { target: { value: 'Vilket år?' } })
+    for (const [choice, text] of [['A', '1983'], ['B', '1984'], ['C', '1985'], ['D', '1986']]) {
+      fireEvent.change(screen.getByLabelText(`Svar ${choice}`), { target: { value: text } })
+    }
+    fireEvent.click(screen.getByLabelText('Svar B är rätt'))
+    expect(screen.getByRole('heading', { name: 'Musikquiz · 1 låt · 1 fråga' })).toBeInTheDocument()
+    save()
+    await screen.findByText('Sparat')
+    const changes = savedChanges()
+    expect(changes['config/songs']).toEqual({
+      'ny-songs-1': { order: 1, spotifyUri: TRACK, startMs: 45_000, secondsPerQuestion: 30 },
+    })
+    expect(changes['config/questions']).toEqual({
+      'ny-questions-2': {
+        songId: 'ny-songs-1',
+        order: 1,
+        text: 'Vilket år?',
+        answerType: 'text',
+        options: { A: '1983', B: '1984', C: '1985', D: '1986' },
+      },
+    })
+    expect(changes['secret/correct']).toEqual({ 'ny-questions-2': 'B' })
+  })
+
+  it('kräver rätt svar och giltig länk innan den sparar', async () => {
+    await open()
+    fireEvent.click(within(quiz()).getByRole('button', { name: '+ Ny låt' }))
+    fireEvent.change(screen.getByLabelText('Spotify-länk'), { target: { value: 'last christmas' } })
+    expect(screen.getByLabelText('Spotify-länk')).toHaveAttribute('aria-invalid', 'true')
+    save()
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('Låt 1: Spotify-länken ska se ut som')
+    expect(alert).toHaveTextContent('Fråga 1: tryck på det rätta svaret.')
+    expect(mocked.savePreparation).not.toHaveBeenCalled()
+  })
+
+  it('lägger till fler frågor till samma låt, numrerade över hela quizet', async () => {
+    await open(withQuiz)
+    fireEvent.click(screen.getByRole('button', { name: '+ Fråga till låten' }))
+    expect(screen.getByRole('tab', { name: 'Fråga 2', selected: true })).toBeInTheDocument()
+    expect(screen.getByLabelText('Fråga')).toHaveValue('')
+    fireEvent.click(screen.getByRole('tab', { name: /Fråga 1/ }))
+    expect(screen.getByLabelText('Fråga')).toHaveValue('Årtal?')
+    expect(screen.getByRole('heading', { name: 'Musikquiz · 1 låt · 2 frågor' })).toBeInTheDocument()
+  })
+
+  it('byter svarstyp till Bild och visar bildfält per svar', async () => {
+    await open(withQuiz)
+    fireEvent.click(screen.getByRole('button', { name: 'Bild' }))
+    expect(screen.getByRole('button', { name: 'Bild' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByLabelText('Bildlänk för svar A')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Svar A')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Text' }))
+    expect(screen.getByLabelText('Svar A')).toHaveValue('1984')
+  })
+
+  it('tar bort en låt med dess frågor', async () => {
+    await open(withQuiz)
+    fireEvent.click(screen.getByRole('button', { name: 'Ta bort låt 1' }))
+    expect(screen.getByRole('heading', { name: 'Musikquiz · 0 låtar · 0 frågor' })).toBeInTheDocument()
+    save()
+    await screen.findByText('Sparat')
+    expect(savedChanges()).toMatchObject({ 'config/songs': {}, 'config/questions': {}, 'secret/correct': {} })
+  })
+})
+
+describe('Spotify', () => {
+  it('ber om inloggning och kan byta till reservläget', async () => {
+    await open()
+    expect(screen.getByRole('button', { name: 'Logga in med Spotify' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('tab', { name: 'Reservläge' }))
+    expect(screen.getByText(/Reservläge: du startar låtarna själv/)).toBeInTheDocument()
+    expect(localStorage.getItem('spotify.mode')).toBe('manual')
   })
 })

@@ -1,10 +1,21 @@
 import { useEffect, useId, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { loadPreparation, newConfigId, removeAsset, savePreparation, setGloggImage, subscribeAssets } from '../data'
-import type { GuestClass, Phase } from '../types'
+import {
+  loadPreparation,
+  newConfigId,
+  removeAsset,
+  savePreparation,
+  setAnswerImage,
+  setGloggImage,
+  subscribeAssets,
+} from '../data'
+import type { Choice, GuestClass, Phase } from '../types'
 import { Button, Card, Tabs } from '../ui'
 import { readAdminEventId } from './adminEvent'
 import { ImageField } from './ImageField'
+import { QuizCard } from './QuizCard'
+import { RowActions } from './RowActions'
+import { SpotifySetup } from './SpotifySetup'
 import {
   CLASS_LABEL,
   CLASSES,
@@ -23,7 +34,7 @@ import './prepare.css'
 type Load = { kind: 'loading' } | { kind: 'failed' } | { kind: 'ready'; saved: Saved; baseline: Draft; phase: Phase | null }
 type SaveStatus = { kind: 'idle' } | { kind: 'saving' } | { kind: 'saved' } | { kind: 'error'; messages: string[] }
 
-/** Förbered kvällen (#/admin/forbered): kvällens namn och kod, glögger per klass och kriterier. */
+/** Förbered kvällen (#/admin/forbered): kvällens namn och kod, glögger per klass, kriterier, låtar och quizfrågor. */
 export default function PrepareEvening() {
   const { search } = useLocation()
   const eventId = useMemo(() => readAdminEventId(search), [search])
@@ -55,9 +66,9 @@ function Prepare({ eventId }: { eventId: string }) {
     let active = true
     setLoad({ kind: 'loading' })
     loadPreparation(eventId)
-      .then(({ config, joinCode, numbers, phase }) => {
+      .then(({ config, joinCode, numbers, correct, phase }) => {
         if (!active) return
-        const saved: Saved = { config, joinCode, numbers }
+        const saved: Saved = { config, joinCode, numbers, correct }
         const baseline = toDraft(saved, eventId)
         setLoad({ kind: 'ready', saved, baseline, phase })
         setDraft(baseline)
@@ -135,9 +146,12 @@ function Prepare({ eventId }: { eventId: string }) {
           name: payload['config/name'],
           gloggs: payload['config/gloggs'],
           criteria: payload['config/criteria'],
+          songs: payload['config/songs'],
+          questions: payload['config/questions'],
         },
         joinCode: payload['secret/joinCode'],
         numbers: payload['secret/numbers'],
+        correct: payload['secret/correct'],
       }
       setLoad({ kind: 'ready', saved: nextSaved, baseline: toDraft(nextSaved, eventId), phase })
       setStatus({ kind: 'saved' })
@@ -158,6 +172,30 @@ function Prepare({ eventId }: { eventId: string }) {
       const nextSaved: Saved = {
         ...saved,
         config: { ...saved.config!, gloggs: { ...saved.config!.gloggs, [gId]: { ...stored, imageId } } },
+      }
+      setLoad({ ...load, saved: nextSaved, baseline: update(load.baseline) })
+    }
+    setDraft((d) => (d ? update(d) : d))
+  }
+
+  /** Som changeImage, för ett bildsvar. Sparas direkt bara om frågan redan finns som bildfråga. */
+  async function changeAnswerImage(qId: string, choice: Choice, imageId: string) {
+    const update = (d: Draft): Draft => ({
+      ...d,
+      songs: d.songs.map((s) => ({
+        ...s,
+        questions: s.questions.map((q) => (q.qId === qId ? { ...q, images: { ...q.images, [choice]: imageId } } : q)),
+      })),
+    })
+    const stored = saved.config?.questions?.[qId]
+    if (stored?.answerType === 'image' && load.kind === 'ready') {
+      await setAnswerImage(eventId, qId, choice, imageId)
+      const nextSaved: Saved = {
+        ...saved,
+        config: {
+          ...saved.config!,
+          questions: { ...saved.config!.questions, [qId]: { ...stored, options: { ...stored.options, [choice]: imageId } } },
+        },
       }
       setLoad({ ...load, saved: nextSaved, baseline: update(load.baseline) })
     }
@@ -206,6 +244,17 @@ function Prepare({ eventId }: { eventId: string }) {
             newId={() => newConfigId(eventId, 'gloggs')}
           />
           <CriteriaCard draft={draft} onEdit={edit} newId={() => newConfigId(eventId, 'criteria')} />
+        </div>
+        <div className="prepare__column">
+          <QuizCard
+            eventId={eventId}
+            draft={draft}
+            assets={assets}
+            onEdit={edit}
+            onAnswerImage={changeAnswerImage}
+            newId={(kind) => newConfigId(eventId, kind)}
+          />
+          <SpotifySetup />
         </div>
       </div>
     </main>
@@ -393,43 +442,5 @@ function CriteriaCard({ draft, onEdit, newId }: EditProps & { newId: () => strin
         </ol>
       )}
     </Card>
-  )
-}
-
-type RowActionsProps = {
-  label: string
-  index: number
-  count: number
-  onMove: (step: -1 | 1) => void
-  onRemove: () => void
-}
-
-function RowActions({ label, index, count, onMove, onRemove }: RowActionsProps) {
-  return (
-    <span className="row-actions">
-      <button type="button" className="icon-button" aria-label={`Flytta upp ${label}`} disabled={index === 0} onClick={() => onMove(-1)}>
-        <Icon d="M6 15l6-6 6 6" />
-      </button>
-      <button
-        type="button"
-        className="icon-button"
-        aria-label={`Flytta ned ${label}`}
-        disabled={index === count - 1}
-        onClick={() => onMove(1)}
-      >
-        <Icon d="M6 9l6 6 6-6" />
-      </button>
-      <button type="button" className="icon-button icon-button--danger" aria-label={`Ta bort ${label}`} onClick={onRemove}>
-        <Icon d="M6 6l12 12M18 6L6 18" />
-      </button>
-    </span>
-  )
-}
-
-function Icon({ d }: { d: string }) {
-  return (
-    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d={d} />
-    </svg>
   )
 }
