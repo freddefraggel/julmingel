@@ -396,3 +396,110 @@ describe('förbered kvällen', () => {
     await assertSucceeds(get(ref(db('anna'), `${E}/config/questions`)))
   })
 })
+
+// Hela regelverket enligt docs/spec.md (#23): det som inte redan täcks ovan.
+describe('fullständiga regler', () => {
+  async function seed(path: string, value: unknown) {
+    await env.withSecurityRulesDisabled((ctx) => set(ref(ctx.database(), `${E}/${path}`), value))
+  }
+
+  describe('bara admin skriver kvällen', () => {
+    const areas = ['config/name', 'secret/joinCode', 'live/phase', 'reveal/correct/q1', 'results/leaderboard/anna', 'assets/i1']
+
+    it.each(areas)('gäst får inte skriva %s', async (path) => {
+      await assertFails(set(ref(db('anna'), `${E}/${path}`), 'x'))
+    })
+
+    it('ingen inloggning: inga skrivningar alls, inte heller som gäst', async () => {
+      for (const path of [...areas, 'guests/okand', 'answers/q1/okand', 'ratings/okand/1/c1', 'guesses/okand']) {
+        await assertFails(set(ref(db(), `${E}/${path}`), 'x'))
+      }
+    })
+
+    it('ingen får skriva /admins, inte ens en admin', async () => {
+      await assertFails(set(ref(db('admin'), 'admins/anna'), true))
+      await assertFails(set(ref(db('anna'), 'admins/anna'), true))
+    })
+
+    it('ett inloggat konto som inte står under /admins är inte admin', async () => {
+      await assertFails(set(ref(db('okand'), `${E}/live/phase`), 'reveal'))
+      await assertFails(get(ref(db('okand'), `${E}/secret`)))
+    })
+
+    it('gäst får inte läsa reveal/ eller results/ utan att ha gått med', async () => {
+      await assertFails(get(ref(db('okand'), `${E}/reveal`)))
+      await assertFails(get(ref(db('okand'), `${E}/results`)))
+      await assertSucceeds(get(ref(db('anna'), `${E}/results`)))
+    })
+  })
+
+  describe('guests', () => {
+    const base = { name: 'Bertil', class: 'vanlig', joinCode: 'hemlig', joinedAt: serverTimestamp() }
+
+    it('nekar tomt namn, okänd klass, extra fält och tid från klientens klocka', async () => {
+      await assertFails(set(ref(db('bertil'), `${E}/guests/bertil`), { ...base, name: '' }))
+      await assertFails(set(ref(db('bertil'), `${E}/guests/bertil`), { ...base, class: 'stark' }))
+      await assertFails(set(ref(db('bertil'), `${E}/guests/bertil`), { ...base, admin: true }))
+      await assertFails(set(ref(db('bertil'), `${E}/guests/bertil`), { ...base, joinedAt: Date.now() }))
+      await assertSucceeds(set(ref(db('bertil'), `${E}/guests/bertil`), base))
+    })
+
+    it('gäst kan inte byta namn eller ta bort sig själv', async () => {
+      await assertFails(set(ref(db('anna'), `${E}/guests/anna/name`), 'Admin'))
+      await assertFails(set(ref(db('anna'), `${E}/guests/anna`), null))
+    })
+  })
+
+  describe('answers', () => {
+    it('nekar svar från någon som inte har gått med', async () => {
+      await assertFails(set(ref(db('okand'), `${E}/answers/q1/okand`), { choice: 'A', at: serverTimestamp() }))
+    })
+
+    it('nekar extra fält och svar utanför quizfasen', async () => {
+      await assertFails(set(ref(db('anna'), `${E}/answers/q1/anna`), { choice: 'A', at: serverTimestamp(), stars: 3 }))
+      await setLive({ phase: 'review', quiz: { qId: 'q1', openedAt: Date.now(), durationMs: 60_000 } })
+      await assertFails(set(ref(db('anna'), `${E}/answers/q1/anna`), { choice: 'A', at: serverTimestamp() }))
+    })
+  })
+
+  describe('ratings', () => {
+    beforeEach(async () => {
+      await setLive({ phase: 'tasting' })
+    })
+
+    it('nekar decimaltal och nummer som inte finns i gästens klass', async () => {
+      await assertFails(set(ref(db('anna'), `${E}/ratings/anna/1/c1`), 3.5))
+      await seed('guests/cecilia', { name: 'Cecilia', class: 'alkfri', joinCode: 'hemlig', joinedAt: 1 })
+      // Nummer 1 finns bara i vanlig.
+      await assertFails(set(ref(db('cecilia'), `${E}/ratings/cecilia/1/c1`), 4))
+    })
+
+    it('nekar betyg från någon som inte har gått med', async () => {
+      await assertFails(set(ref(db('okand'), `${E}/ratings/okand/1/c1`), 4))
+    })
+  })
+
+  describe('guesses', () => {
+    beforeEach(async () => {
+      await setLive({ phase: 'guess' })
+      await seed('config/gloggs/g2', { class: 'alkfri', name: 'Äpple', description: '' })
+    })
+
+    it('nekar glögger från den andra klassen och nummer som inte finns i klassen', async () => {
+      const guesses = ref(db('anna'), `${E}/guesses/anna`)
+      await assertFails(set(guesses, { map: { 1: 'g2' }, locked: false }))
+      await assertFails(set(guesses, { map: { 7: 'g1' }, locked: false }))
+      await assertSucceeds(set(guesses, { map: { 1: 'g1' }, locked: false }))
+    })
+
+    it('nekar extra fält och gissningar från någon som inte har gått med', async () => {
+      await assertFails(set(ref(db('anna'), `${E}/guesses/anna`), { map: { 1: 'g1' }, locked: false, score: 6 }))
+      await assertFails(set(ref(db('okand'), `${E}/guesses/okand`), { map: {}, locked: false }))
+    })
+
+    it('en låst gissning kan inte tas bort', async () => {
+      await assertSucceeds(set(ref(db('anna'), `${E}/guesses/anna`), { map: { 1: 'g1' }, locked: true }))
+      await assertFails(set(ref(db('anna'), `${E}/guesses/anna`), null))
+    })
+  })
+})

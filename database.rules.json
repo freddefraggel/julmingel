@@ -111,7 +111,7 @@
             ".validate": "newData.hasChildren(['locked'])",
             "map": {
               "$number": {
-                ".validate": "newData.isString() && root.child('events/' + $e + '/config/gloggs/' + newData.val()).exists()"
+                ".validate": "newData.isString() && root.child('events/' + $e + '/config/gloggs/' + newData.val() + '/class').val() === root.child('events/' + $e + '/guests/' + $uid + '/class').val() && root.child('events/' + $e + '/secret/numbers/' + root.child('events/' + $e + '/guests/' + $uid + '/class').val() + '/' + $number).exists()"
               }
             },
             "locked": {
