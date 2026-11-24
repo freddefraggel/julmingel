@@ -33,7 +33,8 @@ type Props = {
 
 /** Admin – styr kvällen: flöde, Just nu-text, registrering, gäster och QR-kod. */
 export function ControlPanel({ eventId, eventName, joinCode, onChangeEvent }: Props) {
-  const [live, setLive] = useState<LiveState | null>(null)
+  // undefined medan live/ hämtas; null när kvällen inte har någon live/ än (en ny kväll).
+  const [live, setLive] = useState<LiveState | null | undefined>(undefined)
   const [config, setConfig] = useState<EventConfig | null>(null)
   const [guests, setGuests] = useState<Record<string, Guest> | null>(null)
   const [lostConnection, setLostConnection] = useState(false)
@@ -69,6 +70,7 @@ export function ControlPanel({ eventId, eventName, joinCode, onChangeEvent }: Pr
 
   const guestCount = guests ? Object.keys(guests).length : null
   const joinOpen = config?.joinOpen === true
+  const loaded = live !== undefined
   const current = phaseIndex(live?.phase)
   const currentInfo = PHASES[current]
   const nextInfo = PHASES[current + 1]
@@ -124,16 +126,16 @@ export function ControlPanel({ eventId, eventName, joinCode, onChangeEvent }: Pr
       <h1 className="visually-hidden">Styr kvällen</h1>
 
       <div className="control__body">
-        <PhaseList current={live?.phase} disabled={busy || !live} onSelect={goTo} />
+        <PhaseList current={live?.phase} disabled={busy || !loaded} onSelect={goTo} />
 
         <Card className="control__main">
           <span className="eyebrow eyebrow--gold">
             {currentInfo ? `Just nu · steg ${current + 1} av ${PHASES.length}` : 'Just nu'}
           </span>
-          <h2 className="control__phase">{currentInfo?.label ?? (live ? 'Ingen fas vald' : 'Hämtar…')}</h2>
+          <h2 className="control__phase">{currentInfo?.label ?? (loaded ? 'Kvällen har inte börjat' : 'Hämtar…')}</h2>
           {currentInfo && <p className="muted">{currentInfo.sub}</p>}
 
-          <NowTextEditor value={live?.nowText ?? ''} disabled={busy || !live} onSave={(text) => save(() => setNowText(eventId, text))} />
+          <NowTextEditor value={live?.nowText ?? ''} disabled={busy || !loaded} onSave={(text) => save(() => setNowText(eventId, text))} />
 
           {live?.phase === 'tasting' && (
             <TastingPanel eventId={eventId} config={config} live={live} guests={guests} disabled={busy} save={save} />
@@ -178,7 +180,7 @@ export function ControlPanel({ eventId, eventName, joinCode, onChangeEvent }: Pr
           <div className="control__spacer" />
 
           {nextInfo && (
-            <Button size="large" block disabled={busy || !live} onClick={() => goTo(nextInfo.phase)}>
+            <Button size="large" block disabled={busy || !loaded} onClick={() => goTo(nextInfo.phase)}>
               Nästa: {nextInfo.label}
             </Button>
           )}
