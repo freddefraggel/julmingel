@@ -37,8 +37,10 @@ Kräver Node och Java 21 (för Firebase Emulator Suite).
 - `npm run build`: typkontroll (`tsc -b`) och Vite-bygge till `dist/`
 - `npm run deploy:rules`: `firebase deploy --only database` till projektet i `.firebaserc`
 
+**Deploy:** varje push till `main` byggs och publiceras på GitHub Pages av `.github/workflows/deploy.yml` (`npm ci`, `npm test`, `npm run build`). Firebase-webbkonfigurationen kommer in som `VITE_FIREBASE_*` i bygget, från repo-variablerna `FIREBASE_API_KEY`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_DATABASE_URL`, `FIREBASE_PROJECT_ID` och `FIREBASE_APP_ID` (Settings → Secrets and variables → Actions → Variables). Lokalt används `.env.local`, se `.env.example`.
+
 Emulatorn kör projektet `demo-glogg-mingel`. Reglerna gäller bara standardinstansen `demo-glogg-mingel-default-rtdb`, så appen och testdatan använder den.
 
 ## Kräver Fredrik (kan inte göras från koden)
 
-Spotify-appen på developer.spotify.com (Premium), Firebase-projektet `glogg-mingel` och admin-`uid` under `/admins`, samt Pages-källan "GitHub Actions" i repots inställningar.
+Spotify-appen på developer.spotify.com (Premium), Firebase-projektet `glogg-mingel` och admin-`uid` under `/admins`, Pages-källan "GitHub Actions" i repots inställningar, samt repo-variablerna `FIREBASE_*` med webbkonfigurationen.
