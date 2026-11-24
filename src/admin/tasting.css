@@ -1,0 +1,239 @@
+/* Admin – glöggprovning (docs/design/AdminGlogg.dc.html). */
+.tasting {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tasting__body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.tasting__main {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.tasting-now {
+  display: flex;
+  gap: 18px;
+  padding: 20px;
+  border-radius: var(--radius-2xl);
+  background: var(--color-surface-2);
+  border: 2px solid var(--color-gold);
+}
+
+.tasting-now__image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  background: var(--color-bg);
+  color: var(--color-text-subtle);
+}
+
+.tasting-now__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tasting-now__text {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tasting-now__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+}
+
+.tasting-now__number {
+  font-family: var(--font-heading);
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-gold);
+}
+
+.tasting-now__name {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.tasting-now__spacer {
+  flex-grow: 1;
+}
+
+.tasting-now__rated {
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+}
+
+.tasting-now__bar {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+.tasting-now__bar > div {
+  height: 100%;
+  border-radius: 5px;
+  background: var(--color-gold);
+}
+
+.tasting-next {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px 20px;
+  border-radius: var(--radius-xl);
+  border: 2px dashed var(--color-gold);
+}
+
+.tasting-next__name {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.tasting__serve {
+  justify-content: flex-start;
+  height: auto;
+  min-height: 72px;
+  padding: 12px 24px;
+}
+
+.tasting__serve-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.tasting__serve-sub {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-on-gold-muted);
+}
+
+.tasting__all-done {
+  padding: 16px 20px;
+  border-radius: var(--radius-xl);
+  background: var(--color-green-dark);
+  color: var(--color-green);
+  font-weight: 800;
+}
+
+.tasting-order {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tasting-order__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tasting-order__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 2px solid var(--color-surface);
+}
+
+.tasting-order__row--now {
+  border-color: var(--color-gold);
+}
+
+.tasting-order__row--next {
+  border-style: dashed;
+  border-color: var(--color-gold);
+}
+
+.tasting-order__row--done {
+  opacity: 0.7;
+}
+
+.tasting-order__number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.tasting-order__name {
+  flex-grow: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tasting-order__chip {
+  padding: 5px 10px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
+  color: var(--color-text-subtle);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.tasting-order__row--now .tasting-order__chip {
+  background: var(--color-gold);
+  color: var(--color-on-gold);
+}
+
+.tasting-order__row--next .tasting-order__chip {
+  color: var(--color-gold);
+}
+
+.tasting-order__row--done .tasting-order__chip {
+  color: var(--color-green);
+}
+
+.tasting-order__pick {
+  cursor: pointer;
+}
+
+.tasting-order__pick:hover:not(:disabled) {
+  outline: 2px solid var(--color-gold);
+}

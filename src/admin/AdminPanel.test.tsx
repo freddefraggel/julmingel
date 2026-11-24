@@ -22,6 +22,10 @@ vi.mock('../data', () => ({
   setJoinOpen: vi.fn(),
   changeGuestClass: vi.fn(),
   removeGuest: vi.fn(),
+  subscribeNumbers: vi.fn(() => () => {}),
+  subscribeAllRatings: vi.fn(() => () => {}),
+  subscribeAssets: vi.fn(() => () => {}),
+  setTasting: vi.fn(),
 }))
 
 const mocked = vi.mocked(data)
