@@ -286,7 +286,12 @@ describe('förbered kvällen', () => {
     'config/name': 'Glöggkväll',
     'config/gloggs': { g1: { class: 'vanlig', name: 'A', description: '' }, g2: { class: 'vanlig', name: 'B', description: '' } },
     'config/criteria': { c1: { name: 'Smak', order: 1, lowIsGood: false } },
+    'config/songs': { s1: { order: 1, spotifyUri: 'spotify:track:2FRnf9qhLbvw8fu4IBXx78', startMs: 30_000, secondsPerQuestion: 30 } },
+    'config/questions': {
+      q1: { songId: 's1', order: 1, text: 'Årtal?', answerType: 'text', options: { A: '1984', B: '1985', C: '1986', D: '1987' } },
+    },
     'secret/numbers': { vanlig: { 1: 'g2', 2: 'g1' }, alkfri: {} },
+    'secret/correct': { q1: 'A' },
     'secret/joinCode': 'tomte',
   }
 
@@ -294,8 +299,14 @@ describe('förbered kvällen', () => {
     await assertSucceeds(update(ref(db('admin'), E), changes))
   })
 
-  it('gäst får inte spara och inte läsa numren', async () => {
+  it('gäst får inte spara och inte läsa numren eller facit', async () => {
     await assertFails(update(ref(db('anna'), E), changes))
     await assertFails(get(ref(db('anna'), `${E}/secret/numbers`)))
+    await assertFails(get(ref(db('anna'), `${E}/secret/correct`)))
+  })
+
+  it('gäst får läsa frågorna, som inte innehåller facit', async () => {
+    await assertSucceeds(update(ref(db('admin'), E), changes))
+    await assertSucceeds(get(ref(db('anna'), `${E}/config/questions`)))
   })
 })
