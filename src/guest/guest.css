@@ -1282,3 +1282,143 @@ button.guess-row {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
 }
+
+/* 8. Hem efter kvällen – med pokal */
+.trophy {
+  --cup: var(--color-gold);
+  --cup-dark: var(--color-on-gold-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 28px 20px 24px;
+  border-radius: 28px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  text-align: center;
+}
+
+.trophy--gold {
+  --cup: var(--color-cup-gold);
+  --cup-dark: var(--color-cup-gold-dark);
+  border-color: var(--cup);
+}
+
+.trophy--silver {
+  --cup: var(--color-cup-silver);
+  --cup-dark: var(--color-cup-silver-dark);
+  border-color: var(--cup);
+}
+
+.trophy--bronze {
+  --cup: var(--color-cup-bronze);
+  --cup-dark: var(--color-cup-bronze-dark);
+  border-color: var(--cup);
+}
+
+.trophy__metal {
+  fill: var(--cup);
+}
+
+.trophy__edge {
+  stroke: var(--cup-dark);
+}
+
+.trophy__handles {
+  stroke: var(--cup);
+}
+
+.trophy__mark {
+  fill: var(--cup-dark);
+}
+
+.trophy__star {
+  fill: var(--color-gold);
+}
+
+.trophy__spark {
+  fill: var(--color-text);
+  animation: trophy-spark 2.4s ease-in-out infinite;
+}
+
+.trophy__spark--late {
+  animation-delay: 0.9s;
+}
+
+@keyframes trophy-spark {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trophy__spark {
+    animation: none;
+  }
+}
+
+.trophy__text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.trophy__name {
+  font-family: var(--font-heading);
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.trophy__place {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.trophy__score {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 18px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.trophy__stars {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-gold);
+}
+
+.home-after__links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.home-after__link {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 17px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.home-after__link svg {
+  color: var(--color-gold);
+}
