@@ -208,3 +208,111 @@
   stroke-linecap: round;
   transition: opacity 0.5s;
 }
+
+/* Textfält */
+.input {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--color-text-subtle);
+}
+
+.input:focus-visible {
+  border-color: var(--color-gold);
+  outline: none;
+}
+
+.input[aria-invalid='true'] {
+  border-color: var(--color-red);
+}
+
+.input--large {
+  height: 60px;
+  padding: 0 18px;
+  border-radius: var(--radius-lg);
+  font-size: 20px;
+}
+
+/* Polkagrisrand under rubriker */
+.candy {
+  width: 72px;
+  height: 6px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(135deg, var(--color-text) 0 6px, var(--color-red) 6px 12px);
+}
+
+/* Ljusslinga */
+.garland {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 36px;
+  pointer-events: none;
+}
+
+.garland svg {
+  display: block;
+  width: 100%;
+  height: 36px;
+}
+
+.garland__bulbs {
+  filter: drop-shadow(0 0 3px rgb(232 176 75 / 55%));
+}
+
+.garland__bulbs ellipse {
+  animation: garland-twinkle 2.6s ease-in-out infinite;
+}
+
+.garland__bulbs ellipse:nth-child(3n + 2) {
+  animation-delay: 0.9s;
+}
+
+.garland__bulbs ellipse:nth-child(3n) {
+  animation-delay: 1.7s;
+}
+
+@keyframes garland-twinkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* Snö */
+.snow {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.snow__flake {
+  position: absolute;
+  top: -10px;
+  border-radius: 50%;
+  background: var(--color-text);
+  opacity: 0.35;
+  animation: snow-fall 12s linear infinite;
+}
+
+@keyframes snow-fall {
+  from {
+    transform: translate(0, -20px);
+  }
+  to {
+    transform: translate(18px, 100dvh);
+  }
+}

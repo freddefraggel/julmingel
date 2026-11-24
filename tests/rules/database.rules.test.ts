@@ -13,7 +13,8 @@ let env: RulesTestEnvironment
 
 beforeAll(async () => {
   env = await initializeTestEnvironment({
-    projectId: 'demo-glogg-mingel',
+    // Eget projekt-id, så att testerna aldrig skriver i samma databas som npm run dev använder.
+    projectId: 'demo-julmingel-rules',
     database: { rules: readFileSync('database.rules.json', 'utf8'), host: '127.0.0.1', port: 9000 },
   })
 })
@@ -71,6 +72,27 @@ describe('registrering', () => {
   it('nekar när registreringen är stängd', async () => {
     await env.withSecurityRulesDisabled((ctx) => set(ref(ctx.database(), `${E}/config/joinOpen`), false))
     await assertFails(join('bertil', 'hemlig'))
+  })
+
+  it('inloggad användare får läsa om registreringen är öppen, men inte resten av config', async () => {
+    await assertSucceeds(get(ref(db('bertil'), `${E}/config/joinOpen`)))
+    await assertFails(get(ref(db('bertil'), `${E}/config`)))
+    await assertFails(get(ref(db(), `${E}/config/joinOpen`)))
+  })
+
+  it('gäst får läsa sin egen post', async () => {
+    await assertSucceeds(get(ref(db('anna'), `${E}/guests/anna`)))
+  })
+
+  it('gäst kan inte registrera sig två gånger', async () => {
+    await assertSucceeds(join('bertil', 'hemlig'))
+    await assertFails(join('bertil', 'hemlig'))
+  })
+
+  it('nekar för långt namn', async () => {
+    await assertFails(
+      set(ref(db('bertil'), `${E}/guests/bertil`), { name: 'x'.repeat(31), class: 'vanlig', joinCode: 'hemlig', joinedAt: serverTimestamp() }),
+    )
   })
 
   it('nekar att registrera någon annan', async () => {

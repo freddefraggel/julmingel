@@ -10,7 +10,10 @@
         ".write": "root.child('admins/' + auth.uid).exists()",
 
         "config": {
-          ".read": "data.parent().child('guests/' + auth.uid).exists()"
+          ".read": "data.parent().child('guests/' + auth.uid).exists()",
+          "joinOpen": {
+            ".read": "auth != null"
+          }
         },
         "assets": {
           ".read": "data.parent().child('guests/' + auth.uid).exists()"

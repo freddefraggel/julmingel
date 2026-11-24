@@ -88,4 +88,4 @@ await put(`events/${EVENT_ID}`, demoEvent)
 console.log(`Emulatorn är fylld med testdata.
   Admin: ${ADMIN.email} / ${ADMIN.password}
   Gäst:  http://127.0.0.1:5173/julmingel/#/?e=${EVENT_ID}&k=${demoEvent.secret.joinCode}
-  Emulatorns översikt: http://127.0.0.1:4000/`)
+  Appens databas i översikten: http://127.0.0.1:4000/database/${NAMESPACE}/data`)

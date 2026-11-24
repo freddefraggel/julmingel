@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import App from './App'
 
 function renderAt(hash: string) {
+  localStorage.clear()
   window.location.hash = hash
   render(<App />)
 }
@@ -15,7 +16,7 @@ afterEach(() => {
 describe('routing', () => {
   it('visar gästvyn på #/', () => {
     renderAt('#/')
-    expect(screen.getByRole('heading', { name: 'Glöggmingel' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Välkommen!' })).toBeInTheDocument()
   })
 
   it('visar kontrollpanelen på #/admin', () => {
@@ -30,6 +31,6 @@ describe('routing', () => {
 
   it('skickar okända adresser till gästvyn', () => {
     renderAt('#/finns-inte')
-    expect(screen.getByRole('heading', { name: 'Glöggmingel' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Välkommen!' })).toBeInTheDocument()
   })
 })
