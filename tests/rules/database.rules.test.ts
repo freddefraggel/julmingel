@@ -280,6 +280,20 @@ describe('bilder', () => {
   })
 })
 
+describe('glöggprovningen', () => {
+  const state = { serving: 2, next: 3 }
+
+  it('admin serverar per klass och gäster ser det', async () => {
+    await assertSucceeds(set(ref(db('admin'), `${E}/live/tasting/vanlig`), state))
+    await assertSucceeds(get(ref(db('anna'), `${E}/live/tasting`)))
+  })
+
+  it('gäst får inte byta glögg eller läsa andras betyg', async () => {
+    await assertFails(set(ref(db('anna'), `${E}/live/tasting/vanlig`), state))
+    await assertFails(get(ref(db('anna'), `${E}/ratings`)))
+  })
+})
+
 describe('förbered kvällen', () => {
   // Samma skrivning som savePreparation() med toPayload() i src/admin/preparation.ts
   const changes = {

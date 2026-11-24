@@ -18,6 +18,7 @@ import { NowTextEditor } from './NowTextEditor'
 import { PHASES, phaseIndex } from './phases'
 import { PhaseList } from './PhaseList'
 import { QrDialog } from './QrDialog'
+import { TastingPanel } from './TastingPanel'
 
 type Props = {
   eventId: string
@@ -129,6 +130,10 @@ export function ControlPanel({ eventId, eventName, joinCode, onChangeEvent }: Pr
           {currentInfo && <p className="muted">{currentInfo.sub}</p>}
 
           <NowTextEditor value={live?.nowText ?? ''} disabled={busy || !live} onSave={(text) => save(() => setNowText(eventId, text))} />
+
+          {live?.phase === 'tasting' && (
+            <TastingPanel eventId={eventId} config={config} live={live} guests={guests} disabled={busy} save={save} />
+          )}
 
           {config && (
             <Card compact className="control__join">
