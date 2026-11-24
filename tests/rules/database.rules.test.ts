@@ -239,6 +239,21 @@ describe('betyg och gissningar', () => {
     await assertFails(update(ref(db('anna'), `${E}/ratings/bertil/1`), { c1: 4 }))
   })
 
+  it('gissningar sparas olåsta under gissningen, med glögger som finns, och inte utanför fasen', async () => {
+    const guesses = ref(db('anna'), `${E}/guesses/anna`)
+    await assertFails(set(guesses, { map: { 1: 'g1' }, locked: false }))
+    await setLive({ phase: 'guess' })
+    await assertSucceeds(set(guesses, { map: { 1: 'g1' }, locked: false }))
+    await assertFails(set(guesses, { map: { 1: 'finns-inte' }, locked: false }))
+    await assertFails(set(ref(db('anna'), `${E}/guesses/bertil`), { map: { 1: 'g1' }, locked: false }))
+  })
+
+  it('admin avslöjar glöggordningen i reveal/numbers, gäster läser men skriver inte', async () => {
+    await assertSucceeds(set(ref(db('admin'), `${E}/reveal/numbers`), { vanlig: { 1: 'g1' } }))
+    await assertSucceeds(get(ref(db('anna'), `${E}/reveal/numbers`)))
+    await assertFails(set(ref(db('anna'), `${E}/reveal/numbers`), { vanlig: { 1: 'g1' } }))
+  })
+
   it('låsta gissningar kan inte ändras', async () => {
     await setLive({ phase: 'guess' })
     const guesses = ref(db('anna'), `${E}/guesses/anna`)

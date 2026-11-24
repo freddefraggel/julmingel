@@ -13,6 +13,7 @@ import {
 import type { EventConfig, Guest, GuestClass, LiveState, Phase } from '../types'
 import { Button, Card, Chip } from '../ui'
 import { SignOutButton } from './AdminGate'
+import { GuessPanel } from './GuessPanel'
 import { GuestList } from './GuestList'
 import { NowTextEditor } from './NowTextEditor'
 import { PHASES, phaseIndex } from './phases'
@@ -143,6 +144,10 @@ export function ControlPanel({ eventId, eventName, joinCode, onChangeEvent }: Pr
 
           {live?.phase === 'review' && (
             <ReviewPanel eventId={eventId} config={config} live={live} guests={guests} disabled={busy} save={save} />
+          )}
+
+          {live?.phase === 'guess' && (
+            <GuessPanel eventId={eventId} config={config} guests={guests} disabled={busy} save={save} />
           )}
 
           {config && (

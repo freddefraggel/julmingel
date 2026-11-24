@@ -4,6 +4,7 @@ import type { EventConfig, Guest, GuestRatings, LiveState } from '../types'
 import { GuestAssets } from './assets'
 import { GuestHome, type HomeTarget } from './GuestHome'
 import { Gloggs } from './Gloggs'
+import { Guess } from './Guess'
 import { GuestMessage } from './GuestMessage'
 import { Quiz } from './Quiz'
 import { Rate } from './Rate'
@@ -16,8 +17,8 @@ type Props = {
   guest: Guest
 }
 
-/** Undersidorna som finns hittills. Gissa glöggen (#21) läggs till här. */
-const OPENABLE: readonly HomeTarget[] = ['ranka', 'glogger']
+/** Undersidorna som går att öppna från Hem. */
+const OPENABLE: readonly HomeTarget[] = ['ranka', 'glogger', 'gissa']
 
 /**
  * Gästens kväll efter registreringen. Prenumererar på `live/`, `config/` och
@@ -38,6 +39,7 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
   const [lost, setLost] = useState(false)
   const [view, setView] = useState<'home' | HomeTarget>('home')
   const lastServing = useRef<number | null>(null)
+  const lastPhase = useRef<string | undefined>(undefined)
 
   useEffect(() => {
     const onError = () => setLost(true)
@@ -73,6 +75,13 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
     setView('ranka')
   }, [phase, serving])
 
+  // Gissningen öppnar: mobilen går dit av sig själv, en gång.
+  useEffect(() => {
+    if (phase === lastPhase.current) return
+    lastPhase.current = phase
+    if (phase === 'guess') setView('gissa')
+  }, [phase])
+
   if (!guest) {
     return <GuestMessage title="Du är inte med längre" text="Värden har tagit bort dig från kvällen. Fråga värden om du vill vara med igen." />
   }
@@ -96,6 +105,8 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
           serving={serving}
           onBack={() => setView('home')}
         />
+      ) : view === 'gissa' ? (
+        <Guess eventId={eventId} uid={uid} config={config} guestClass={guest.class} phase={phase} onBack={() => setView('home')} />
       ) : view === 'glogger' ? (
         <Gloggs gloggs={config?.gloggs} guestClass={guest.class} onBack={() => setView('home')} />
       ) : (

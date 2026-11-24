@@ -237,3 +237,43 @@
 .tasting-order__pick:hover:not(:disabled) {
   outline: 2px solid var(--color-gold);
 }
+
+/* Gissa glöggen hos admin */
+.guess-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.guess-panel__count {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 18px;
+}
+
+.guess-panel__bar {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+.guess-panel__bar > div {
+  height: 100%;
+  border-radius: 5px;
+  background: var(--color-gold);
+}
+
+.guess-panel__order {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 16px;
+}
+
+.guess-panel__order section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
