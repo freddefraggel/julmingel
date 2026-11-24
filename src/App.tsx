@@ -1,6 +1,7 @@
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import AdminPanel from './admin/AdminPanel'
 import PrepareEvening from './admin/PrepareEvening'
+import SpotifySpike from './admin/SpotifySpike'
 import GuestApp from './guest/GuestApp'
 import Showcase from './ui/Showcase'
 
@@ -8,6 +9,7 @@ import Showcase from './ui/Showcase'
 //   #/                gäst
 //   #/admin           kontrollpanel
 //   #/admin/forbered  förbered kvällen (konfiguration)
+//   #/admin/spotify   Spotify-test (spiken i #1)
 //   #/design          grundkomponenterna, bara i utvecklingsläge (npm run dev)
 export default function App() {
   return (
@@ -16,6 +18,7 @@ export default function App() {
         <Route path="/" element={<GuestApp />} />
         <Route path="/admin" element={<AdminPanel />} />
         <Route path="/admin/forbered" element={<PrepareEvening />} />
+        <Route path="/admin/spotify" element={<SpotifySpike />} />
         {import.meta.env.DEV && <Route path="/design" element={<Showcase />} />}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

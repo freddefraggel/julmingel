@@ -1,0 +1,53 @@
+.spike {
+  display: grid;
+  gap: 16px;
+  max-width: 720px;
+}
+
+.spike h2 {
+  margin: 0 0 8px;
+}
+
+.spike__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.spike select,
+.spike input {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+.spike select {
+  flex: 1;
+}
+
+.spike__field {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 12px;
+  color: var(--color-text-muted);
+}
+
+.spike__field--short input {
+  max-width: 120px;
+}
+
+.spike code,
+.spike__log {
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.spike__log {
+  margin: 0;
+  white-space: pre-wrap;
+  color: var(--color-text-muted);
+}
