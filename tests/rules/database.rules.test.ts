@@ -279,3 +279,23 @@ describe('bilder', () => {
     await assertFails(get(ref(db(), `${E}/assets`)))
   })
 })
+
+describe('förbered kvällen', () => {
+  // Samma skrivning som savePreparation() med toPayload() i src/admin/preparation.ts
+  const changes = {
+    'config/name': 'Glöggkväll',
+    'config/gloggs': { g1: { class: 'vanlig', name: 'A', description: '' }, g2: { class: 'vanlig', name: 'B', description: '' } },
+    'config/criteria': { c1: { name: 'Smak', order: 1, lowIsGood: false } },
+    'secret/numbers': { vanlig: { 1: 'g2', 2: 'g1' }, alkfri: {} },
+    'secret/joinCode': 'tomte',
+  }
+
+  it('admin sparar glögger, kriterier, nummer och kod i ett anrop', async () => {
+    await assertSucceeds(update(ref(db('admin'), E), changes))
+  })
+
+  it('gäst får inte spara och inte läsa numren', async () => {
+    await assertFails(update(ref(db('anna'), E), changes))
+    await assertFails(get(ref(db('anna'), `${E}/secret/numbers`)))
+  })
+})
