@@ -24,11 +24,9 @@ Vite + React + TypeScript, Firebase Realtime Database + Auth (Spark), GitHub Pag
 
 ## Kommandon
 
-Fyll i när #2 och #4 är klara:
-
-- `npm run dev`: Vite mot Firebase Emulator Suite
-- `npm test`: Vitest (poängräkning) och regeltester
-- `npm run build`
+- `npm run dev`: Vite på http://127.0.0.1:5173/julmingel/ (kopplas mot Firebase Emulator Suite i #4)
+- `npm test`: Vitest (routing, kodstruktur; poängräkning och regeltester tillkommer i #18 och #23)
+- `npm run build`: typkontroll (`tsc -b`) och Vite-bygge till `dist/`
 
 ## Kräver Fredrik (kan inte göras från koden)
 
