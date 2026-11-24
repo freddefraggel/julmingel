@@ -8,9 +8,11 @@ export {
   openQuestion,
   sendAnswer,
   setAnsweredCount,
+  showReview,
   subscribeAnswers,
   subscribeCorrect,
   subscribeOwnAnswer,
+  subscribeReveal,
 } from './quiz'
 export { getOwnGuest, isJoinOpen, joinEvent, type JoinRequest, type JoinResult } from './guests'
 export {

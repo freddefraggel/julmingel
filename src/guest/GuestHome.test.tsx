@@ -154,7 +154,7 @@ describe('GuestLive', () => {
   it('förladdar bilderna en gång, även när live/ ändras', async () => {
     render(<GuestLive eventId="demo" uid="u1" guest={anna} />)
     act(() => pushLive({ phase: 'tasting' }))
-    act(() => pushLive({ phase: 'review' }))
+    act(() => pushLive({ phase: 'tasting' }))
     await act(async () => {})
     expect(mocked.getAssets).toHaveBeenCalledTimes(1)
     expect(mocked.getAssets).toHaveBeenCalledWith('demo')

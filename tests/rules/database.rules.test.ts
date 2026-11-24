@@ -301,6 +301,21 @@ describe('bilder', () => {
   })
 })
 
+describe('rättningen', () => {
+  // Samma skrivning som showReview() i src/data/quiz.ts
+  const review = { 'live/review': { qId: 'q1' }, 'reveal/correct/q1': 'B' }
+
+  it('admin visar en fråga och kopierar rätt svar till reveal/, som gäster får läsa', async () => {
+    await assertSucceeds(update(ref(db('admin'), E), review))
+    await assertSucceeds(get(ref(db('anna'), `${E}/reveal/correct`)))
+  })
+
+  it('gäst får inte avslöja rätt svar själv', async () => {
+    await assertFails(update(ref(db('anna'), E), review))
+    await assertFails(set(ref(db('anna'), `${E}/reveal/correct/q1`), 'B'))
+  })
+})
+
 describe('glöggprovningen', () => {
   const state = { serving: 2, next: 3 }
 

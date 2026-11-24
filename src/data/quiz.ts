@@ -1,5 +1,5 @@
 import { get, ref, serverTimestamp, set, update } from 'firebase/database'
-import type { Answer, AnsweredCount, Choice, EventSecret, QuestionTiming } from '../types'
+import type { Answer, AnsweredCount, Choice, EventReveal, EventSecret, QuestionTiming } from '../types'
 import { eventPath, subscribe, type OnError } from './db'
 import { firebase } from './firebase'
 
@@ -64,4 +64,20 @@ export function sendAnswer(eventId: string, qId: string, uid: string, choice: Ch
 /** Admin: hur många som har svarat, till gästernas ”Har svarat x av y”. */
 export function setAnsweredCount(eventId: string, answered: AnsweredCount): Promise<void> {
   return set(ref(firebase().db, eventPath(eventId, 'live', 'answered')), answered)
+}
+
+/**
+ * Rättning: visar en fråga för gästerna. Rätt svar kopieras från secret/ till
+ * reveal/ i samma anrop, så att det syns först när frågan gås igenom.
+ */
+export function showReview(eventId: string, qId: string, correct: Choice): Promise<void> {
+  return update(ref(firebase().db, eventPath(eventId)), {
+    'live/review': { qId },
+    [`reveal/correct/${qId}`]: correct,
+  })
+}
+
+/** Det som admin har avslöjat: rätt svar och glöggernas nummer. Gäster får läsa det. */
+export function subscribeReveal(eventId: string, callback: (reveal: EventReveal) => void, onError?: OnError): () => void {
+  return subscribe<EventReveal>(eventPath(eventId, 'reveal'), (reveal) => callback(reveal ?? {}), onError)
 }

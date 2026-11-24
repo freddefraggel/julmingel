@@ -766,3 +766,134 @@
   justify-content: space-between;
   font-size: 15px;
 }
+
+/* 7a. Rättning */
+.review__song {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.review__song .quiz-bar__eq {
+  height: 20px;
+}
+
+.review__song .quiz-bar__eq span {
+  height: 20px;
+}
+
+.review-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.review-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 8px 14px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+}
+
+.review-option--right {
+  border-color: var(--color-green);
+  background: var(--color-green-dark);
+}
+
+.review-option--mine {
+  border-color: var(--color-rose);
+}
+
+.review-option__letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.review-option--right .review-option__letter {
+  background: var(--color-green);
+  color: var(--color-green-dark);
+}
+
+.review-option__text {
+  flex-grow: 1;
+  min-width: 0;
+  font-size: 20px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.review-option__image {
+  width: 96px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.review-option__image + .review-option__tag {
+  margin-left: auto;
+}
+
+.review-option__tag {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--color-text-muted);
+}
+
+.review-option--right .review-option__tag {
+  color: var(--color-green);
+}
+
+.review-option--mine .review-option__tag {
+  color: var(--color-rose);
+}
+
+.review__verdict {
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-rose);
+}
+
+.review__verdict--right {
+  color: var(--color-green);
+}
+
+.review__points {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-size: 15px;
+}
+
+.review__points strong {
+  font-size: 20px;
+  color: var(--color-gold);
+}
