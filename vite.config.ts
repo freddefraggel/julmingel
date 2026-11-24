@@ -13,6 +13,8 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
+    // Regeltesterna i tests/rules/ kräver emulatorn och körs med npm run test:rules.
+    include: ['src/**/*.test.{ts,tsx}'],
     setupFiles: ['./src/test/setup.ts'],
   },
 })

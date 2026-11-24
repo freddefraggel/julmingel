@@ -1,0 +1,103 @@
+{
+  "rules": {
+    "admins": {
+      ".read": false,
+      ".write": false
+    },
+    "events": {
+      "$e": {
+        ".read": "root.child('admins/' + auth.uid).exists()",
+        ".write": "root.child('admins/' + auth.uid).exists()",
+
+        "config": {
+          ".read": "data.parent().child('guests/' + auth.uid).exists()"
+        },
+        "assets": {
+          ".read": "data.parent().child('guests/' + auth.uid).exists()"
+        },
+        "live": {
+          ".read": "data.parent().child('guests/' + auth.uid).exists()"
+        },
+        "reveal": {
+          ".read": "data.parent().child('guests/' + auth.uid).exists()"
+        },
+        "results": {
+          ".read": "data.parent().child('guests/' + auth.uid).exists()"
+        },
+
+        "guests": {
+          "$uid": {
+            ".read": "auth.uid === $uid",
+            ".write": "auth.uid === $uid && !data.exists() && root.child('events/' + $e + '/config/joinOpen').val() === true",
+            ".validate": "newData.hasChildren(['name', 'class', 'joinCode', 'joinedAt']) && newData.child('joinCode').val() === root.child('events/' + $e + '/secret/joinCode').val()",
+            "name": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 30"
+            },
+            "class": {
+              ".validate": "newData.val() === 'vanlig' || newData.val() === 'alkfri'"
+            },
+            "joinCode": {
+              ".validate": "newData.isString()"
+            },
+            "joinedAt": {
+              ".validate": "newData.val() === now || (data.exists() && newData.val() === data.val())"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+
+        "ratings": {
+          "$uid": {
+            ".read": "auth.uid === $uid",
+            "$number": {
+              "$cId": {
+                ".write": "auth.uid === $uid && root.child('events/' + $e + '/live/phase').val() === 'tasting'",
+                ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 5 && newData.val() % 1 === 0 && root.child('events/' + $e + '/config/criteria/' + $cId).exists() && root.child('events/' + $e + '/secret/numbers/' + root.child('events/' + $e + '/guests/' + $uid + '/class').val() + '/' + $number).exists()"
+              }
+            }
+          }
+        },
+
+        "answers": {
+          "$q": {
+            "$uid": {
+              ".read": "auth.uid === $uid",
+              ".write": "auth.uid === $uid && root.child('events/' + $e + '/guests/' + $uid).exists() && root.child('events/' + $e + '/live/phase').val() === 'quiz' && root.child('events/' + $e + '/live/quiz/qId').val() === $q && now <= root.child('events/' + $e + '/live/quiz/openedAt').val() + root.child('events/' + $e + '/live/quiz/durationMs').val()",
+              ".validate": "newData.hasChildren(['choice', 'at'])",
+              "choice": {
+                ".validate": "newData.isString() && newData.val().matches(/^[ABCD]$/)"
+              },
+              "at": {
+                ".validate": "newData.val() === now"
+              },
+              "$other": {
+                ".validate": false
+              }
+            }
+          }
+        },
+
+        "guesses": {
+          "$uid": {
+            ".read": "auth.uid === $uid",
+            ".write": "auth.uid === $uid && root.child('events/' + $e + '/guests/' + $uid).exists() && root.child('events/' + $e + '/live/phase').val() === 'guess' && data.child('locked').val() !== true",
+            ".validate": "newData.hasChildren(['locked'])",
+            "map": {
+              "$number": {
+                ".validate": "newData.isString() && root.child('events/' + $e + '/config/gloggs/' + newData.val()).exists()"
+              }
+            },
+            "locked": {
+              ".validate": "newData.isBoolean()"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
+      }
+    }
+  }
+}
