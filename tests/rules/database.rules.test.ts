@@ -13,7 +13,8 @@ let env: RulesTestEnvironment
 
 beforeAll(async () => {
   env = await initializeTestEnvironment({
-    projectId: 'demo-glogg-mingel',
+    // Eget projekt-id, så att testerna aldrig skriver i samma databas som npm run dev använder.
+    projectId: 'demo-julmingel-rules',
     database: { rules: readFileSync('database.rules.json', 'utf8'), host: '127.0.0.1', port: 9000 },
   })
 })

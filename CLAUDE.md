@@ -29,7 +29,7 @@ Kräver Node och Java 21 (för Firebase Emulator Suite).
 
 - `npm run dev`: startar Firebase-emulatorerna (Auth och Realtime Database), fyller dem med ett testevent och startar Vite på http://127.0.0.1:5173/julmingel/
   - Testevent `demo` med koden `glogg`. Admin i emulatorn: `admin@julmingel.test` / `julmingel`
-  - Emulatorns översikt: http://127.0.0.1:4000/
+  - Appens databas i emulatorns översikt: http://127.0.0.1:4000/database/demo-glogg-mingel-default-rtdb/data (översikten kan visa en annan, tom instans som standard)
   - `#/design` visar grundkomponenterna, bara i utvecklingsläge
   - `VITE_FIREBASE_EMULATOR=false` kör mot det riktiga projektet i stället
 - `npm test`: Vitest (routing, komponenter, kodstruktur; poängräkning tillkommer i #18)
