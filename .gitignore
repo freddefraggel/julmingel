@@ -9,3 +9,7 @@ firebase-debug.log
 database-debug.log
 ui-debug.log
 firebase-debug.*.log
+
+# Claude Code: en worktree per session, personliga inställningar
+.claude/worktrees/
+.claude/settings.local.json

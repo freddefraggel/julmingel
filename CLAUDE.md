@@ -41,6 +41,17 @@ Kräver Node och Java 21 (för Firebase Emulator Suite).
 
 Emulatorn kör projektet `demo-glogg-mingel`. Reglerna gäller bara standardinstansen `demo-glogg-mingel-default-rtdb`, så appen och testdatan använder den.
 
+## Parallella sessioner
+
+Flera Claude-sessioner kan jobba samtidigt, en per issue, var och en i en egen worktree under `.claude/worktrees/`.
+
+- **Ny worktree:** kör `npm ci` först, eftersom `node_modules` inte följer med. `.env.local` kopieras dit via `.worktreeinclude`.
+- **Gren:** utgå från `origin/main`, en gren per issue (`feat/<nr>-<kort-namn>`).
+- **Före PR:** `git fetch` och `git rebase origin/main`, sedan `npm test` och `npm run build`. Andra sessioner mergar under tiden.
+- **Delade filer** krockar lätt: `src/types.ts`, `src/data/index.ts`, routerna i `src/App.tsx` och databasreglerna. Ändra bara det issuet behöver och lägg nya saker i slutet i stället för att flytta om.
+- **Aldrig:** pusha till `main`, force-pusha, merga PR:er eller deploya databasregler. Det gör Fredrik.
+- Tillåtna kommandon utan fråga finns i `.claude/settings.json`. Personliga tillägg går i `.claude/settings.local.json` (ignoreras av git).
+
 ## Kräver Fredrik (kan inte göras från koden)
 
 Spotify-appen på developer.spotify.com (Premium), Firebase-projektet `glogg-mingel` och admin-`uid` under `/admins`, Pages-källan "GitHub Actions" i repots inställningar, samt repo-variablerna `FIREBASE_*` med webbkonfigurationen.

@@ -1,0 +1,3 @@
+# Git-ignorerade filer som Claude Code kopierar till varje ny worktree (.gitignore-syntax).
+# .env.local behövs bara när man kör mot det riktiga Firebase-projektet, se .env.example.
+.env.local
