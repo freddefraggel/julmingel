@@ -18,11 +18,9 @@ function emulatorPort(): number {
 
 beforeAll(async () => {
   env = await initializeTestEnvironment({
-    projectId: 'demo-glogg-mingel',
-    database: { rules: readFileSync('database.rules.json', 'utf8'), host: '127.0.0.1', port: emulatorPort() },
     // Eget projekt-id, så att testerna aldrig skriver i samma databas som npm run dev använder.
     projectId: 'demo-julmingel-rules',
-    database: { rules: readFileSync('database.rules.json', 'utf8'), host: '127.0.0.1', port: 9000 },
+    database: { rules: readFileSync('database.rules.json', 'utf8'), host: '127.0.0.1', port: emulatorPort() },
   })
 })
 
@@ -261,6 +259,9 @@ describe('admin styr kvällen', () => {
     await assertSucceeds(
       update(ref(db('admin'), E), { 'guests/anna': null, 'ratings/anna': null, 'answers/q1/anna': null, 'guesses/anna': null }),
     )
+  })
+})
+
 describe('bilder', () => {
   const webp = 'data:image/webp;base64,UklGRg=='
 
