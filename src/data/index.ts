@@ -3,7 +3,15 @@
 // kan bytas mot Azure-varianten (se docs/spec.md, Risker) utan att röra vyerna.
 export { isWrongCredentials, onUserChanged, signInAdmin, signInGuest, signOut, type SignedInUser } from './auth'
 export { eventPath, subscribeConfig, subscribeLive, subscribeServerTimeOffset, type OnError } from './db'
-export { getQuizTimes, openQuestion, subscribeAnswers, subscribeCorrect } from './quiz'
+export {
+  getQuizTimes,
+  openQuestion,
+  sendAnswer,
+  setAnsweredCount,
+  subscribeAnswers,
+  subscribeCorrect,
+  subscribeOwnAnswer,
+} from './quiz'
 export { getOwnGuest, isJoinOpen, joinEvent, type JoinRequest, type JoinResult } from './guests'
 export {
   changeGuestClass,

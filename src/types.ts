@@ -101,7 +101,11 @@ export type LiveState = {
   review?: { qId: string }
   /** 0–4: vid steg 1–4 avslöjas 4:an, 3:an, 2:an och vinnaren. */
   reveal?: { step: 0 | 1 | 2 | 3 | 4 }
+  /** Hur många som har svarat på frågan som visas. Admin skriver det, eftersom gäster inte får läsa andras svar. */
+  answered?: AnsweredCount
 }
+
+export type AnsweredCount = { qId: string; count: number; total: number }
 
 // ── reveal/: admin kopierar hit vid avslöjandet ─────────────────────────────
 

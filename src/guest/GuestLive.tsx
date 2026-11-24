@@ -5,6 +5,7 @@ import { GuestAssets } from './assets'
 import { GuestHome, type HomeTarget } from './GuestHome'
 import { Gloggs } from './Gloggs'
 import { GuestMessage } from './GuestMessage'
+import { Quiz } from './Quiz'
 import { Rate } from './Rate'
 
 type Props = {
@@ -22,6 +23,7 @@ const OPENABLE: readonly HomeTarget[] = ['ranka', 'glogger']
  * gästens egna noder, och renderar den fas som står i `live/phase`. Ingen
  * mobil styr sitt eget flöde, så en omladdad mobil hamnar alltid rätt.
  *
+ * Under musikquizet visar mobilen frågan som quizledaren har öppnat.
  * Ranka glögg öppnas från Hem, och av sig själv när värden serverar en ny
  * glögg i gästens klass. Den stängs när provningen är slut.
  */
@@ -78,7 +80,9 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
   const count = Object.values(config?.gloggs ?? {}).filter((g) => g.class === guest.class).length
   return (
     <GuestAssets.Provider value={assets}>
-      {view === 'ranka' && phase === 'tasting' ? (
+      {phase === 'quiz' && live ? (
+        <Quiz eventId={eventId} uid={uid} config={config} live={live} />
+      ) : view === 'ranka' && phase === 'tasting' ? (
         <Rate
           eventId={eventId}
           uid={uid}

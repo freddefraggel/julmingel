@@ -86,6 +86,7 @@ Allt för en kväll ligger under `/events/{eventId}` och är uppdelat efter vem 
     quiz: { qId, openedAt, durationMs }  ← openedAt = ServerValue.TIMESTAMP
     review: { qId }
     reveal: { step: 0–4 }
+    answered: { qId, count, total }      ← ”Har svarat x av y”; gäster får inte läsa andras svar
   reveal/                                ← admin kopierar hit vid avslöjande
     correct/{qId}, numbers/{class}/{number}
   guests/{uid}: { name, class, joinCode, joinedAt }

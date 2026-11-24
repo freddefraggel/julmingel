@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react'
-import { openQuestion, subscribeAnswers, subscribeAssets, subscribeCorrect, subscribeServerTimeOffset } from '../data'
+import {
+  openQuestion,
+  setAnsweredCount,
+  subscribeAnswers,
+  subscribeAssets,
+  subscribeCorrect,
+  subscribeServerTimeOffset,
+} from '../data'
 import { getDeviceId, getPlaybackMode, isLoggedIn, pause, replaySong, songLabel, startSong, type StartResult } from '../spotify'
 import type { Answer, Choice, EventConfig, Guest, LiveState } from '../types'
 import { Button } from '../ui'
@@ -62,6 +69,14 @@ export function QuizPanel({ eventId, config, live, guests, disabled, save }: Pro
   const stats = answerStats(answers, guests)
   const guestCount = guests ? Object.keys(guests).length : 0
   const right = current ? correct[current.qId] : undefined
+
+  // Gästerna får inte läsa varandras svar, så admin skriver bara antalet till live/answered.
+  const shown = live?.answered
+  useEffect(() => {
+    if (!currentId || !guests) return
+    if (shown?.qId === currentId && shown.count === stats.answered && shown.total === guestCount) return
+    setAnsweredCount(eventId, { qId: currentId, count: stats.answered, total: guestCount }).catch(() => {})
+  }, [eventId, currentId, guests, stats.answered, guestCount, shown?.qId, shown?.count, shown?.total])
 
   async function openNext(target: PlannedQuestion) {
     const ok = await save(() => openQuestion(eventId, target.qId, target.durationMs))

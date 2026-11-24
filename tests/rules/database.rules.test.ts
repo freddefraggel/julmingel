@@ -173,6 +173,13 @@ describe('svar i quizet', () => {
     await assertFails(get(ref(db('anna'), `${E}/answers/q1`)))
   })
 
+  it('admin skriver antalet svar till live/answered, gäster läser men skriver inte', async () => {
+    const answered = { qId: 'q1', count: 3, total: 5 }
+    await assertSucceeds(set(ref(db('admin'), `${E}/live/answered`), answered))
+    await assertSucceeds(get(ref(db('anna'), `${E}/live/answered`)))
+    await assertFails(set(ref(db('anna'), `${E}/live/answered`), { ...answered, count: 5 }))
+  })
+
   it('nekar ogiltigt svarsalternativ', async () => {
     await assertFails(answer('q1', 'E'))
   })
