@@ -1,8 +1,17 @@
 import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 
+// Ingen inloggad användare: admin-sidorna visar inloggningen.
+vi.mock('./data', () => ({
+  onUserChanged: (callback: (user: null) => void) => {
+    callback(null)
+    return () => {}
+  },
+}))
+
 function renderAt(hash: string) {
+  localStorage.clear()
   window.location.hash = hash
   render(<App />)
 }
@@ -15,7 +24,7 @@ afterEach(() => {
 describe('routing', () => {
   it('visar gästvyn på #/', () => {
     renderAt('#/')
-    expect(screen.getByRole('heading', { name: 'Glöggmingel' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Välkommen!' })).toBeInTheDocument()
   })
 
   it('visar kontrollpanelen på #/admin', () => {
@@ -30,6 +39,6 @@ describe('routing', () => {
 
   it('skickar okända adresser till gästvyn', () => {
     renderAt('#/finns-inte')
-    expect(screen.getByRole('heading', { name: 'Glöggmingel' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Välkommen!' })).toBeInTheDocument()
   })
 })

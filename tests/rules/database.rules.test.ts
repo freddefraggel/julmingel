@@ -20,6 +20,9 @@ beforeAll(async () => {
   env = await initializeTestEnvironment({
     projectId: 'demo-glogg-mingel',
     database: { rules: readFileSync('database.rules.json', 'utf8'), host: '127.0.0.1', port: emulatorPort() },
+    // Eget projekt-id, så att testerna aldrig skriver i samma databas som npm run dev använder.
+    projectId: 'demo-julmingel-rules',
+    database: { rules: readFileSync('database.rules.json', 'utf8'), host: '127.0.0.1', port: 9000 },
   })
 })
 
@@ -86,6 +89,27 @@ describe('registrering', () => {
   it('nekar när registreringen är stängd', async () => {
     await env.withSecurityRulesDisabled((ctx) => set(ref(ctx.database(), `${E}/config/joinOpen`), false))
     await assertFails(join('bertil', 'hemlig'))
+  })
+
+  it('inloggad användare får läsa om registreringen är öppen, men inte resten av config', async () => {
+    await assertSucceeds(get(ref(db('bertil'), `${E}/config/joinOpen`)))
+    await assertFails(get(ref(db('bertil'), `${E}/config`)))
+    await assertFails(get(ref(db(), `${E}/config/joinOpen`)))
+  })
+
+  it('gäst får läsa sin egen post', async () => {
+    await assertSucceeds(get(ref(db('anna'), `${E}/guests/anna`)))
+  })
+
+  it('gäst kan inte registrera sig två gånger', async () => {
+    await assertSucceeds(join('bertil', 'hemlig'))
+    await assertFails(join('bertil', 'hemlig'))
+  })
+
+  it('nekar för långt namn', async () => {
+    await assertFails(
+      set(ref(db('bertil'), `${E}/guests/bertil`), { name: 'x'.repeat(31), class: 'vanlig', joinCode: 'hemlig', joinedAt: serverTimestamp() }),
+    )
   })
 
   it('nekar att registrera någon annan', async () => {
@@ -201,5 +225,56 @@ describe('betyg och gissningar', () => {
     const guesses = ref(db('anna'), `${E}/guesses/anna`)
     await assertSucceeds(set(guesses, { map: { 1: 'g1' }, locked: true }))
     await assertFails(update(guesses, { locked: false }))
+  })
+})
+
+describe('admin styr kvällen', () => {
+  it('admin byter fas, Just nu-text och registrering', async () => {
+    await assertSucceeds(set(ref(db('admin'), `${E}/live/phase`), 'tasting'))
+    await assertSucceeds(set(ref(db('admin'), `${E}/live/nowText`), 'Glögg 1 serveras'))
+    await assertSucceeds(set(ref(db('admin'), `${E}/config/joinOpen`), false))
+  })
+
+  it('gäst får inte byta fas eller öppna registreringen', async () => {
+    await assertFails(set(ref(db('anna'), `${E}/live/phase`), 'reveal'))
+    await assertFails(set(ref(db('anna'), `${E}/config/joinOpen`), true))
+  })
+
+  it('admin byter klass och tar bort betygen i samma skrivning', async () => {
+    await env.withSecurityRulesDisabled((ctx) => set(ref(ctx.database(), `${E}/ratings/anna`), { 1: { c1: 4 } }))
+    await assertSucceeds(update(ref(db('admin'), E), { 'guests/anna/class': 'alkfri', 'ratings/anna': null }))
+  })
+
+  it('admin kan byta klass även när kvällens kod har ändrats', async () => {
+    await env.withSecurityRulesDisabled((ctx) => set(ref(ctx.database(), `${E}/secret/joinCode`), 'ny-kod'))
+    await assertSucceeds(update(ref(db('admin'), E), { 'guests/anna/class': 'alkfri', 'ratings/anna': null }))
+  })
+
+  it('gäst får inte byta sin egen klass', async () => {
+    await assertFails(set(ref(db('anna'), `${E}/guests/anna/class`), 'alkfri'))
+  })
+
+  it('admin tar bort en dubblett med svar och betyg', async () => {
+    await env.withSecurityRulesDisabled((ctx) =>
+      update(ref(ctx.database(), E), { 'ratings/anna': { 1: { c1: 4 } }, 'answers/q1/anna': { choice: 'A', at: 1 } }),
+    )
+    await assertSucceeds(
+      update(ref(db('admin'), E), { 'guests/anna': null, 'ratings/anna': null, 'answers/q1/anna': null, 'guesses/anna': null }),
+    )
+describe('bilder', () => {
+  const webp = 'data:image/webp;base64,UklGRg=='
+
+  it('admin får spara komprimerade bilder och länkar, gäster får läsa dem', async () => {
+    await assertSucceeds(set(ref(db('admin'), `${E}/assets/i1`), webp))
+    await assertSucceeds(set(ref(db('admin'), `${E}/assets/i2`), 'https://example.com/glogg.jpg'))
+    await assertSucceeds(get(ref(db('anna'), `${E}/assets`)))
+  })
+
+  it('nekar annat än bilder, för stora bilder och gäster som skriver', async () => {
+    await assertFails(set(ref(db('admin'), `${E}/assets/i1`), 'http://example.com/glogg.jpg'))
+    await assertFails(set(ref(db('admin'), `${E}/assets/i1`), { src: webp }))
+    await assertFails(set(ref(db('admin'), `${E}/assets/i1`), webp + 'A'.repeat(200_000)))
+    await assertFails(set(ref(db('anna'), `${E}/assets/i1`), webp))
+    await assertFails(get(ref(db(), `${E}/assets`)))
   })
 })

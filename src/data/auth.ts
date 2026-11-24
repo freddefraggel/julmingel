@@ -25,3 +25,12 @@ export function onUserChanged(callback: (user: SignedInUser | null) => void): ()
     callback(user ? { uid: user.uid, isAnonymous: user.isAnonymous } : null),
   )
 }
+
+/** Om inloggningen misslyckades på grund av fel e-post eller lösenord (och inte t.ex. nätet). */
+export function isWrongCredentials(error: unknown): boolean {
+  const code = (error as { code?: unknown } | null)?.code
+  return (
+    typeof code === 'string' &&
+    ['auth/invalid-credential', 'auth/wrong-password', 'auth/user-not-found', 'auth/invalid-email'].includes(code)
+  )
+}
