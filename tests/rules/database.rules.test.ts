@@ -177,6 +177,39 @@ describe('betyg och gissningar', () => {
   })
 })
 
+describe('admin styr kvällen', () => {
+  it('admin byter fas, Just nu-text och registrering', async () => {
+    await assertSucceeds(set(ref(db('admin'), `${E}/live/phase`), 'tasting'))
+    await assertSucceeds(set(ref(db('admin'), `${E}/live/nowText`), 'Glögg 1 serveras'))
+    await assertSucceeds(set(ref(db('admin'), `${E}/config/joinOpen`), false))
+  })
+
+  it('gäst får inte byta fas eller öppna registreringen', async () => {
+    await assertFails(set(ref(db('anna'), `${E}/live/phase`), 'reveal'))
+    await assertFails(set(ref(db('anna'), `${E}/config/joinOpen`), true))
+  })
+
+  it('admin byter klass och tar bort betygen i samma skrivning', async () => {
+    await env.withSecurityRulesDisabled((ctx) => set(ref(ctx.database(), `${E}/ratings/anna`), { 1: { c1: 4 } }))
+    await assertSucceeds(update(ref(db('admin'), E), { 'guests/anna/class': 'alkfri', 'ratings/anna': null }))
+  })
+
+  it('admin kan byta klass även när kvällens kod har ändrats', async () => {
+    await env.withSecurityRulesDisabled((ctx) => set(ref(ctx.database(), `${E}/secret/joinCode`), 'ny-kod'))
+    await assertSucceeds(update(ref(db('admin'), E), { 'guests/anna/class': 'alkfri', 'ratings/anna': null }))
+  })
+
+  it('gäst får inte byta sin egen klass', async () => {
+    await assertFails(set(ref(db('anna'), `${E}/guests/anna/class`), 'alkfri'))
+  })
+
+  it('admin tar bort en dubblett med svar och betyg', async () => {
+    await env.withSecurityRulesDisabled((ctx) =>
+      update(ref(ctx.database(), E), { 'ratings/anna': { 1: { c1: 4 } }, 'answers/q1/anna': { choice: 'A', at: 1 } }),
+    )
+    await assertSucceeds(
+      update(ref(db('admin'), E), { 'guests/anna': null, 'ratings/anna': null, 'answers/q1/anna': null, 'guesses/anna': null }),
+    )
 describe('bilder', () => {
   const webp = 'data:image/webp;base64,UklGRg=='
 
