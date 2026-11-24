@@ -159,7 +159,7 @@ describe('Ranka glögg i kvällens flöde', () => {
     render(<GuestLive eventId="demo" uid="u1" guest={anna} />)
     act(() => pushLive({ phase: 'tasting', tasting: { vanlig: { serving: 1, next: 2 } } }))
     expect(screen.getByRole('heading', { name: 'Glögg nr 1' })).toBeInTheDocument()
-    act(() => pushLive({ phase: 'quiz', tasting: { vanlig: { serving: 1, next: 2 } } }))
+    act(() => pushLive({ phase: 'review', tasting: { vanlig: { serving: 1, next: 2 } } }))
     expect(screen.getByRole('heading', { name: 'Hej Anna!' })).toBeInTheDocument()
   })
 })

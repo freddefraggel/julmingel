@@ -7,6 +7,7 @@ import { QuizPanel } from './QuizPanel'
 
 vi.mock('../data', () => ({
   openQuestion: vi.fn(),
+  setAnsweredCount: vi.fn(),
   subscribeAnswers: vi.fn(),
   subscribeAssets: vi.fn(),
   subscribeCorrect: vi.fn(),
@@ -58,6 +59,7 @@ beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true })
   vi.setSystemTime(100_000)
   mocked.openQuestion.mockResolvedValue()
+  mocked.setAnsweredCount.mockResolvedValue()
   mocked.subscribeAnswers.mockImplementation((_e, _q, callback) => {
     pushAnswers = callback
     callback({})
@@ -165,6 +167,18 @@ describe('Musikquizet hos admin', () => {
     renderPanel({ phase: 'quiz', quiz: { qId: 'q1', openedAt: 95_000, durationMs: 30_000 } })
     const items = within(screen.getByRole('region', { name: 'Härnäst' })).getAllByRole('listitem')
     expect(items.map((i) => i.textContent)).toEqual(['Låt 1 · fråga 2 av 2Vem sjunger?', 'Ny låt · Låt 2 startarVad heter låten?'])
+  })
+
+  it('skriver antalet svar till live/answered åt gästerna, men inte vilka svar', () => {
+    renderPanel({ phase: 'quiz', quiz: { qId: 'q1', openedAt: 95_000, durationMs: 30_000 } })
+    expect(mocked.setAnsweredCount).toHaveBeenLastCalledWith('demo', { qId: 'q1', count: 0, total: 3 })
+    act(() => pushAnswers({ u1: { choice: 'B', at: 96_000 }, u2: { choice: 'C', at: 97_000 } }))
+    expect(mocked.setAnsweredCount).toHaveBeenLastCalledWith('demo', { qId: 'q1', count: 2, total: 3 })
+  })
+
+  it('skriver inte om live/answered när det redan stämmer', () => {
+    renderPanel({ phase: 'quiz', quiz: { qId: 'q1', openedAt: 95_000, durationMs: 30_000 }, answered: { qId: 'q1', count: 0, total: 3 } })
+    expect(mocked.setAnsweredCount).not.toHaveBeenCalled()
   })
 
   it('säger till när alla frågor är visade', () => {

@@ -1,5 +1,5 @@
-import { get, ref, serverTimestamp, update } from 'firebase/database'
-import type { Answer, Choice, EventSecret, QuestionTiming } from '../types'
+import { get, ref, serverTimestamp, set, update } from 'firebase/database'
+import type { Answer, AnsweredCount, Choice, EventSecret, QuestionTiming } from '../types'
 import { eventPath, subscribe, type OnError } from './db'
 import { firebase } from './firebase'
 
@@ -40,4 +40,28 @@ export function subscribeCorrect(
   onError?: OnError,
 ): () => void {
   return subscribe<Record<string, Choice>>(eventPath(eventId, 'secret', 'correct'), (correct) => callback(correct ?? {}), onError)
+}
+
+/** Gästens eget svar på en fråga, eller null. */
+export function subscribeOwnAnswer(
+  eventId: string,
+  qId: string,
+  uid: string,
+  callback: (answer: Answer | null) => void,
+  onError?: OnError,
+): () => void {
+  return subscribe<Answer>(eventPath(eventId, 'answers', qId, uid), callback, onError)
+}
+
+/**
+ * Gästens svar. Tiden sätts av servern, och databasreglerna nekar svaret om
+ * frågan inte är den öppna eller om tiden är ute. Varje byte skriver om svaret.
+ */
+export function sendAnswer(eventId: string, qId: string, uid: string, choice: Choice): Promise<void> {
+  return set(ref(firebase().db, eventPath(eventId, 'answers', qId, uid)), { choice, at: serverTimestamp() })
+}
+
+/** Admin: hur många som har svarat, till gästernas ”Har svarat x av y”. */
+export function setAnsweredCount(eventId: string, answered: AnsweredCount): Promise<void> {
+  return set(ref(firebase().db, eventPath(eventId, 'live', 'answered')), answered)
 }
