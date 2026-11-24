@@ -1,0 +1,102 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+h1 {
+  font-size: 34px;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--color-gold);
+}
+
+a:hover {
+  color: var(--color-gold-light);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-gold-light);
+  outline-offset: 2px;
+}
+
+/* Mobil först: gästvyn är byggd för 390×844. */
+.page {
+  width: 100%;
+  max-width: var(--page-max-mobile);
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 48px var(--page-gutter) 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Admin-enheten: bredare layout, designad för 1280×800. */
+.page--admin {
+  max-width: var(--page-max-admin);
+  padding: 28px 32px;
+}
+
+.eyebrow {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-subtle);
+}
+
+.eyebrow--gold {
+  color: var(--color-gold);
+}
+
+.muted {
+  color: var(--color-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

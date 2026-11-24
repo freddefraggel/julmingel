@@ -17,6 +17,7 @@ Vite + React + TypeScript, Firebase Realtime Database + Auth (Spark), GitHub Pag
 - Sajten ligger på `https://freddefraggel.github.io/julmingel/`, så Vite `base` är `'/julmingel/'`. Specen skriver `/glogg/`, men `/julmingel/` gäller.
 - Använd `HashRouter`: `#/` för gäst, `#/admin` och `#/admin/forbered` för admin.
 - Bara `src/data/` får importera Firebase. Övrigt: `src/guest/`, `src/admin/`, `src/scoring.ts`, `src/spotify.ts`, `src/types.ts`.
+- Färger, typsnitt och rundning finns som CSS-variabler i `src/styles/tokens.css`. Använd dem i stället för hårdkodade hex-värden. Grundkomponenterna (knapp, kort, chip, flikar, stjärnor, glöggkopp-timer) ligger i `src/ui/`.
 - Facit (`secret/correct`, `secret/numbers`, topp 4 före avslöjandet) får aldrig hamna där gäster kan läsa det.
 - Tid kommer från servern: `ServerValue.TIMESTAMP` och `.info/serverTimeOffset`, aldrig klientens klocka för poäng eller stjärnor.
 - Repot är publikt. Inga hemligheter i koden: admin-lösenord och `joinCode` sätts i Firebase. Firebase-konfigurationen får vara publik.
@@ -25,6 +26,7 @@ Vite + React + TypeScript, Firebase Realtime Database + Auth (Spark), GitHub Pag
 ## Kommandon
 
 - `npm run dev`: Vite på http://127.0.0.1:5173/julmingel/ (kopplas mot Firebase Emulator Suite i #4)
+  - `#/design` visar grundkomponenterna, bara i utvecklingsläge
 - `npm test`: Vitest (routing, kodstruktur; poängräkning och regeltester tillkommer i #18 och #23)
 - `npm run build`: typkontroll (`tsc -b`) och Vite-bygge till `dist/`
 

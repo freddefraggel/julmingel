@@ -1,0 +1,210 @@
+/* Knapp */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 60px;
+  padding: 0 22px;
+  border-radius: var(--radius-lg);
+  border: 2px solid transparent;
+  font-family: var(--font-body);
+  font-size: 19px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn--primary {
+  background: var(--color-gold);
+  color: var(--color-on-gold);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--color-gold-light);
+}
+
+.btn--secondary {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  border-color: var(--color-text-faint);
+}
+
+.btn--small {
+  height: 48px;
+  padding: 0 18px;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+}
+
+.btn--large {
+  height: 72px;
+  padding: 0 28px;
+  border-radius: 18px;
+  font-size: 22px;
+}
+
+.btn--block {
+  display: flex;
+  width: 100%;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Kort */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px;
+  border-radius: var(--radius-2xl);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.card--accent {
+  background: var(--color-gold);
+  border-color: var(--color-gold);
+  color: var(--color-on-gold);
+}
+
+.card--dashed {
+  background: transparent;
+  border: 1.5px dashed var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.card--compact {
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+}
+
+/* Chip (etikett) */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.chip--rose {
+  color: var(--color-rose);
+}
+
+.chip--gold {
+  background: var(--color-gold);
+  color: var(--color-on-gold);
+}
+
+.chip--green {
+  background: var(--color-green-dark);
+  color: var(--color-green);
+}
+
+/* Flikar (t.ex. Vanlig/Alkoholfri) */
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.tabs__tab {
+  flex: 1 1 0;
+  min-height: 44px;
+  padding: 0 18px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.tabs__tab[aria-selected='true'] {
+  background: var(--color-gold);
+  color: var(--color-on-gold);
+}
+
+/* Stjärnor */
+.stars {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.stars__star {
+  transition: transform 0.3s;
+  transform: scale(0.85);
+}
+
+.stars__star path {
+  fill: none;
+  stroke: var(--color-border);
+}
+
+.stars__star--on {
+  transform: scale(1);
+}
+
+.stars__star--on path {
+  fill: var(--color-gold);
+  stroke: var(--color-gold);
+}
+
+/* Glöggkopp-timer */
+.cup-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cup-timer__label {
+  min-width: 41px;
+  font-size: 20px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.cup-timer--low .cup-timer__label {
+  color: var(--color-rose);
+}
+
+.cup-timer__liquid {
+  fill: var(--color-red);
+  transition:
+    y 1s linear,
+    height 1s linear;
+}
+
+.cup-timer__outline {
+  fill: none;
+  stroke: var(--color-text);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.cup-timer__steam {
+  fill: none;
+  stroke: var(--color-text-subtle);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  transition: opacity 0.5s;
+}
