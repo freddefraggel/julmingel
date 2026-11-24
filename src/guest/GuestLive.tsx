@@ -3,6 +3,7 @@ import { getAssets, subscribeConfig, subscribeLive, subscribeOwnGuest, subscribe
 import type { EventConfig, Guest, GuestRatings, LiveState } from '../types'
 import { GuestAssets } from './assets'
 import { GuestHome, type HomeTarget } from './GuestHome'
+import { Gloggs } from './Gloggs'
 import { GuestMessage } from './GuestMessage'
 import { Rate } from './Rate'
 
@@ -13,8 +14,8 @@ type Props = {
   guest: Guest
 }
 
-/** Undersidorna som finns hittills. Kvällens glögger (#14) och Gissa (#21) läggs till här. */
-const OPENABLE: readonly HomeTarget[] = ['ranka']
+/** Undersidorna som finns hittills. Gissa glöggen (#21) läggs till här. */
+const OPENABLE: readonly HomeTarget[] = ['ranka', 'glogger']
 
 /**
  * Gästens kväll efter registreringen. Prenumererar på `live/`, `config/` och
@@ -87,6 +88,8 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
           serving={serving}
           onBack={() => setView('home')}
         />
+      ) : view === 'glogger' ? (
+        <Gloggs gloggs={config?.gloggs} guestClass={guest.class} onBack={() => setView('home')} />
       ) : (
         <GuestHome
           guest={guest}
