@@ -24,6 +24,14 @@
   --color-on-gold: #2b1015;
   --color-on-gold-muted: #4a222a;
 
+  /* Pokaler (docs/design/HemPokal.dc.html): metall och mörkare kant */
+  --color-cup-gold: #e8b04b;
+  --color-cup-gold-dark: #8a5a12;
+  --color-cup-silver: #c9ced6;
+  --color-cup-silver-dark: #5f6670;
+  --color-cup-bronze: #c98a5b;
+  --color-cup-bronze-dark: #6e3f20;
+
   /* Typsnitt */
   --font-heading: 'Fraunces', Georgia, serif;
   --font-body: 'Nunito', system-ui, sans-serif;

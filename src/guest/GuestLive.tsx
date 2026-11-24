@@ -5,6 +5,7 @@ import { GuestAssets } from './assets'
 import { GuestHome, type HomeTarget } from './GuestHome'
 import { Gloggs } from './Gloggs'
 import { Guess } from './Guess'
+import { HomeAfter } from './HomeAfter'
 import { Leaderboard } from './Leaderboard'
 import { GuestMessage } from './GuestMessage'
 import { Quiz } from './Quiz'
@@ -38,7 +39,7 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
   const [ratings, setRatings] = useState<GuestRatings>({})
   const [assets, setAssets] = useState<Record<string, string>>({})
   const [lost, setLost] = useState(false)
-  const [view, setView] = useState<'home' | HomeTarget>('home')
+  const [view, setView] = useState<'home' | 'topplista' | HomeTarget>('home')
   const lastServing = useRef<number | null>(null)
   const lastPhase = useRef<string | undefined>(undefined)
 
@@ -94,6 +95,20 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
     <GuestAssets.Provider value={assets}>
       {phase === 'quiz' && live ? (
         <Quiz eventId={eventId} uid={uid} config={config} live={live} />
+      ) : phase === 'done' ? (
+        view === 'topplista' ? (
+          <Leaderboard
+            eventId={eventId}
+            uid={uid}
+            guestClass={guest.class}
+            config={config}
+            step={live?.reveal?.step ?? null}
+            final
+            onBack={() => setView('home')}
+          />
+        ) : (
+          <HomeAfter eventId={eventId} uid={uid} guest={guest} onOpenLeaderboard={() => setView('topplista')} />
+        )
       ) : phase === 'reveal' ? (
         <Leaderboard
           eventId={eventId}
