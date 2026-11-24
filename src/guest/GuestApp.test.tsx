@@ -11,6 +11,11 @@ vi.mock('../data', () => ({
   getOwnGuest: vi.fn(),
   signInGuest: vi.fn(),
   joinEvent: vi.fn(),
+  subscribeLive: vi.fn(),
+  subscribeConfig: vi.fn(),
+  subscribeOwnGuest: vi.fn(),
+  subscribeOwnRatings: vi.fn(),
+  getAssets: vi.fn(),
 }))
 
 const mocked = vi.mocked(data)
@@ -36,6 +41,16 @@ beforeEach(() => {
   vi.resetAllMocks()
   localStorage.clear()
   mocked.signInGuest.mockResolvedValue({ uid: 'u1', isAnonymous: true })
+  // Hem prenumererar på live/, config/ och gästens egna noder; här svarar de aldrig.
+  for (const subscribe of [
+    mocked.subscribeLive,
+    mocked.subscribeConfig,
+    mocked.subscribeOwnGuest,
+    mocked.subscribeOwnRatings,
+  ] as ReturnType<typeof vi.fn>[]) {
+    subscribe.mockReturnValue(() => {})
+  }
+  mocked.getAssets.mockResolvedValue({})
 })
 
 afterEach(cleanup)
@@ -68,6 +83,7 @@ describe('återvändande gäst', () => {
     renderAt('/?e=demo&k=glogg')
     expect(await screen.findByRole('heading', { name: 'Hej Anna!' })).toBeInTheDocument()
     expect(mocked.getOwnGuest).toHaveBeenCalledWith('demo', 'u1')
+    expect(mocked.subscribeOwnRatings).toHaveBeenCalledWith('demo', 'u1', expect.any(Function), expect.any(Function))
   })
 
   it('hittar tillbaka till kvällen utan länk', async () => {
@@ -101,6 +117,8 @@ describe('registrering', () => {
 
     expect(await screen.findByRole('heading', { name: 'Hej Anna!' })).toBeInTheDocument()
     expect(mocked.joinEvent).toHaveBeenCalledWith('demo', 'u1', { name: 'Anna', class: 'alkfri', joinCode: 'glogg' })
+    expect(mocked.subscribeOwnGuest).toHaveBeenCalledWith('demo', 'u1', expect.any(Function), expect.any(Function))
+    expect(mocked.getAssets).toHaveBeenCalledTimes(1)
   })
 
   it('kräver ett namn', async () => {

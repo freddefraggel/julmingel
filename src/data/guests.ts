@@ -1,6 +1,6 @@
 import { get, ref, serverTimestamp, set } from 'firebase/database'
 import type { Guest, GuestClass } from '../types'
-import { eventPath } from './db'
+import { eventPath, subscribe, type OnError } from './db'
 import { isPermissionDenied } from './errors'
 import { firebase } from './firebase'
 
@@ -45,4 +45,17 @@ export async function joinEvent(eventId: string, uid: string, request: JoinReque
 
   const guest = await getOwnGuest(eventId, uid)
   return guest ? { ok: true, guest } : { ok: false, reason: 'error' }
+}
+
+/**
+ * Gästens egen post, uppdateras när admin byter klass. Ger null om admin har
+ * tagit bort gästen.
+ */
+export function subscribeOwnGuest(
+  eventId: string,
+  uid: string,
+  callback: (guest: Guest | null) => void,
+  onError?: OnError,
+): () => void {
+  return subscribe<Guest>(eventPath(eventId, 'guests', uid), callback, onError)
 }
