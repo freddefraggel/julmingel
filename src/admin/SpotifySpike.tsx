@@ -1,32 +1,57 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
+  getDeviceId,
   getDevices,
+  getPlaybackMode,
   isLoggedIn,
   logout,
   parseTrackLink,
   pause,
-  play,
   redirectUri,
+  setDeviceId as storeDeviceId,
+  setPlaybackMode,
+  songLabel,
   SpotifyError,
   startLogin,
+  startSong,
   takeLoginError,
+  type PlaybackMode,
   type SpotifyDevice,
+  type StartResult,
 } from '../spotify'
-import { Button, Card } from '../ui'
+import { Button, Card, Chip, Tabs } from '../ui'
 import './spotify-spike.css'
 
+const MODES = [
+  { value: 'spotify', label: 'Spotify' },
+  { value: 'manual', label: 'Reservläge' },
+] as const
+
 // Spike för #1: avgör om PKCE-inloggning och play med position_ms fungerar i Development Mode.
+// Här kan reservläget (#17) också provas i förväg.
 export default function SpotifySpike() {
   const [loggedIn, setLoggedIn] = useState(isLoggedIn)
   const [devices, setDevices] = useState<SpotifyDevice[]>([])
-  const [deviceId, setDeviceId] = useState('')
+  const [deviceId, setDeviceIdState] = useState(() => getDeviceId() ?? '')
+  const [mode, setModeState] = useState<PlaybackMode>(getPlaybackMode)
+  const [result, setResult] = useState<StartResult | null>(null)
   const [link, setLink] = useState('https://open.spotify.com/track/2FRnf9qhLbvw8fu4IBXx78')
   const [startSeconds, setStartSeconds] = useState('45')
   const [log, setLog] = useState<string[]>(() => {
     const error = takeLoginError()
     return error ? [`Fel: ${error}`] : []
   })
+
+  const setDeviceId = (id: string) => {
+    storeDeviceId(id || null)
+    setDeviceIdState(id)
+  }
+
+  const setMode = (next: PlaybackMode) => {
+    setPlaybackMode(next)
+    setModeState(next)
+  }
 
   const write = (line: string) => setLog((lines) => [`${new Date().toLocaleTimeString('sv-SE')}  ${line}`, ...lines])
 
@@ -43,7 +68,8 @@ export default function SpotifySpike() {
     run('Hämta enheter', async () => {
       const list = await getDevices()
       setDevices(list)
-      const active = list.find((d) => d.is_active) ?? list[0]
+      const saved = list.find((d) => d.id === getDeviceId())
+      const active = saved ?? list.find((d) => d.is_active) ?? list[0]
       if (active?.id) setDeviceId(active.id)
       write(`Hittade ${list.length} enhet(er): ${list.map((d) => `${d.name} (${d.type})`).join(', ') || 'inga'}`)
     })
@@ -107,6 +133,10 @@ export default function SpotifySpike() {
 
       <Card>
         <h2>3. Spela upp</h2>
+        <p className="muted">
+          I reservläget spelar appen inget, utan visar vilken låt admin ska starta för hand från spellistan.
+        </p>
+        <Tabs<PlaybackMode> label="Uppspelning" options={MODES} value={mode} onChange={setMode} />
         <label className="spike__field">
           Spotify-länk
           <input value={link} onChange={(e) => setLink(e.target.value)} />
@@ -118,11 +148,16 @@ export default function SpotifySpike() {
         <p className="muted">{uri ? <code>{uri}</code> : 'Ingen giltig spårlänk.'}</p>
         <div className="spike__row">
           <Button
-            disabled={!loggedIn || !deviceId || !uri}
+            disabled={!uri}
             onClick={() =>
               void run('Spela', async () => {
-                await play(deviceId, uri!, positionMs)
-                write(`Spela ${uri} från ${positionMs / 1000} s: OK`)
+                const started = await startSong({ songId: 'test', number: 1, spotifyUri: uri!, startMs: positionMs })
+                setResult(started)
+                write(
+                  started.kind === 'played'
+                    ? `Spela ${uri} från ${positionMs / 1000} s: OK`
+                    : `Reservläge: ${started.instruction}${started.reason ? ` (${started.reason})` : ''}`,
+                )
               })
             }
           >
@@ -141,6 +176,20 @@ export default function SpotifySpike() {
             Pausa
           </Button>
         </div>
+        {result && (
+          <p className="spike__result">
+            {result.kind === 'played' ? (
+              <>
+                <Chip tone="green">Spelar på Spotify</Chip> {songLabel(result.cue)}
+              </>
+            ) : (
+              <>
+                <Chip tone="gold">Starta för hand</Chip> <strong>{result.instruction}</strong>
+                {result.reason && <span className="muted"> · {result.reason}</span>}
+              </>
+            )}
+          </p>
+        )}
       </Card>
 
       <Card>
