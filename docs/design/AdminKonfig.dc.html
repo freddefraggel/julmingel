@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<title>Admin – konfigurera</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&amp;family=Nunito:wght@400;600;700;800&amp;display=swap">
+<style>
+body{margin:0;font-family:'Nunito',sans-serif;color:#F7ECDC}
+a{color:#D9C3AE;text-decoration:none}a:hover{color:#F7ECDC}
+button,input{font-family:'Nunito',sans-serif}
+button{cursor:pointer}
+input::placeholder{color:#B89C88}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; box-sizing: border-box; background: #2B1015; padding: 28px 32px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<div style="display: flex; align-items: center; gap: 16px">
+<a href="AdminKontroll.dc.html" aria-label="Tillbaka till kontrollpanelen" style="width: 48px; height: 48px; border-radius: 14px; background: #3D1A20; display: flex; align-items: center; justify-content: center">
+<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg>
+</a>
+<h1 style="margin: 0; font-family: 'Fraunces', serif; font-size: 30px; font-weight: 700">Förbered kvällen</h1>
+</div>
+<button type="button" style="height: 52px; padding: 0 28px; border-radius: 14px; border: none; background: #E8B04B; color: #2B1015; font-size: 17px; font-weight: 800">Spara</button>
+</div>
+<div style="flex-grow: 1; display: flex; gap: 24px; min-height: 0">
+<div style="width: 460px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; padding: 24px; border-radius: 24px; background: #3D1A20; border: 1px solid #5A2C34">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<h2 style="margin: 0; font-family: 'Fraunces', serif; font-size: 24px; font-weight: 700">Glögger</h2>
+<span style="font-size: 14px; color: #D9C3AE">Nummer = serveringsordning</span>
+</div>
+<div style="display: flex; gap: 8px; align-items: center">
+<div role="tablist" aria-label="Glöggprovning" style="display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: #2B1015">
+<button type="button" role="tab" aria-selected="true" style="height: 36px; padding: 0 14px; border: none; border-radius: 8px; background: #E8B04B; color: #2B1015; font-size: 14px; font-weight: 800">Vanlig · 6</button>
+<button type="button" role="tab" aria-selected="false" style="height: 36px; padding: 0 14px; border: none; border-radius: 8px; background: transparent; color: #D9C3AE; font-size: 14px; font-weight: 800">Alkoholfri · 4</button>
+</div>
+<div style="flex-grow: 1"></div>
+<button type="button" style="height: 44px; padding: 0 14px; border-radius: 12px; border: 2px dashed #5A2C34; background: transparent; color: #D9C3AE; font-size: 14px; font-weight: 800">+ Lägg till</button>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<sc-for list="{{ glogger }}" as="g" hint-placeholder-count="6">
+<div style="display: flex; align-items: center; gap: 8px">
+<label for="{{ g.id }}" style="width: 28px; flex-shrink: 0; font-weight: 800; font-size: 17px; color: #E8B04B; text-align: center">{{ g.nr }}</label>
+<button type="button" aria-label="{{ g.imgAria }}" style="width: 44px; height: 44px; flex-shrink: 0; border-radius: 10px; border: 2px dashed #5A2C34; background: #2B1015; color: #B89C88; display: flex; align-items: center; justify-content: center; padding: 0">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><path d="M21 16l-5-5-9 9"></path></svg>
+</button>
+<input id="{{ g.id }}" type="text" value="{{ g.name }}" style="width: 130px; flex-shrink: 0; height: 44px; box-sizing: border-box; border-radius: 10px; border: 2px solid #5A2C34; background: #2B1015; color: #F7ECDC; font-size: 14px; font-weight: 700; padding: 0 10px">
+<input type="text" aria-label="{{ g.descAria }}" value="{{ g.desc }}" style="min-width: 0; flex-grow: 1; height: 44px; box-sizing: border-box; border-radius: 10px; border: 2px solid #5A2C34; background: #2B1015; color: #D9C3AE; font-size: 14px; padding: 0 10px">
+<button type="button" aria-label="{{ g.del }}" style="width: 32px; height: 44px; flex-shrink: 0; padding: 0; border-radius: 12px; border: none; background: transparent; color: #B89C88; display: flex; align-items: center; justify-content: center">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+</button>
+</div>
+</sc-for>
+</div>
+<div style="height: 1px; background: #5A2C34"></div>
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #B89C88">Ranka på (1–5)</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<span style="font-size: 15px; font-weight: 700; padding: 8px 14px; border-radius: 999px; background: #4A222A">Julkänsla</span>
+<span style="font-size: 15px; font-weight: 700; padding: 8px 14px; border-radius: 999px; background: #4A222A">Mysfaktor</span>
+<span style="font-size: 15px; font-weight: 700; padding: 8px 14px; border-radius: 999px; background: #4A222A">Doft</span>
+<span style="font-size: 15px; font-weight: 700; padding: 8px 14px; border-radius: 999px; background: #4A222A; color: #D98A7E">Sliskighet · lågt = bra</span>
+<span style="font-size: 15px; font-weight: 700; padding: 8px 14px; border-radius: 999px; background: #4A222A; color: #D98A7E">Kvalmighet · lågt = bra</span>
+<span style="font-size: 15px; font-weight: 700; padding: 8px 14px; border-radius: 999px; background: #4A222A">Påtår?</span>
+<button type="button" style="font-size: 15px; font-weight: 800; padding: 8px 14px; border-radius: 999px; border: 2px dashed #5A2C34; background: transparent; color: #D9C3AE">+ Lägg till</button>
+</div>
+</div>
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 14px; padding: 24px; border-radius: 24px; background: #3D1A20; border: 1px solid #5A2C34; min-width: 0">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<h2 style="margin: 0; font-family: 'Fraunces', serif; font-size: 24px; font-weight: 700">Musikquiz · 5 låtar · 12 frågor</h2>
+<button type="button" style="height: 44px; padding: 0 16px; border-radius: 12px; border: 2px solid #5A2C34; background: #2B1015; color: #F7ECDC; font-size: 15px; font-weight: 800">+ Ny låt</button>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 18px; background: #2B1015; border: 2px solid #E8B04B">
+<div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 17px; font-weight: 800; color: #E8B04B">Låt 2 · 3 frågor</span><span style="font-size: 13px; color: #B89C88">Låten spelar vidare mellan frågorna</span></div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
+<div style="display: flex; flex-direction: column; gap: 6px; grid-column: span 2"><label for="sp" style="font-size: 13px; font-weight: 700; color: #D9C3AE">Spotify-länk</label><input id="sp" type="text" placeholder="https://open.spotify.com/track/…" style="height: 44px; box-sizing: border-box; border-radius: 12px; border: 2px solid #5A2C34; background: #3D1A20; color: #F7ECDC; font-size: 15px; padding: 0 12px"></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><label for="st" style="font-size: 13px; font-weight: 700; color: #D9C3AE">Starta vid</label><input id="st" type="text" value="0:30" style="height: 44px; box-sizing: border-box; border-radius: 12px; border: 2px solid #5A2C34; background: #3D1A20; color: #F7ECDC; font-size: 15px; padding: 0 12px"></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><label for="tid" style="font-size: 13px; font-weight: 700; color: #D9C3AE">Tid per fråga</label><input id="tid" type="text" value="30 s" style="height: 44px; box-sizing: border-box; border-radius: 12px; border: 2px solid #5A2C34; background: #3D1A20; color: #F7ECDC; font-size: 15px; padding: 0 12px"></div>
+</div>
+<div role="tablist" aria-label="Frågor till låt 2" style="display: flex; gap: 8px">
+<button type="button" role="tab" aria-selected="false" style="height: 40px; padding: 0 14px; border-radius: 10px; border: 2px solid #5A2C34; background: #3D1A20; color: #D9C3AE; font-size: 14px; font-weight: 800">Fråga 4 · Årtal</button>
+<button type="button" role="tab" aria-selected="false" style="height: 40px; padding: 0 14px; border-radius: 10px; border: 2px solid #5A2C34; background: #3D1A20; color: #D9C3AE; font-size: 14px; font-weight: 800">Fråga 5 · Artist</button>
+<button type="button" role="tab" aria-selected="true" style="height: 40px; padding: 0 14px; border-radius: 10px; border: 2px solid #F7ECDC; background: #F7ECDC; color: #2B1015; font-size: 14px; font-weight: 800">Fråga 6 · Film</button>
+<button type="button" style="height: 40px; padding: 0 14px; border-radius: 10px; border: 2px dashed #5A2C34; background: transparent; color: #D9C3AE; font-size: 14px; font-weight: 800">+ Fråga till låten</button>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 14px; border-radius: 14px; background: #3D1A20">
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<div style="display: flex; flex-direction: column; gap: 6px; grid-column: span 2"><label for="fr" style="font-size: 13px; font-weight: 700; color: #D9C3AE">Fråga</label><input id="fr" type="text" value="Vilken film är låten från?" style="height: 44px; box-sizing: border-box; border-radius: 12px; border: 2px solid #5A2C34; background: #3D1A20; color: #F7ECDC; font-size: 16px; font-weight: 700; padding: 0 12px"></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 700; color: #D9C3AE">Svarstyp</span>
+<div role="group" aria-label="Svarstyp" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 12px; background: #3D1A20; border: 2px solid #5A2C34; height: 44px; box-sizing: border-box">
+<button type="button" aria-pressed="false" style="border: none; border-radius: 8px; background: transparent; color: #D9C3AE; font-size: 14px; font-weight: 800">Text</button>
+<button type="button" aria-pressed="true" style="border: none; border-radius: 8px; background: #E8B04B; color: #2B1015; font-size: 14px; font-weight: 800">Bild</button>
+</div>
+</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
+<sc-for list="{{ answers }}" as="a" hint-placeholder-count="4">
+<div style="{{ a.style }}">
+<span style="font-size: 13px; font-weight: 800; color: {{ a.labelColor }}">{{ a.label }}</span>
+<div style="height: 56px; border-radius: 8px; background: #4A222A; display: flex; align-items: center; justify-content: center; gap: 6px">
+<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B89C88" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><path d="M21 16l-5-5-9 9"></path></svg>
+<span style="font-size: 12px; font-weight: 700; color: #D9C3AE">{{ a.thumb }}</span>
+</div>
+<div style="display: flex; gap: 6px">
+<input type="text" aria-label="{{ a.urlAria }}" placeholder="Klistra in bildlänk" style="min-width: 0; flex-grow: 1; height: 36px; box-sizing: border-box; border-radius: 8px; border: 2px solid #5A2C34; background: #2B1015; color: #F7ECDC; font-size: 13px; padding: 0 8px">
+<button type="button" aria-label="{{ a.upAria }}" style="width: 36px; height: 36px; flex-shrink: 0; border-radius: 8px; border: 2px solid #5A2C34; background: #2B1015; color: #D9C3AE; display: flex; align-items: center; justify-content: center; padding: 0">
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"></path></svg>
+</button>
+</div>
+</div>
+</sc-for>
+</div>
+<span style="font-size: 13px; color: #B89C88">Länk eller uppladdning per svar · tryck på ett svar för att markera det som rätt.</span>
+</div>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{ songs }}" as="s" hint-placeholder-count="4">
+<button type="button" style="height: 44px; padding: 0 16px; border-radius: 12px; border: none; background: #4A222A; color: #F7ECDC; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px"><span style="font-weight: 800; color: #E8B04B">{{ s.name }}</span>{{ s.count }}</button>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+const names = ['Klassisk röd vinglögg', 'Vit glögg', 'Hemmagjord kryddglögg', 'Portvinsglögg', 'Blåbärsglögg', 'Rom-glögg'];
+const descs = ['Rött vin, kanel, nejlika och apelsinskal.', 'Vitt vin med kardemumma och vanilj.', 'Värdens egen, extra mycket ingefära.', 'Fyllig och söt med portvin och russin.', 'Rött vin med blåbär och vanilj.', 'Mörk rom, farinsocker och kryddor.'];
+const ans = [['A', 'bild_a.jpg', false], ['B', 'Ingen bild än', false], ['C', 'bild_c.jpg', true], ['D', 'Ingen bild än', false]];
+return {
+glogger: names.map((n, i) => ({ nr: i + 1, id: 'gl' + (i + 1), name: n, desc: descs[i], descAria: 'Beskrivning för glögg ' + (i + 1), imgAria: 'Ladda upp bild för glögg ' + (i + 1), del: 'Ta bort glögg ' + (i + 1) })),
+answers: ans.map((a) => ({
+label: a[2] ? a[0] + ' · rätt svar' : a[0],
+thumb: a[1],
+urlAria: 'Bildlänk för svar ' + a[0],
+upAria: 'Ladda upp bild för svar ' + a[0],
+labelColor: a[2] ? '#8FBF9A' : '#B89C88',
+style: 'padding: 10px; border-radius: 12px; display: flex; flex-direction: column; gap: 6px; background: #3D1A20; border: 2px solid ' + (a[2] ? '#8FBF9A' : '#5A2C34')
+})),
+songs: [
+{ name: 'Låt 1', count: '3 frågor' },
+{ name: 'Låt 3', count: '2 frågor' },
+{ name: 'Låt 4', count: '2 frågor' },
+{ name: 'Låt 5', count: '2 frågor' }
+]
+};
+}
+}
+</script>
+</body>
+</html>

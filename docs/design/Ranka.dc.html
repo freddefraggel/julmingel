@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<title>Ranka glögg</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&amp;family=Nunito:wght@400;600;700;800&amp;display=swap">
+<style>
+body{margin:0;font-family:'Nunito',sans-serif;color:#F7ECDC}
+.bulbs{filter:drop-shadow(0 0 3px rgba(232,176,75,.55))}.bulbs ellipse{animation:tw 2.6s ease-in-out infinite}.bulbs ellipse:nth-child(3n+2){animation-delay:.9s}.bulbs ellipse:nth-child(3n){animation-delay:1.7s}@keyframes tw{0%,100%{opacity:1}50%{opacity:.4}}@media (prefers-reduced-motion:reduce){.bulbs ellipse{animation:none}}
+a{color:#D9C3AE;text-decoration:none}a:hover{color:#F7ECDC}
+button{font-family:'Nunito',sans-serif;cursor:pointer}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; background: #2B1015; padding: 40px 24px 28px; display: flex; flex-direction: column; gap: 16px">
+<a href="Hem.dc.html" style="display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 700; min-height: 44px">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg>
+Tillbaka
+</a>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #B89C88">Välj glögg</span>
+<div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{ glogger }}" as="g" hint-placeholder-count="6">
+<button type="button" onClick="{{ g.pick }}" aria-label="{{ g.aria }}" style="{{ g.style }}">{{ g.nr }}</button>
+</sc-for>
+</div>
+</div>
+<h1 style="margin: 0; font-family: 'Fraunces', serif; font-size: 38px; font-weight: 700; color: #F7ECDC">Glögg nr {{ current }}</h1>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<sc-for list="{{ params }}" as="p" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<span style="font-size: 18px; font-weight: 800; color: #F7ECDC">{{ p.label }}<sc-if value="{{ p.bad }}" hint-placeholder-val="{{ false }}"><span style="margin-left: 8px; font-size: 12px; font-weight: 800; padding: 3px 8px; border-radius: 999px; background: #4A222A; color: #D98A7E">lågt = bra</span></sc-if></span>
+<span style="font-size: 13px; color: #B89C88">{{ p.hint }}</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{ p.dots }}" as="d" hint-placeholder-count="5">
+<button type="button" onClick="{{ d.pick }}" aria-label="{{ d.aria }}" style="{{ d.style }}">{{ d.txt }}</button>
+</sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="flex-grow: 1"></div>
+<button type="button" onClick="{{ save }}" style="height: 60px; border: none; border-radius: 16px; background: #E8B04B; color: #2B1015; font-size: 19px; font-weight: 800">{{ saveLabel }}</button>
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 390px; height: 36px; pointer-events: none">
+<svg width="390" height="36" viewBox="0 0 390 36">
+<path d="M0 6Q48.75 22 97.5 6T195 6T292.5 6T390 6" fill="none" stroke="#7A4A50" stroke-width="1.5"></path>
+<g class="bulbs">
+<ellipse cx="16" cy="16.4" rx="4" ry="5.5" fill="#E8B04B"></ellipse>
+<ellipse cx="48.5" cy="20" rx="4" ry="5.5" fill="#C4454F"></ellipse>
+<ellipse cx="81" cy="16.5" rx="4" ry="5.5" fill="#8FBF9A"></ellipse>
+<ellipse cx="113.5" cy="16.4" rx="4" ry="5.5" fill="#F7ECDC"></ellipse>
+<ellipse cx="146" cy="20" rx="4" ry="5.5" fill="#E8B04B"></ellipse>
+<ellipse cx="178.5" cy="16.5" rx="4" ry="5.5" fill="#C4454F"></ellipse>
+<ellipse cx="211" cy="16.4" rx="4" ry="5.5" fill="#8FBF9A"></ellipse>
+<ellipse cx="243.5" cy="20" rx="4" ry="5.5" fill="#F7ECDC"></ellipse>
+<ellipse cx="276" cy="16.5" rx="4" ry="5.5" fill="#E8B04B"></ellipse>
+<ellipse cx="308.5" cy="16.4" rx="4" ry="5.5" fill="#C4454F"></ellipse>
+<ellipse cx="341" cy="20" rx="4" ry="5.5" fill="#8FBF9A"></ellipse>
+<ellipse cx="373.5" cy="16.5" rx="4" ry="5.5" fill="#F7ECDC"></ellipse>
+</g>
+</svg>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = {
+current: 3,
+saved: { 1: true, 2: true },
+ratings: { 3: { jul: 4, mys: 3, doft: 3, slisk: 2, kvalm: 1, patar: 4 } }
+};
+}
+renderVals() {
+const s = this.state;
+const r = s.ratings[s.current] || {};
+const defs = [
+{ key: 'jul', label: 'Julkänsla', hint: 'tisdag i mars → julafton' },
+{ key: 'mys', label: 'Mysfaktor', hint: 'busshållplats → brasan' },
+{ key: 'doft', label: 'Doft', hint: 'blöt kartong → julmarknad' },
+{ key: 'slisk', label: 'Sliskighet', hint: 'lagom → sockerchock', bad: true },
+{ key: 'kvalm', label: 'Kvalmighet', hint: 'fräsch → behöver luft', bad: true },
+{ key: 'patar', label: 'Påtår?', hint: 'aldrig igen → fyll på!' }
+];
+const params = defs.map((d) => ({
+label: d.label,
+hint: d.hint,
+bad: !!d.bad,
+dots: [1, 2, 3, 4, 5].map((n) => {
+const on = (r[d.key] || 0) >= n;
+const sel = r[d.key] === n;
+const st = d.colors
+? 'height: 40px; border-radius: 14px; border: 3px solid ' + (sel ? '#F7ECDC' : '#5A2C34') + '; background: ' + d.colors[n - 1] + '; box-shadow: ' + (sel ? '0 0 0 2px #2B1015 inset' : 'none')
+: 'height: 40px; border-radius: 14px; font-size: 18px; font-weight: 800; border: 2px solid ' + (on ? (d.bad ? '#D98A7E' : '#E8B04B') : '#5A2C34') + '; background: ' + (on ? (d.bad ? '#D98A7E' : '#E8B04B') : '#3D1A20') + '; color: ' + (on ? '#2B1015' : '#D9C3AE');
+return {
+n: n,
+txt: d.colors ? '' : n,
+aria: d.colors ? d.label + ': ' + d.names[n - 1] : d.label + ' ' + n,
+style: st,
+pick: () => {
+const next = Object.assign({}, s.ratings);
+next[s.current] = Object.assign({}, r, { [d.key]: n });
+this.setState({ ratings: next });
+}
+};
+})
+}));
+const glogger = [1, 2, 3, 4, 5, 6].map((nr) => {
+const active = nr === s.current;
+const done = !!s.saved[nr];
+return {
+nr: nr,
+aria: 'Glögg ' + nr + (done ? ', rankad' : ''),
+style: 'height: 48px; border-radius: 12px; font-size: 17px; font-weight: 800; border: 2px solid ' + (active ? '#F7ECDC' : done ? '#8FBF9A' : '#5A2C34') + '; background: ' + (active ? '#F7ECDC' : '#3D1A20') + '; color: ' + (active ? '#2B1015' : done ? '#8FBF9A' : '#D9C3AE'),
+pick: () => this.setState({ current: nr })
+};
+});
+const isSaved = !!s.saved[s.current];
+return {
+current: s.current,
+params: params,
+glogger: glogger,
+saveLabel: isSaved ? 'Sparat – uppdatera betyg' : 'Spara betyg',
+save: () => {
+const sv = Object.assign({}, s.saved, { [s.current]: true });
+const nextNr = [1, 2, 3, 4, 5, 6].find((n) => !sv[n]) || s.current;
+this.setState({ saved: sv, current: nextNr });
+}
+};
+}
+}
+</script>
+</body>
+</html>

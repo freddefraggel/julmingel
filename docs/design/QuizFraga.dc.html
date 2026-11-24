@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<title>Quizfråga</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&amp;family=Nunito:wght@400;600;700;800&amp;display=swap">
+<style>
+body{margin:0;font-family:'Nunito',sans-serif;color:#F7ECDC}
+.bulbs{filter:drop-shadow(0 0 3px rgba(232,176,75,.55))}.bulbs ellipse{animation:tw 2.6s ease-in-out infinite}.bulbs ellipse:nth-child(3n+2){animation-delay:.9s}.bulbs ellipse:nth-child(3n){animation-delay:1.7s}@keyframes tw{0%,100%{opacity:1}50%{opacity:.4}}@media (prefers-reduced-motion:reduce){.bulbs ellipse{animation:none}}
+a{color:#2B1015;text-decoration:none}a:hover{color:#2B1015}
+@keyframes eq{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
+.eq span{display:block;width:6px;height:28px;border-radius:3px;background:#E8B04B;transform-origin:bottom;animation:eq 1s ease-in-out infinite}
+.eq span:nth-child(2){animation-delay:.2s}.eq span:nth-child(3){animation-delay:.4s}.eq span:nth-child(4){animation-delay:.1s}.eq span:nth-child(5){animation-delay:.3s}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; background: #2B1015; padding: 48px 24px 28px; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span style="font-size: 14px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #E8B04B">Musikquiz</span>
+<span style="font-size: 15px; font-weight: 700; color: #D9C3AE">Låt 2 · fråga 1 av 3</span>
+</div>
+<div style="display: flex; align-items: center; gap: 16px; padding: 20px; border-radius: 20px; background: #3D1A20; border: 1px solid #5A2C34">
+<div class="eq" aria-hidden="true" style="display: flex; align-items: flex-end; gap: 4px; height: 28px"><span></span><span></span><span></span><span></span><span></span></div>
+<div style="display: flex; flex-direction: column; gap: 2px; width: 138px; height: 28px"><span style="font-size: 16px; font-weight: 800; color: rgb(247, 236, 220)">Låten spelas nu</span></div>
+<div style="flex-grow: 1"></div>
+<div style="display: flex; align-items: center; gap: 8px">
+<span style="font-size: 20px; width: 41px; height: 27px">{{ tLabel }}</span>
+<svg role="img" aria-label="{{ tAria }}" width="48" height="56" viewBox="0 0 48 56">
+<path d="M15 3c-1.5 2 1.5 3 0 5M21 3c-1.5 2 1.5 3 0 5M27 3c-1.5 2 1.5 3 0 5" fill="none" stroke="#B89C88" stroke-width="1.6" stroke-linecap="round" style="{{ steamStyle }}"></path>
+<rect x="10" y="{{ liqY }}" width="22" height="{{ liqH }}" rx="5" fill="#C4454F" style="transition: y 1s linear, height 1s linear"></rect>
+<path d="M8 12h26v28a8 8 0 0 1-8 8H16a8 8 0 0 1-8-8z" fill="none" stroke="#F7ECDC" stroke-width="2.5" stroke-linejoin="round"></path>
+<path d="M34 19h3a6 6 0 0 1 0 12h-3" fill="none" stroke="#F7ECDC" stroke-width="2.5" stroke-linecap="round"></path>
+</svg>
+</div>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 0 4px">
+<span style="font-size: 14px; font-weight: 700; color: #D9C3AE">{{ starText }}</span>
+<div role="img" aria-label="{{ starAria }}" style="display: flex; gap: 6px">
+<sc-for list="{{ stars }}" as="s" hint-placeholder-count="3">
+<svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" style="{{ s.style }}"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z" fill="{{ s.fill }}" stroke="{{ s.stroke }}" stroke-width="1.6" stroke-linejoin="round"></path></svg>
+</sc-for>
+</div>
+</div>
+<h1 style="margin: 0; font-family: 'Fraunces', serif; font-size: 34px; line-height: 1.15; font-weight: 700; color: #F7ECDC">Vilket år släpptes låten?</h1>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+<sc-for list="{{ answers }}" as="a" hint-placeholder-count="4">
+<button type="button" onClick="{{ a.pick }}" aria-pressed="{{ a.pressed }}" style="{{ a.box }}"><span style="font-size: 14px; font-weight: 800; color: #7A4A50">{{ a.tag }}</span><span style="font-size: 26px; font-weight: 800; color: #2B1015">{{ a.text }}</span></button>
+</sc-for>
+</div>
+<div style="flex-grow: 1"></div>
+<p style="margin: 0; text-align: center; font-size: 14px; color: #B89C88">{{ footText }}</p>
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 390px; height: 36px; pointer-events: none">
+<svg width="390" height="36" viewBox="0 0 390 36">
+<path d="M0 6Q48.75 22 97.5 6T195 6T292.5 6T390 6" fill="none" stroke="#7A4A50" stroke-width="1.5"></path>
+<g class="bulbs">
+<ellipse cx="16" cy="16.4" rx="4" ry="5.5" fill="#E8B04B"></ellipse>
+<ellipse cx="48.5" cy="20" rx="4" ry="5.5" fill="#C4454F"></ellipse>
+<ellipse cx="81" cy="16.5" rx="4" ry="5.5" fill="#8FBF9A"></ellipse>
+<ellipse cx="113.5" cy="16.4" rx="4" ry="5.5" fill="#F7ECDC"></ellipse>
+<ellipse cx="146" cy="20" rx="4" ry="5.5" fill="#E8B04B"></ellipse>
+<ellipse cx="178.5" cy="16.5" rx="4" ry="5.5" fill="#C4454F"></ellipse>
+<ellipse cx="211" cy="16.4" rx="4" ry="5.5" fill="#8FBF9A"></ellipse>
+<ellipse cx="243.5" cy="20" rx="4" ry="5.5" fill="#F7ECDC"></ellipse>
+<ellipse cx="276" cy="16.5" rx="4" ry="5.5" fill="#E8B04B"></ellipse>
+<ellipse cx="308.5" cy="16.4" rx="4" ry="5.5" fill="#C4454F"></ellipse>
+<ellipse cx="341" cy="20" rx="4" ry="5.5" fill="#8FBF9A"></ellipse>
+<ellipse cx="373.5" cy="16.5" rx="4" ry="5.5" fill="#F7ECDC"></ellipse>
+</g>
+</svg>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { t: 30, sel: 'B' };
+}
+componentDidMount() {
+this.iv = setInterval(() => {
+this.setState({ t: this.state.t <= -3 ? 30 : this.state.t - 1 });
+}, 1000);
+}
+componentWillUnmount() {
+clearInterval(this.iv);
+}
+renderVals() {
+const total = 30;
+const t = this.state.t;
+const frac = Math.max(t, 0) / total;
+const ns = frac > 0.75 ? 3 : frac > 0.5 ? 2 : frac > 0.25 ? 1 : 0;
+const liqH = Math.round(32 * frac * 10) / 10;
+const open = t > 0;
+const ans = [['A', '1984'], ['B', '1994'], ['C', '2003'], ['D', '2011']];
+return {
+answers: ans.map((a) => {
+const on = this.state.sel === a[0];
+return {
+text: a[1],
+tag: on ? a[0] + ' · ditt svar' : a[0],
+pressed: on ? 'true' : 'false',
+pick: () => { if (open) this.setState({ sel: a[0] }); },
+box: 'height: 120px; border-radius: 20px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; padding: 16px; box-sizing: border-box; font-family: Nunito, sans-serif; cursor: pointer; background: ' + (on ? '#E8B04B' : '#F7ECDC') + '; border: 3px solid ' + (on ? '#F7ECDC' : '#F7ECDC') + '; box-shadow: ' + (on ? '0 0 0 3px #E8B04B' : 'none') + '; opacity: ' + (open || on ? 1 : 0.5)
+};
+}),
+footText: open ? 'Du kan byta svar tills tiden är ute.' : 'Tiden är ute – ditt svar är låst.',
+liqH: liqH,
+liqY: 46 - liqH,
+stars: [0, 1, 2].map((i) => ({ fill: i < ns ? '#E8B04B' : 'none', stroke: i < ns ? '#E8B04B' : '#5A2C34', style: 'transition: transform .3s; transform: scale(' + (i < ns ? 1 : 0.85) + ')' })),
+starText: t <= 0 ? 'Frågan är stängd' : ns > 0 ? 'Svara nu för ' + ns + (ns === 1 ? ' stjärna' : ' stjärnor') : 'Inga stjärnor kvar – svara ändå!',
+starAria: ns + ' av 3 snabbhetsstjärnor kvar',
+tLabel: t > 0 ? t + ' s' : 'Tiden ute!',
+tAria: t > 0 ? t + ' sekunder kvar' : 'Tiden är ute',
+tStyle: 'font-size: 22px; font-weight: 800; text-align: right; color: ' + (t <= 5 ? '#D98A7E' : '#F7ECDC'),
+steamStyle: 'transition: opacity .5s; opacity: ' + (t > 20 ? 1 : 0)
+};
+}
+}
+</script>
+</body>
+</html>

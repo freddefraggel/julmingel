@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<title>Admin – rättning</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&amp;family=Nunito:wght@400;600;700;800&amp;display=swap">
+<style>
+body{margin:0;font-family:'Nunito',sans-serif;color:#F7ECDC}
+a{color:#E8B04B}a:hover{color:#F3C873}
+button{font-family:'Nunito',sans-serif;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; box-sizing: border-box; background: #2B1015; padding: 28px 32px; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<div style="display: flex; align-items: center; gap: 12px">
+<span style="font-family: 'Fraunces', serif; font-size: 28px; font-weight: 700">Rättning</span>
+<span style="font-size: 13px; font-weight: 800; padding: 5px 10px; border-radius: 999px; background: #4A222A; color: #D9C3AE; letter-spacing: 0.08em; text-transform: uppercase">Admin</span>
+</div>
+<span style="font-size: 16px; font-weight: 700; color: #D9C3AE">Gästerna ser rätt svar och sitt eget svar på mobilen</span>
+</div>
+<div style="flex-grow: 1; display: flex; gap: 24px; min-height: 0">
+<div style="width: 260px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px">
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #B89C88">Alla frågor</span>
+<sc-for list="{{ songs }}" as="s" hint-placeholder-count="5">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 14px; font-weight: 800; color: #F7ECDC">{{ s.name }}</span>
+<div style="display: flex; gap: 8px">
+<sc-for list="{{ s.qs }}" as="q" hint-placeholder-count="3">
+<button type="button" aria-label="{{ q.aria }}" style="{{ q.style }}">{{ q.n }}</button>
+</sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 20px; padding: 28px; border-radius: 24px; background: #3D1A20; border: 1px solid #5A2C34">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span style="font-size: 15px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #E8B04B">Låt 2 · fråga 1 av 3 · totalt 4 av 12</span>
+<span style="font-size: 15px; font-weight: 700; color: #D9C3AE">8 av 18 hade rätt</span>
+</div>
+<h1 style="margin: 0; font-family: 'Fraunces', serif; font-size: 40px; line-height: 1.1; font-weight: 700">Vilket år släpptes låten?</h1>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{ answers }}" as="a" hint-placeholder-count="4">
+<div style="{{ a.box }}">
+<span style="{{ a.letterStyle }}">{{ a.letter }}</span>
+<span style="width: 90px; font-size: 22px; font-weight: 800">{{ a.text }}</span>
+<div style="flex-grow: 1; height: 12px; border-radius: 6px; background: #2B1015; overflow: hidden"><div style="{{ a.bar }}"></div></div>
+<span style="width: 120px; text-align: right; font-size: 15px; font-weight: 800; color: {{ a.countColor }}">{{ a.count }}</span>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; align-items: center; gap: 16px; padding: 14px 18px; border-radius: 16px; background: #2B1015">
+<button type="button" aria-label="Spela låten" style="width: 52px; height: 52px; border-radius: 26px; border: none; background: #F7ECDC; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="#2B1015"><path d="M8 5l11 7-11 7z"></path></svg>
+</button>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 16px; font-weight: 800">Spela låten igen · [Låt] – [Artist]</span>
+<span style="font-size: 14px; color: #D9C3AE">Spelar från 0:30 på Spotify</span>
+</div>
+</div>
+<div style="flex-grow: 1"></div>
+<div style="display: flex; gap: 12px">
+<button type="button" style="height: 72px; padding: 0 28px; border-radius: 18px; border: 2px solid #5A2C34; background: #2B1015; color: #F7ECDC; font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 10px">
+<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>
+Föregående
+</button>
+<button type="button" style="flex-grow: 1; height: 72px; border-radius: 18px; border: none; background: #E8B04B; color: #2B1015; font-size: 22px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 14px">
+<span style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px"><span>Nästa rätt svar</span><span style="font-size: 14px; font-weight: 700; color: #4A222A">Efter fråga 12: till topplistan</span></span>
+<svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2B1015" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+</button>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+const songs = [[1, 2, 3], [4, 5, 6], [7, 8], [9, 10], [11, 12]];
+const current = 4;
+const ans = [['A', '1984', 2, false], ['B', '1994', 8, true], ['C', '2003', 3, false], ['D', '2011', 1, false]];
+return {
+songs: songs.map((qs, i) => ({
+name: 'Låt ' + (i + 1),
+qs: qs.map((n) => {
+const cur = n === current;
+const done = n < current;
+return {
+n: n,
+aria: 'Fråga ' + n + (done ? ', rättad' : cur ? ', visas nu' : ''),
+style: 'width: 48px; height: 48px; border-radius: 12px; font-size: 17px; font-weight: 800; border: 2px solid ' + (cur ? '#E8B04B' : done ? '#8FBF9A' : '#5A2C34') + '; background: ' + (cur ? '#E8B04B' : '#3D1A20') + '; color: ' + (cur ? '#2B1015' : done ? '#8FBF9A' : '#D9C3AE')
+};
+})
+})),
+answers: ans.map((a) => ({
+letter: a[0],
+text: a[1],
+count: a[3] ? 'Rätt · ' + a[2] + ' st' : a[2] + ' st',
+countColor: a[3] ? '#8FBF9A' : '#D9C3AE',
+letterStyle: 'width: 36px; height: 36px; border-radius: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; background: ' + (a[3] ? '#8FBF9A' : '#2B1015') + '; color: ' + (a[3] ? '#1F3A28' : '#D9C3AE'),
+box: 'display: flex; align-items: center; gap: 16px; padding: 12px 16px; border-radius: 14px; background: #4A222A; border: 2px solid ' + (a[3] ? '#8FBF9A' : '#4A222A') + '; opacity: ' + (a[3] ? 1 : 0.75),
+bar: 'height: 12px; border-radius: 6px; width: ' + Math.round(a[2] / 18 * 100) + '%; background: ' + (a[3] ? '#8FBF9A' : '#B89C88')
+}))
+};
+}
+}
+</script>
+</body>
+</html>

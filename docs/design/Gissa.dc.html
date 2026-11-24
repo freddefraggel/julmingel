@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<title>Gissa glöggen</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&amp;family=Nunito:wght@400;600;700;800&amp;display=swap">
+<style>
+body{margin:0;font-family:'Nunito',sans-serif;color:#F7ECDC}
+.bulbs{filter:drop-shadow(0 0 3px rgba(232,176,75,.55))}.bulbs ellipse{animation:tw 2.6s ease-in-out infinite}.bulbs ellipse:nth-child(3n+2){animation-delay:.9s}.bulbs ellipse:nth-child(3n){animation-delay:1.7s}@keyframes tw{0%,100%{opacity:1}50%{opacity:.4}}@media (prefers-reduced-motion:reduce){.bulbs ellipse{animation:none}}
+a{color:#D9C3AE;text-decoration:none}a:hover{color:#F7ECDC}
+button{font-family:'Nunito',sans-serif;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #2B1015; padding: 40px 24px 28px; display: flex; flex-direction: column; gap: 20px; position: relative; overflow: hidden">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="align-self: flex-start; font-size: 13px; font-weight: 800; padding: 6px 12px; border-radius: 999px; background: #8FBF9A; color: #1F3A28">Nu öppet</span>
+<h1 style="margin: 0; font-family: 'Fraunces', serif; font-size: 36px; line-height: 1.1; font-weight: 700; color: #F7ECDC">Vilken glögg är vilken?</h1>
+<p style="margin: 0; font-size: 16px; color: #D9C3AE">Tryck på ett nummer och välj glögg. Varje glögg används en gång.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+<button type="button" onClick="{{ r.open }}" aria-label="{{ r.aria }}" style="{{ r.box }}">
+<span style="width: 40px; height: 40px; flex-shrink: 0; border-radius: 12px; background: #2B1015; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; color: #E8B04B">{{ r.nr }}</span>
+<span style="{{ r.thumb }}">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B89C88" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><path d="M21 16l-5-5-9 9"></path></svg>
+</span>
+<span style="{{ r.nameStyle }}">{{ r.label }}</span>
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D9C3AE" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>
+</button>
+</sc-for>
+</div>
+<div style="flex-grow: 1"></div>
+<button type="button" style="height: 60px; border: none; border-radius: 16px; background: #E8B04B; color: #2B1015; font-size: 19px; font-weight: 800">Lås mina gissningar</button>
+<p style="margin: 0; text-align: center; font-size: 14px; color: #B89C88">Svaret avslöjas av värden när alla har gissat.</p>
+<sc-if value="{{ isOpen }}" hint-placeholder-val="{{ true }}">
+<div style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: rgba(20,6,9,0.72); display: flex; flex-direction: column; justify-content: flex-end">
+<div role="dialog" aria-label="{{ sheetTitle }}" style="display: flex; flex-direction: column; gap: 16px; padding: 22px 20px 28px; border-radius: 28px 28px 0 0; background: #3D1A20; border-top: 1px solid #5A2C34">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<span style="font-family: 'Fraunces', serif; font-size: 26px; font-weight: 700; color: #F7ECDC">{{ sheetTitle }}</span>
+<button type="button" onClick="{{ close }}" aria-label="Stäng" style="width: 44px; height: 44px; border-radius: 22px; border: none; background: #4A222A; color: #F7ECDC; display: flex; align-items: center; justify-content: center; padding: 0">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+</button>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<sc-for list="{{ options }}" as="o" hint-placeholder-count="6">
+<button type="button" onClick="{{ o.pick }}" aria-label="{{ o.aria }}" style="{{ o.box }}">
+<span style="height: 76px; background: #4A222A; display: flex; align-items: center; justify-content: center; position: relative">
+<svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B89C88" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><path d="M21 16l-5-5-9 9"></path></svg>
+<sc-if value="{{ o.taken }}" hint-placeholder-val="{{ false }}"><span style="position: absolute; top: 8px; right: 8px; font-size: 12px; font-weight: 800; padding: 3px 8px; border-radius: 999px; background: #2B1015; color: #D9C3AE">{{ o.takenText }}</span></sc-if>
+</span>
+<span style="padding: 8px 10px 10px; font-size: 14px; font-weight: 800; line-height: 1.25; color: #F7ECDC; text-align: left">{{ o.name }}</span>
+</button>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 390px; height: 36px; pointer-events: none">
+<svg width="390" height="36" viewBox="0 0 390 36">
+<path d="M0 6Q48.75 22 97.5 6T195 6T292.5 6T390 6" fill="none" stroke="#7A4A50" stroke-width="1.5"></path>
+<g class="bulbs">
+<ellipse cx="16" cy="16.4" rx="4" ry="5.5" fill="#E8B04B"></ellipse>
+<ellipse cx="48.5" cy="20" rx="4" ry="5.5" fill="#C4454F"></ellipse>
+<ellipse cx="81" cy="16.5" rx="4" ry="5.5" fill="#8FBF9A"></ellipse>
+<ellipse cx="113.5" cy="16.4" rx="4" ry="5.5" fill="#F7ECDC"></ellipse>
+<ellipse cx="146" cy="20" rx="4" ry="5.5" fill="#E8B04B"></ellipse>
+<ellipse cx="178.5" cy="16.5" rx="4" ry="5.5" fill="#C4454F"></ellipse>
+<ellipse cx="211" cy="16.4" rx="4" ry="5.5" fill="#8FBF9A"></ellipse>
+<ellipse cx="243.5" cy="20" rx="4" ry="5.5" fill="#F7ECDC"></ellipse>
+<ellipse cx="276" cy="16.5" rx="4" ry="5.5" fill="#E8B04B"></ellipse>
+<ellipse cx="308.5" cy="16.4" rx="4" ry="5.5" fill="#C4454F"></ellipse>
+<ellipse cx="341" cy="20" rx="4" ry="5.5" fill="#8FBF9A"></ellipse>
+<ellipse cx="373.5" cy="16.5" rx="4" ry="5.5" fill="#F7ECDC"></ellipse>
+</g>
+</svg>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { open: 3, picks: { 1: 1, 2: 0, 4: 4 } };
+}
+renderVals() {
+const names = ['Klassisk röd vinglögg', 'Vit glögg', 'Hemmagjord kryddglögg', 'Portvinsglögg', 'Blåbärsglögg', 'Rom-glögg'];
+const s = this.state;
+const owner = {};
+Object.keys(s.picks).forEach((nr) => { owner[s.picks[nr]] = Number(nr); });
+const rows = [1, 2, 3, 4, 5, 6].map((nr) => {
+const g = s.picks[nr];
+const has = g !== undefined;
+return {
+nr: nr,
+label: has ? names[g] : 'Välj glögg',
+aria: 'Nummer ' + nr + ': ' + (has ? names[g] : 'inte vald'),
+open: () => this.setState({ open: nr }),
+box: 'display: flex; align-items: center; gap: 12px; height: 60px; padding: 0 12px 0 8px; border-radius: 16px; text-align: left; background: #3D1A20; border: 2px ' + (has ? 'solid #5A2C34' : 'dashed #5A2C34'),
+thumb: 'width: 44px; height: 44px; flex-shrink: 0; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: ' + (has ? '#4A222A' : 'transparent') + '; opacity: ' + (has ? 1 : 0),
+nameStyle: 'flex-grow: 1; font-size: 16px; font-weight: ' + (has ? 800 : 700) + '; color: ' + (has ? '#F7ECDC' : '#B89C88')
+};
+});
+const cur = s.open;
+const options = names.map((n, i) => {
+const by = owner[i];
+const taken = by !== undefined && by !== cur;
+const mine = by === cur;
+return {
+name: n,
+taken: taken,
+takenText: 'Nr ' + by,
+aria: n + (taken ? ', vald till nummer ' + by : ''),
+box: 'display: flex; flex-direction: column; padding: 0; border-radius: 16px; overflow: hidden; background: #2B1015; border: 2px solid ' + (mine ? '#E8B04B' : '#5A2C34') + '; opacity: ' + (taken ? 0.5 : 1),
+pick: () => {
+const p = Object.assign({}, s.picks);
+Object.keys(p).forEach((k) => { if (p[k] === i) delete p[k]; });
+p[cur] = i;
+this.setState({ picks: p, open: null });
+}
+};
+});
+return {
+rows: rows,
+isOpen: cur !== null && cur !== undefined,
+sheetTitle: 'Vilken är nr ' + cur + '?',
+options: options,
+close: () => this.setState({ open: null })
+};
+}
+}
+</script>
+</body>
+</html>
