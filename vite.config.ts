@@ -6,7 +6,7 @@ export default defineConfig({
   base: '/julmingel/',
   plugins: [react()],
   server: {
-    // Spotify redirect-URI för utveckling är http://127.0.0.1:5173/ (se docs/spec.md).
+    // Spotify redirect-URI för utveckling är http://127.0.0.1:5173/julmingel/ (måste matcha exakt).
     host: '127.0.0.1',
     port: 5173,
     strictPort: true,

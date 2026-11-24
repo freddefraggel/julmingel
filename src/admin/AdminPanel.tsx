@@ -8,6 +8,9 @@ export default function AdminPanel() {
       <p>
         <Link to="/admin/forbered">Förbered kvällen</Link>
       </p>
+      <p>
+        <Link to="/admin/spotify">Testa Spotify</Link>
+      </p>
     </main>
   )
 }
