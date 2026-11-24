@@ -18,6 +18,7 @@ import { NowTextEditor } from './NowTextEditor'
 import { PHASES, phaseIndex } from './phases'
 import { PhaseList } from './PhaseList'
 import { QrDialog } from './QrDialog'
+import { QuizPanel } from './QuizPanel'
 import { TastingPanel } from './TastingPanel'
 
 type Props = {
@@ -133,6 +134,10 @@ export function ControlPanel({ eventId, eventName, joinCode, onChangeEvent }: Pr
 
           {live?.phase === 'tasting' && (
             <TastingPanel eventId={eventId} config={config} live={live} guests={guests} disabled={busy} save={save} />
+          )}
+
+          {live?.phase === 'quiz' && (
+            <QuizPanel eventId={eventId} config={config} live={live} guests={guests} disabled={busy} save={save} />
           )}
 
           {config && (

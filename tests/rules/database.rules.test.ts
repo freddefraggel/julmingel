@@ -166,6 +166,13 @@ describe('svar i quizet', () => {
     await assertFails(set(ref(db('anna'), `${E}/answers/q1/anna`), { choice: 'A', at: Date.now() }))
   })
 
+  it('admin ser alla svar live, gästen bara sitt eget', async () => {
+    await assertSucceeds(answer('q1'))
+    await assertSucceeds(get(ref(db('admin'), `${E}/answers/q1`)))
+    await assertSucceeds(get(ref(db('anna'), `${E}/answers/q1/anna`)))
+    await assertFails(get(ref(db('anna'), `${E}/answers/q1`)))
+  })
+
   it('nekar ogiltigt svarsalternativ', async () => {
     await assertFails(answer('q1', 'E'))
   })
