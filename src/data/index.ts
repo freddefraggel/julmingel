@@ -14,3 +14,4 @@ export {
   subscribeGuests,
   type AdminEventResult,
 } from './admin'
+export { getAssets, removeAsset, saveAsset, subscribeAssets } from './assets'

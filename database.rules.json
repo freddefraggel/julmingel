@@ -16,7 +16,10 @@
           }
         },
         "assets": {
-          ".read": "data.parent().child('guests/' + auth.uid).exists()"
+          ".read": "data.parent().child('guests/' + auth.uid).exists()",
+          "$imageId": {
+            ".validate": "newData.isString() && newData.val().length <= 200000 && (newData.val().beginsWith('data:image/') || newData.val().beginsWith('https://'))"
+          }
         },
         "live": {
           ".read": "data.parent().child('guests/' + auth.uid).exists()"

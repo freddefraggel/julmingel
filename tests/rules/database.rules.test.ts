@@ -210,5 +210,20 @@ describe('admin styr kvällen', () => {
     await assertSucceeds(
       update(ref(db('admin'), E), { 'guests/anna': null, 'ratings/anna': null, 'answers/q1/anna': null, 'guesses/anna': null }),
     )
+describe('bilder', () => {
+  const webp = 'data:image/webp;base64,UklGRg=='
+
+  it('admin får spara komprimerade bilder och länkar, gäster får läsa dem', async () => {
+    await assertSucceeds(set(ref(db('admin'), `${E}/assets/i1`), webp))
+    await assertSucceeds(set(ref(db('admin'), `${E}/assets/i2`), 'https://example.com/glogg.jpg'))
+    await assertSucceeds(get(ref(db('anna'), `${E}/assets`)))
+  })
+
+  it('nekar annat än bilder, för stora bilder och gäster som skriver', async () => {
+    await assertFails(set(ref(db('admin'), `${E}/assets/i1`), 'http://example.com/glogg.jpg'))
+    await assertFails(set(ref(db('admin'), `${E}/assets/i1`), { src: webp }))
+    await assertFails(set(ref(db('admin'), `${E}/assets/i1`), webp + 'A'.repeat(200_000)))
+    await assertFails(set(ref(db('anna'), `${E}/assets/i1`), webp))
+    await assertFails(get(ref(db(), `${E}/assets`)))
   })
 })
