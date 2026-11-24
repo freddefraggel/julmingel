@@ -32,7 +32,7 @@
           "$uid": {
             ".read": "auth.uid === $uid",
             ".write": "auth.uid === $uid && !data.exists() && root.child('events/' + $e + '/config/joinOpen').val() === true",
-            ".validate": "newData.hasChildren(['name', 'class', 'joinCode', 'joinedAt']) && newData.child('joinCode').val() === root.child('events/' + $e + '/secret/joinCode').val()",
+            ".validate": "newData.hasChildren(['name', 'class', 'joinCode', 'joinedAt']) && (newData.child('joinCode').val() === root.child('events/' + $e + '/secret/joinCode').val() || (data.exists() && newData.child('joinCode').val() === data.child('joinCode').val()))",
             "name": {
               ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 30"
             },

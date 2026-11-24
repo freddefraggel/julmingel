@@ -1,6 +1,16 @@
 // Datalagret: det ENDA stället i appen som får importera Firebase.
 // Resten av koden pratar med datalagret via funktionerna här, så att Firebase
 // kan bytas mot Azure-varianten (se docs/spec.md, Risker) utan att röra vyerna.
-export { onUserChanged, signInAdmin, signInGuest, signOut, type SignedInUser } from './auth'
+export { isWrongCredentials, onUserChanged, signInAdmin, signInGuest, signOut, type SignedInUser } from './auth'
 export { eventPath, subscribeConfig, subscribeLive, subscribeServerTimeOffset, type OnError } from './db'
 export { getOwnGuest, isJoinOpen, joinEvent, type JoinRequest, type JoinResult } from './guests'
+export {
+  changeGuestClass,
+  openAdminEvent,
+  removeGuest,
+  setJoinOpen,
+  setNowText,
+  setPhase,
+  subscribeGuests,
+  type AdminEventResult,
+} from './admin'

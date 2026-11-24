@@ -28,7 +28,7 @@ Vite + React + TypeScript, Firebase Realtime Database + Auth (Spark), GitHub Pag
 Kräver Node och Java 21 (för Firebase Emulator Suite).
 
 - `npm run dev`: startar Firebase-emulatorerna (Auth och Realtime Database), fyller dem med ett testevent och startar Vite på http://127.0.0.1:5173/julmingel/
-  - Testevent `demo` med koden `glogg`. Admin i emulatorn: `admin@julmingel.test` / `julmingel`
+  - Testevent `demo` med koden `glogg`. Admin i emulatorn: `admin@julmingel.test` / `julmingel` på `#/admin?e=demo` (kvällen sparas sedan på enheten)
   - Appens databas i emulatorns översikt: http://127.0.0.1:4000/database/demo-glogg-mingel-default-rtdb/data (översikten kan visa en annan, tom instans som standard)
   - `#/design` visar grundkomponenterna, bara i utvecklingsläge
   - `VITE_FIREBASE_EMULATOR=false` kör mot det riktiga projektet i stället

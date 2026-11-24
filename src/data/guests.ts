@@ -1,6 +1,7 @@
 import { get, ref, serverTimestamp, set } from 'firebase/database'
 import type { Guest, GuestClass } from '../types'
 import { eventPath } from './db'
+import { isPermissionDenied } from './errors'
 import { firebase } from './firebase'
 
 /** Gästens egen post, eller null om gästen inte har gått med i eventet. */
@@ -44,8 +45,4 @@ export async function joinEvent(eventId: string, uid: string, request: JoinReque
 
   const guest = await getOwnGuest(eventId, uid)
   return guest ? { ok: true, guest } : { ok: false, reason: 'error' }
-}
-
-function isPermissionDenied(error: unknown): boolean {
-  return error instanceof Error && /permission[_ ]denied/i.test(`${(error as { code?: string }).code ?? ''} ${error.message}`)
 }
