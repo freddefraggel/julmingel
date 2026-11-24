@@ -16,11 +16,23 @@ export const EMULATOR_HOST = '127.0.0.1'
 export const EMULATOR_PORTS = { auth: 9099, database: 9000 } as const
 
 /**
- * Webbkonfigurationen för det riktiga projektet `glogg-mingel`. Den är publik
- * och får ligga i koden; skyddet sitter i database.rules.json.
+ * Webbkonfigurationen för det riktiga projektet `glogg-mingel`. Den är publik;
+ * skyddet sitter i database.rules.json. Värdena kommer in som miljövariabler i
+ * bygget: i GitHub Actions från repo-variablerna, lokalt från en .env.local-fil.
  * Hämtas från Firebase-konsolen → Project settings → Your apps → Web app.
  */
-export const productionConfig: FirebaseOptions | null = null
+export const productionConfig: FirebaseOptions | null = readProductionConfig(import.meta.env)
+
+export function readProductionConfig(env: ImportMetaEnv): FirebaseOptions | null {
+  const config = {
+    apiKey: env.VITE_FIREBASE_API_KEY,
+    authDomain: env.VITE_FIREBASE_AUTH_DOMAIN,
+    databaseURL: env.VITE_FIREBASE_DATABASE_URL,
+    projectId: env.VITE_FIREBASE_PROJECT_ID,
+    appId: env.VITE_FIREBASE_APP_ID,
+  }
+  return Object.values(config).every((value) => typeof value === 'string' && value !== '') ? config : null
+}
 
 /** Utvecklingsläget går mot emulatorn om inte VITE_FIREBASE_EMULATOR=false. */
 export const useEmulator = import.meta.env.DEV && import.meta.env.VITE_FIREBASE_EMULATOR !== 'false'
@@ -34,7 +46,7 @@ export function firebaseOptions(): FirebaseOptions {
     }
   }
   if (!productionConfig) {
-    throw new Error('Firebase-konfigurationen saknas. Fyll i productionConfig i src/data/config.ts.')
+    throw new Error('Firebase-konfigurationen saknas. Sätt VITE_FIREBASE_* i bygget (se CLAUDE.md).')
   }
   return productionConfig
 }
