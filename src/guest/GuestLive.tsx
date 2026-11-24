@@ -5,6 +5,7 @@ import { GuestAssets } from './assets'
 import { GuestHome, type HomeTarget } from './GuestHome'
 import { Gloggs } from './Gloggs'
 import { Guess } from './Guess'
+import { Leaderboard } from './Leaderboard'
 import { GuestMessage } from './GuestMessage'
 import { Quiz } from './Quiz'
 import { Rate } from './Rate'
@@ -93,6 +94,15 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
     <GuestAssets.Provider value={assets}>
       {phase === 'quiz' && live ? (
         <Quiz eventId={eventId} uid={uid} config={config} live={live} />
+      ) : phase === 'reveal' ? (
+        <Leaderboard
+          eventId={eventId}
+          uid={uid}
+          guestClass={guest.class}
+          config={config}
+          step={live?.reveal?.step ?? null}
+          final={false}
+        />
       ) : phase === 'review' && live ? (
         <Review eventId={eventId} uid={uid} config={config} live={live} />
       ) : view === 'ranka' && phase === 'tasting' ? (

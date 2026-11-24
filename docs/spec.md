@@ -94,7 +94,7 @@ Allt för en kväll ligger under `/events/{eventId}` och är uppdelat efter vem 
   answers/{qId}/{uid}: { choice, at }    ← at = ServerValue.TIMESTAMP
   guesses/{uid}: { map: { number: gId }, locked }
   results/                               ← admin beräknar och skriver
-    leaderboard/{uid}: { points, stars, rank }
+    leaderboard/{uid}: { points, stars, rank, name }   ← name: gäster får inte läsa guests/
     gloggOfEvening/{class}: { gId, avg }
 ```
 

@@ -81,7 +81,7 @@ export function score(
 
 /** Topplistan i formen som skrivs till `results/leaderboard` och `secret/leaderboard`. */
 export function toLeaderboard(rows: ScoreRow[]): Record<string, LeaderboardEntry> {
-  return Object.fromEntries(rows.map(({ uid, points, stars, rank }) => [uid, { points, stars, rank }]))
+  return Object.fromEntries(rows.map(({ uid, points, stars, rank, name }) => [uid, { points, stars, rank, name }]))
 }
 
 /**
