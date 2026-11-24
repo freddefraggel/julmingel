@@ -181,7 +181,7 @@ Utdrag ur reglerna (fullständig fil: `database.rules.json` i repot):
 }
 ```
 
-Samma mönster gäller `ratings` (bara i fas `tasting`, värde 1–5, numret finns i gästens klass) och `guesses` (bara i fas `guess` och bara om `locked` inte redan är sant). Reglerna testas med Firebase Emulator Suite och `@firebase/rules-unit-testing` innan kvällen: en gäst utan kod, ett svar efter sluttiden, ett svar på fel fråga och en läsning av `secret/` ska alla nekas.
+Samma mönster gäller `ratings` (bara i fas `tasting`, värde 1–5, numret finns i gästens klass) och `guesses` (bara i fas `guess`, bara om `locked` inte redan är sant, och bara glögger och nummer i gästens klass). Reglerna testas med Firebase Emulator Suite och `@firebase/rules-unit-testing` innan kvällen: en gäst utan kod, ett svar efter sluttiden, ett svar på fel fråga och en läsning av `secret/` ska alla nekas.
 
 **Missbruk.** Anonymous Auth kan i teorin användas för att skapa många konton, men utan `joinCode` går det inte att skriva något. Admin stänger registreringen (`config/joinOpen = false`) när alla är inne. Firebase App Check med reCAPTCHA är ett tillval som inte behövs för en privat fest.
 
