@@ -10,7 +10,7 @@ export function eventPath(eventId: string, ...parts: string[]): string {
   return ['events', eventId, ...parts].join('/')
 }
 
-function subscribe<T>(path: string, callback: (value: T | null) => void, onError?: OnError): () => void {
+export function subscribe<T>(path: string, callback: (value: T | null) => void, onError?: OnError): () => void {
   return onValue(
     ref(firebase().db, path),
     (snapshot) => callback(snapshot.val() as T | null),

@@ -4,3 +4,4 @@
 export { onUserChanged, signInAdmin, signInGuest, signOut, type SignedInUser } from './auth'
 export { eventPath, subscribeConfig, subscribeLive, subscribeServerTimeOffset, type OnError } from './db'
 export { getOwnGuest, isJoinOpen, joinEvent, type JoinRequest, type JoinResult } from './guests'
+export { getAssets, removeAsset, saveAsset, subscribeAssets } from './assets'

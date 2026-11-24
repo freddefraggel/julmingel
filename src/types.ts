@@ -147,7 +147,7 @@ export type EventResults = {
 /** /events/{eventId} */
 export type GloggEvent = {
   config: EventConfig
-  /** imageId → "data:image/webp;base64,…" */
+  /** imageId → "data:image/webp;base64,…", eller en https-länk när sajten blockerade hämtningen (CORS). */
   assets?: Record<string, string>
   secret: EventSecret
   live: LiveState
