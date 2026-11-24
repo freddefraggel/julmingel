@@ -12,6 +12,8 @@ vi.mock('../data', () => ({
   subscribeOwnGuest: vi.fn(),
   subscribeOwnRatings: vi.fn(),
   getAssets: vi.fn(),
+  subscribeReveal: vi.fn(() => () => {}),
+  subscribeOwnAnswer: vi.fn(() => () => {}),
 }))
 
 const mocked = vi.mocked(data)
@@ -155,11 +157,12 @@ describe('Ranka glögg i kvällens flöde', () => {
     expect(screen.getByRole('heading', { name: 'Hej Anna!' })).toBeInTheDocument()
   })
 
-  it('går tillbaka till Hem när provningen är slut', () => {
+  it('lämnar Ranka glögg när provningen är slut', () => {
     render(<GuestLive eventId="demo" uid="u1" guest={anna} />)
     act(() => pushLive({ phase: 'tasting', tasting: { vanlig: { serving: 1, next: 2 } } }))
     expect(screen.getByRole('heading', { name: 'Glögg nr 1' })).toBeInTheDocument()
     act(() => pushLive({ phase: 'review', tasting: { vanlig: { serving: 1, next: 2 } } }))
-    expect(screen.getByRole('heading', { name: 'Hej Anna!' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Glögg nr 1' })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Rättningen börjar snart' })).toBeInTheDocument()
   })
 })
