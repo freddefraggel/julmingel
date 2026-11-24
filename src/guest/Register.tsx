@@ -22,7 +22,7 @@ const ERRORS: Record<FailReason, string> = {
 type Props = {
   eventId: string
   joinCode: string
-  onJoined: (guest: Guest) => void
+  onJoined: (guest: Guest, uid: string) => void
 }
 
 /** 1. Registrera: namn, Vanlig/Alkoholfri, Gå med. */
@@ -52,7 +52,7 @@ export function Register({ eventId, joinCode, onJoined }: Props) {
       const user = await signInGuest()
       const result = await joinEvent(eventId, user.uid, { name: trimmed, class: guestClass, joinCode })
       if (result.ok) {
-        onJoined(result.guest)
+        onJoined(result.guest, user.uid)
         return
       }
       setError(ERRORS[result.reason])

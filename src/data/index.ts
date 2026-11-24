@@ -16,3 +16,5 @@ export {
   type AdminEventResult,
 } from './admin'
 export { getAssets, removeAsset, saveAsset, subscribeAssets } from './assets'
+export { subscribeOwnGuest } from './guests'
+export { subscribeOwnRatings } from './ratings'

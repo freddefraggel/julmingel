@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { getOwnGuest, onUserChanged } from '../data'
 import type { Guest } from '../types'
-import { GuestHome } from './GuestHome'
 import { readGuestLink } from './guestLink'
+import { GuestLive } from './GuestLive'
 import { GuestMessage } from './GuestMessage'
 import { Register } from './Register'
 import './guest.css'
 
-type State = { kind: 'loading' } | { kind: 'register' } | { kind: 'home'; guest: Guest }
+type State = { kind: 'loading' } | { kind: 'register' } | { kind: 'home'; uid: string; guest: Guest }
 
 /**
  * Gästens ingång. En gäst som redan har gått med (samma uid, sparat av Firebase
@@ -35,7 +35,7 @@ export default function GuestApp() {
       }
       getOwnGuest(eventId, user.uid)
         .then((guest) => {
-          if (active) setState(guest ? { kind: 'home', guest } : { kind: 'register' })
+          if (active) setState(guest ? { kind: 'home', uid: user.uid, guest } : { kind: 'register' })
         })
         .catch(() => {
           if (active) setState({ kind: 'register' })
@@ -54,7 +54,7 @@ export default function GuestApp() {
     return <GuestMessage title="Ett ögonblick…" text="Vi letar upp din plats vid glöggen." busy />
   }
   if (state.kind === 'home') {
-    return <GuestHome guest={state.guest} />
+    return <GuestLive eventId={link.eventId} uid={state.uid} guest={state.guest} />
   }
   if (!link.joinCode) {
     return <GuestMessage title="Välkommen!" text="Länken saknar kvällens kod. Skanna QR-koden hos värden igen." />
@@ -63,7 +63,7 @@ export default function GuestApp() {
     <Register
       eventId={link.eventId}
       joinCode={link.joinCode}
-      onJoined={(guest) => setState({ kind: 'home', guest })}
+      onJoined={(guest, uid) => setState({ kind: 'home', uid, guest })}
     />
   )
 }
