@@ -25,10 +25,19 @@ Vite + React + TypeScript, Firebase Realtime Database + Auth (Spark), GitHub Pag
 
 ## Kommandon
 
-- `npm run dev`: Vite på http://127.0.0.1:5173/julmingel/ (kopplas mot Firebase Emulator Suite i #4)
+Kräver Node och Java 21 (för Firebase Emulator Suite).
+
+- `npm run dev`: startar Firebase-emulatorerna (Auth och Realtime Database), fyller dem med ett testevent och startar Vite på http://127.0.0.1:5173/julmingel/
+  - Testevent `demo` med koden `glogg`. Admin i emulatorn: `admin@julmingel.test` / `julmingel`
+  - Emulatorns översikt: http://127.0.0.1:4000/
   - `#/design` visar grundkomponenterna, bara i utvecklingsläge
-- `npm test`: Vitest (routing, kodstruktur; poängräkning och regeltester tillkommer i #18 och #23)
+  - `VITE_FIREBASE_EMULATOR=false` kör mot det riktiga projektet i stället
+- `npm test`: Vitest (routing, komponenter, kodstruktur; poängräkning tillkommer i #18)
+- `npm run test:rules`: databasreglerna testas mot emulatorn (`tests/rules/`)
 - `npm run build`: typkontroll (`tsc -b`) och Vite-bygge till `dist/`
+- `npm run deploy:rules`: `firebase deploy --only database` till projektet i `.firebaserc`
+
+Emulatorn kör projektet `demo-glogg-mingel`. Reglerna gäller bara standardinstansen `demo-glogg-mingel-default-rtdb`, så appen och testdatan använder den.
 
 ## Kräver Fredrik (kan inte göras från koden)
 
