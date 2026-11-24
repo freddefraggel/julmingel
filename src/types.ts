@@ -12,6 +12,13 @@ export type Choice = 'A' | 'B' | 'C' | 'D'
 /** Tidpunkt i millisekunder enligt serverns klocka (`ServerValue.TIMESTAMP`). */
 export type ServerTime = number
 
+/** När en fråga öppnades och hur länge den var öppen, i serverns tid. */
+export type QuestionTiming = {
+  /** `ServerValue.TIMESTAMP` */
+  openedAt: ServerTime
+  durationMs: number
+}
+
 /** Glöggens nummer i serveringsordningen, inom en klass. Nycklar i databasen är strängar: "1", "2", … */
 export type GloggNumber = string
 
@@ -65,6 +72,8 @@ export type EventSecret = {
   correct?: Record<string, Choice>
   /** Serveringsordningen: klass → nummer → gId. */
   numbers?: Partial<Record<GuestClass, Record<GloggNumber, string>>>
+  /** qId → när frågan öppnades. Skrivs i samma anrop som `live/quiz`, så att stjärnorna kan räknas i efterhand. */
+  quizTimes?: Record<string, QuestionTiming>
   /** Hela topplistan före avslöjandet. */
   leaderboard?: Record<string, LeaderboardEntry>
 }
@@ -76,10 +85,8 @@ export type TastingState = {
   next: number | null
 }
 
-export type LiveQuiz = {
+export type LiveQuiz = QuestionTiming & {
   qId: string
-  openedAt: ServerTime
-  durationMs: number
 }
 
 export type LiveState = {

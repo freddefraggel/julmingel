@@ -15,8 +15,27 @@
         "assets": {
           ".read": "data.parent().child('guests/' + auth.uid).exists()"
         },
+        "secret": {
+          "quizTimes": {
+            "$q": {
+              ".validate": "newData.hasChildren(['openedAt', 'durationMs'])",
+              "openedAt": {
+                ".validate": "newData.val() === now || newData.val() === data.val()"
+              },
+              "durationMs": {
+                ".validate": "newData.isNumber() && newData.val() > 0"
+              },
+              "$other": {
+                ".validate": false
+              }
+            }
+          }
+        },
         "live": {
-          ".read": "data.parent().child('guests/' + auth.uid).exists()"
+          ".read": "data.parent().child('guests/' + auth.uid).exists()",
+          "quiz": {
+            ".validate": "newData.child('openedAt').val() === newData.parent().parent().child('secret/quizTimes/' + newData.child('qId').val() + '/openedAt').val() && newData.child('durationMs').val() === newData.parent().parent().child('secret/quizTimes/' + newData.child('qId').val() + '/durationMs').val()"
+          }
         },
         "reveal": {
           ".read": "data.parent().child('guests/' + auth.uid).exists()"

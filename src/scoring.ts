@@ -10,15 +10,10 @@ import type {
   GuestClass,
   GuestRatings,
   LeaderboardEntry,
+  QuestionTiming,
 } from './types'
 
-/** När en fråga öppnades och hur länge den var öppen, i serverns tid. */
-export type QuestionTiming = {
-  openedAt: number
-  durationMs: number
-}
-
-/** qId → tidpunkt och längd för frågan. Admin-enheten sparar `live/quiz` för varje fråga den öppnar. */
+/** qId → när frågan öppnades och hur länge den var öppen, från `secret/quizTimes`. */
 export type QuizConfig = Record<string, QuestionTiming>
 
 /** En rad i topplistan, sorterad. */

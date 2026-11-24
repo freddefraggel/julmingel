@@ -77,6 +77,7 @@ Allt för en kväll ligger under `/events/{eventId}` och är uppdelat efter vem 
     joinCode                             ← kvällens lösenord, ligger i QR-koden
     correct/{qId}: "A"|"B"|"C"|"D"
     numbers/{class}/{number}: gId       ← serveringsordningen
+    quizTimes/{qId}: { openedAt, durationMs }   ← skrivs med live/quiz, för stjärnorna
     leaderboard                          ← hela topplistan före avslöjandet
   live/                                  ← admin skriver, alla läser
     phase: "registration"|"tasting"|"quiz"|"review"|"guess"|"reveal"|"done"
@@ -108,7 +109,7 @@ Admin-enheten är den enda som skriver till `live/`; alla mobiler prenumererar p
 
 **Fasbyten.** Varje knapp hos admin är en enda skrivning, t.ex. `live/phase = "quiz"` eller `live/tasting/vanlig/serving = 3`. Firebase skickar ändringen till alla anslutna klienter på under en sekund. Tappar en mobil nätet återansluter SDK:n själv och hämtar senaste läget.
 
-**Nästa fråga.** Admin skriver i ett anrop `live/quiz = { qId, openedAt: ServerValue.TIMESTAMP, durationMs }`. Starttiden sätts alltså av Firebase, inte av admin-enhetens klocka.
+**Nästa fråga.** Admin skriver i ett anrop `live/quiz = { qId, openedAt: ServerValue.TIMESTAMP, durationMs }` och samma tider till `secret/quizTimes/{qId}`. Starttiden sätts alltså av Firebase, inte av admin-enhetens klocka. `live/quiz` skrivs över av nästa fråga, så det är `secret/quizTimes` som stjärnorna räknas från. Reglerna nekar `live/quiz` om tiderna inte stämmer med `secret/quizTimes`.
 
 **Nedräkning på mobilen.** Mobilen läser `.info/serverTimeOffset` och räknar ned mot `openedAt + durationMs` i serverns tid. Glöggkoppen och sekunderna är bara visning; att ladda om sidan ändrar inte sluttiden.
 
@@ -125,7 +126,7 @@ kvar = (openedAt + durationMs − at) / durationMs
 | > 0,25 och ≤ 0,50 | 1 |
 | ≤ 0,25 | 0 |
 
-**Poäng och topplista.** 1 poäng per rätt svar. Admin-enheten räknar när rättningen börjar, eftersom den är den enda som kan läsa `secret/correct`, och skriver `results/leaderboard`. Sortering: poäng, sedan stjärnor, sedan namn. Lika poäng och lika stjärnor ger delad placering. Beräkningen är en ren funktion (`score(answers, correct, quizConfig)`) som enhetstestas.
+**Poäng och topplista.** 1 poäng per rätt svar. Admin-enheten räknar när rättningen börjar, eftersom den är den enda som kan läsa `secret/correct`, och skriver `results/leaderboard`. Sortering: poäng, sedan stjärnor, sedan namn. Lika poäng och lika stjärnor ger delad placering. Beräkningen är en ren funktion (`score(answers, correct, quizConfig, guests)`, där `quizConfig` är `secret/quizTimes`) som enhetstestas.
 
 **Avslöjandet.** `live/reveal/step` går 0 → 4. Vid steg 0 skriver admin bara plats 5 och nedåt till `results/leaderboard`; vid steg 1–4 läggs 4:an, 3:an, 2:an och vinnaren till, en rad per steg. Topp 4 finns alltså inte i databasen innan de avslöjas – inte ens i nätverkstrafiken – vilket uppfyller ”ingen hint i förväg”. Hela listan hålls i admin-enhetens minne och i `secret/leaderboard`.
 

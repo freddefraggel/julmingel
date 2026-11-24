@@ -6,15 +6,20 @@ import {
 } from '@firebase/rules-unit-testing'
 import { get, ref, serverTimestamp, set, update } from 'firebase/database'
 import { readFileSync } from 'node:fs'
-import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 const E = 'events/test'
 let env: RulesTestEnvironment
 
+/** Porten som emulators:exec startade databasemulatorn på, annars 9000 som i firebase.json. */
+function emulatorPort(): number {
+  return Number(process.env.FIREBASE_DATABASE_EMULATOR_HOST?.split(':').pop()) || 9000
+}
+
 beforeAll(async () => {
   env = await initializeTestEnvironment({
     projectId: 'demo-glogg-mingel',
-    database: { rules: readFileSync('database.rules.json', 'utf8'), host: '127.0.0.1', port: 9000 },
+    database: { rules: readFileSync('database.rules.json', 'utf8'), host: '127.0.0.1', port: emulatorPort() },
   })
 })
 
@@ -53,6 +58,16 @@ function join(uid: string, joinCode: string) {
     joinCode,
     joinedAt: serverTimestamp(),
   })
+}
+
+/** Läser utan regler, för att kontrollera vad som sparats. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- testdata
+async function read(path: string): Promise<any> {
+  let value: unknown
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    value = (await get(ref(ctx.database(), path))).val()
+  })
+  return value
 }
 
 async function setLive(live: object) {
@@ -131,6 +146,40 @@ describe('svar i quizet', () => {
 
   it('nekar ogiltigt svarsalternativ', async () => {
     await assertFails(answer('q1', 'E'))
+  })
+})
+
+describe('frågetider i secret/quizTimes', () => {
+  // Samma skrivning som openQuestion() i src/data/quiz.ts
+  const open = (uid: string, live: object, timing: object) =>
+    update(ref(db(uid), E), { 'live/quiz': live, 'secret/quizTimes/q2': timing })
+  const timing = () => ({ openedAt: serverTimestamp(), durationMs: 20_000 })
+
+  it('admin öppnar en fråga och sparar tiden i samma anrop', async () => {
+    await assertSucceeds(open('admin', { qId: 'q2', ...timing() }, timing()))
+    const saved = await read(E)
+    expect(saved.secret.quizTimes.q2).toEqual({ openedAt: saved.live.quiz.openedAt, durationMs: 20_000 })
+  })
+
+  it('nekar live/quiz utan matchande tid i secret/quizTimes', async () => {
+    await assertFails(set(ref(db('admin'), `${E}/live/quiz`), { qId: 'q2', ...timing() }))
+    await assertFails(open('admin', { qId: 'q2', openedAt: serverTimestamp(), durationMs: 30_000 }, timing()))
+  })
+
+  it('nekar starttid från klientens klocka', async () => {
+    const t = { openedAt: Date.now(), durationMs: 20_000 }
+    await assertFails(open('admin', { qId: 'q2', ...t }, t))
+  })
+
+  it('godkänner att admin skriver om secret/ med befintliga tider', async () => {
+    await assertSucceeds(open('admin', { qId: 'q2', ...timing() }, timing()))
+    const secret = await read(`${E}/secret`)
+    await assertSucceeds(set(ref(db('admin'), `${E}/secret`), secret))
+  })
+
+  it('gäst får varken läsa eller skriva tiderna', async () => {
+    await assertFails(get(ref(db('anna'), `${E}/secret/quizTimes`)))
+    await assertFails(open('anna', { qId: 'q2', ...timing() }, timing()))
   })
 })
 
