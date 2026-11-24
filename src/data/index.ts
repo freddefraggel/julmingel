@@ -17,6 +17,6 @@ export {
 } from './admin'
 export { getAssets, removeAsset, saveAsset, subscribeAssets } from './assets'
 export { subscribeOwnGuest } from './guests'
-export { subscribeOwnRatings } from './ratings'
+export { saveRatings, subscribeOwnRatings } from './ratings'
 export { loadPreparation, newConfigId, savePreparation, setAnswerImage, setGloggImage, type Preparation } from './prepare'
 export { setTasting, subscribeAllRatings, subscribeNumbers } from './tasting'
