@@ -1,0 +1,43 @@
+/* Designtoken från designcanvasen (docs/design.md). */
+:root {
+  /* Bakgrund och ytor */
+  --color-bg: #2b1015; /* vinröd */
+  --color-surface: #3d1a20; /* kort, fält */
+  --color-surface-2: #4a222a; /* chip, inre ytor */
+  --color-border: #5a2c34; /* ramar, tomma stjärnor */
+
+  /* Text */
+  --color-text: #f7ecdc;
+  --color-text-muted: #d9c3ae;
+  --color-text-subtle: #b89c88;
+  --color-text-faint: #7a4a50;
+
+  /* Accenter */
+  --color-gold: #e8b04b;
+  --color-gold-light: #f3c873;
+  --color-rose: #d98a7e;
+  --color-green: #8fbf9a;
+  --color-green-dark: #1f3a28;
+  --color-red: #c4454f;
+
+  /* Text på guldytor */
+  --color-on-gold: #2b1015;
+  --color-on-gold-muted: #4a222a;
+
+  /* Typsnitt */
+  --font-heading: 'Fraunces', Georgia, serif;
+  --font-body: 'Nunito', system-ui, sans-serif;
+
+  /* Rundning */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-pill: 999px;
+
+  /* Layout */
+  --page-gutter: 24px;
+  --page-max-mobile: 430px;
+  --page-max-admin: 1280px;
+}

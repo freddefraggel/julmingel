@@ -8,7 +8,7 @@ function sourceFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name)
     if (entry.isDirectory()) return sourceFiles(path)
-    return /\.(ts|tsx)$/.test(entry.name) ? [path] : []
+    return /\.(ts|tsx|css|html)$/.test(entry.name) ? [path] : []
   })
 }
 
@@ -20,7 +20,17 @@ describe('kodstruktur', () => {
       .map((file) => relative(srcDir, file).split(sep).join('/'))
       .filter((file) => !file.startsWith('data/'))
       .filter((file) => !file.endsWith('.test.ts') && !file.endsWith('.test.tsx'))
+      .filter((file) => /\.tsx?$/.test(file))
       .filter((file) => importsFirebase.test(readFileSync(join(srcDir, file), 'utf8')))
     expect(offenders).toEqual([])
+  })
+
+  it('laddar inga typsnitt utifrån', () => {
+    const files = [...sourceFiles(srcDir), join(srcDir, '..', 'index.html')]
+    const external = files
+      .filter((file) => !/\.test\.tsx?$/.test(file))
+      .filter((file) => /fonts\.(googleapis|gstatic)\.com|use\.typekit\.net/.test(readFileSync(file, 'utf8')))
+      .map((file) => relative(srcDir, file))
+    expect(external).toEqual([])
   })
 })
