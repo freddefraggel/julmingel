@@ -301,3 +301,143 @@
   display: flex;
   color: var(--color-text-subtle);
 }
+
+/* 3. Ranka glögg */
+.rate {
+  gap: 20px;
+}
+
+.rate__back {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.rate__back:hover {
+  color: var(--color-text);
+}
+
+.rate__pick {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rate__numbers {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap: 8px;
+}
+
+.rate__number {
+  height: 48px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.rate__number--rated {
+  border-color: var(--color-green);
+  color: var(--color-green);
+}
+
+.rate__number--current {
+  border-color: var(--color-text);
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+
+.rate h1 {
+  font-size: 38px;
+}
+
+.rate__criteria {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rate-criterion {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  min-width: 0;
+}
+
+.rate-criterion__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.rate-criterion__low {
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+  color: var(--color-rose);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.rate-criterion__values {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.rate-criterion__value {
+  height: 44px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.rate-criterion__value--on {
+  border-color: var(--color-gold);
+  background: var(--color-gold);
+  color: var(--color-on-gold);
+}
+
+.rate-criterion--low .rate-criterion__value--on {
+  border-color: var(--color-rose);
+  background: var(--color-rose);
+}
+
+.rate__spacer {
+  flex-grow: 1;
+}
+
+.rate__save {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rate__ok {
+  color: var(--color-green);
+  font-weight: 700;
+  text-align: center;
+}

@@ -1,31 +1,38 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getAssets, subscribeConfig, subscribeLive, subscribeOwnGuest, subscribeOwnRatings } from '../data'
 import type { EventConfig, Guest, GuestRatings, LiveState } from '../types'
 import { GuestAssets } from './assets'
 import { GuestHome, type HomeTarget } from './GuestHome'
 import { GuestMessage } from './GuestMessage'
+import { Rate } from './Rate'
 
 type Props = {
   eventId: string
   uid: string
   /** Gästens post från registreringen eller inloggningen, tills prenumerationen svarar. */
   guest: Guest
-  /** Öppnar en undersida från Hem. Saknas den gör korten ingenting än. */
-  onOpen?: (target: HomeTarget) => void
 }
+
+/** Undersidorna som finns hittills. Kvällens glögger (#14) och Gissa (#21) läggs till här. */
+const OPENABLE: readonly HomeTarget[] = ['ranka']
 
 /**
  * Gästens kväll efter registreringen. Prenumererar på `live/`, `config/` och
  * gästens egna noder, och renderar den fas som står i `live/phase`. Ingen
  * mobil styr sitt eget flöde, så en omladdad mobil hamnar alltid rätt.
+ *
+ * Ranka glögg öppnas från Hem, och av sig själv när värden serverar en ny
+ * glögg i gästens klass. Den stängs när provningen är slut.
  */
-export function GuestLive({ eventId, uid, guest: initialGuest, onOpen }: Props) {
+export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
   const [live, setLive] = useState<LiveState | null>(null)
   const [config, setConfig] = useState<EventConfig | null>(null)
   const [guest, setGuest] = useState<Guest | null>(initialGuest)
   const [ratings, setRatings] = useState<GuestRatings>({})
   const [assets, setAssets] = useState<Record<string, string>>({})
   const [lost, setLost] = useState(false)
+  const [view, setView] = useState<'home' | HomeTarget>('home')
+  const lastServing = useRef<number | null>(null)
 
   useEffect(() => {
     const onError = () => setLost(true)
@@ -51,15 +58,45 @@ export function GuestLive({ eventId, uid, guest: initialGuest, onOpen }: Props) 
     }
   }, [eventId])
 
+  const phase = live?.phase
+  const serving = guest ? (live?.tasting?.[guest.class]?.serving ?? null) : null
+
+  // Värden serverar en ny glögg: mobilen hoppar till Ranka glögg, även efter en omladdning.
+  useEffect(() => {
+    if (phase !== 'tasting' || serving === null || serving === lastServing.current) return
+    lastServing.current = serving
+    setView('ranka')
+  }, [phase, serving])
+
   if (!guest) {
     return <GuestMessage title="Du är inte med längre" text="Värden har tagit bort dig från kvällen. Fråga värden om du vill vara med igen." />
   }
   if (lost) {
     return <GuestMessage title="Tappade kontakten" text="Vi når inte kvällen just nu. Ladda om sidan, eller fråga värden." />
   }
+  const count = Object.values(config?.gloggs ?? {}).filter((g) => g.class === guest.class).length
   return (
     <GuestAssets.Provider value={assets}>
-      <GuestHome guest={guest} live={live} config={config} ratings={ratings} onOpen={onOpen} />
+      {view === 'ranka' && phase === 'tasting' ? (
+        <Rate
+          eventId={eventId}
+          uid={uid}
+          count={count}
+          criteria={config?.criteria}
+          ratings={ratings}
+          serving={serving}
+          onBack={() => setView('home')}
+        />
+      ) : (
+        <GuestHome
+          guest={guest}
+          live={live}
+          config={config}
+          ratings={ratings}
+          openable={OPENABLE}
+          onOpen={(target) => setView(target)}
+        />
+      )}
     </GuestAssets.Provider>
   )
 }

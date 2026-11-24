@@ -218,6 +218,13 @@ describe('betyg och gissningar', () => {
     await assertFails(set(ref(db('anna'), `${E}/ratings/anna/9/c1`), 3))
   })
 
+  it('sparar ett nummers betyg i ett anrop, som saveRatings(), men inte på okända kriterier', async () => {
+    await setLive({ phase: 'tasting' })
+    await assertSucceeds(update(ref(db('anna'), `${E}/ratings/anna/1`), { c1: 4 }))
+    await assertFails(update(ref(db('anna'), `${E}/ratings/anna/1`), { c1: 4, okänd: 3 }))
+    await assertFails(update(ref(db('anna'), `${E}/ratings/bertil/1`), { c1: 4 }))
+  })
+
   it('låsta gissningar kan inte ändras', async () => {
     await setLive({ phase: 'guess' })
     const guesses = ref(db('anna'), `${E}/guesses/anna`)

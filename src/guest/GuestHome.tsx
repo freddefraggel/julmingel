@@ -12,6 +12,8 @@ type Props = {
   config: EventConfig | null
   ratings: GuestRatings
   onOpen?: (target: HomeTarget) => void
+  /** Undersidorna som går att öppna. Standard: alla, när onOpen finns. */
+  openable?: readonly HomeTarget[]
 }
 
 const ORDER: Phase[] = ['registration', 'tasting', 'quiz', 'review', 'guess', 'reveal', 'done']
@@ -28,7 +30,9 @@ const NOW_TEXT: Record<Phase, string> = {
 }
 
 /** 2. Hem: Just nu, Ranka glögg, Musikquiz, Kvällens glögger, Gissa glöggen. Korten följer `live/phase`. */
-export function GuestHome({ guest, live, config, ratings, onOpen }: Props) {
+export function GuestHome({ guest, live, config, ratings, onOpen, openable }: Props) {
+  const opener = (target: HomeTarget) =>
+    onOpen && (!openable || openable.includes(target)) ? () => onOpen(target) : undefined
   const phase = live?.phase ?? 'registration'
   const at = ORDER.indexOf(phase)
   const before = (p: Phase) => at < ORDER.indexOf(p)
@@ -64,7 +68,7 @@ export function GuestHome({ guest, live, config, ratings, onOpen }: Props) {
           title="Ranka glögg"
           icon={<MugIcon />}
           active={phase === 'tasting'}
-          onOpen={onOpen && (() => onOpen('ranka'))}
+          onOpen={opener('ranka')}
           badge={phase === 'tasting' ? <ChevronIcon size={28} /> : <Chip tone="green">Klart</Chip>}
         >
           <span className="home-card__sub">{progress}</span>
@@ -85,7 +89,7 @@ export function GuestHome({ guest, live, config, ratings, onOpen }: Props) {
           title="Kvällens glögger"
           sub="Se vad du provar"
           icon={<ImageIcon />}
-          onOpen={onOpen && (() => onOpen('glogger'))}
+          onOpen={opener('glogger')}
         />
       )}
 
@@ -99,7 +103,7 @@ export function GuestHome({ guest, live, config, ratings, onOpen }: Props) {
           sub={phase === 'guess' ? 'Vilket nummer är vilken glögg?' : 'Gissningarna är låsta'}
           icon={<QuestionIcon />}
           accent={phase === 'guess'}
-          onOpen={onOpen && (() => onOpen('gissa'))}
+          onOpen={opener('gissa')}
         />
       )}
     </main>
