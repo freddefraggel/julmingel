@@ -1,5 +1,8 @@
 // Spotify Web API (PKCE) från admin-enheten, med reservläge (manuell spellista).
-// Inloggning och uppspelning från spiken i #1; reservläget byggs i #17.
+// All Spotify-logik ligger här. Vyerna anropar startSong()/replaySong() och visar
+// resultatet; i reservläget blir det en instruktion i stället för ett API-anrop.
+
+import type { Song } from './types'
 
 // Klient-ID för Spotify-appen (Development Mode). PKCE använder ingen client
 // secret, så ID:t är publikt och får ligga i koden.
@@ -14,6 +17,9 @@ const KEY_VERIFIER = 'spotify.verifier'
 const KEY_STATE = 'spotify.state'
 const KEY_RETURN = 'spotify.return'
 const KEY_TOKEN = 'spotify.token'
+// Enhet och reservläge gäller admin-enheten och ska överleva en omladdning mitt i kvällen.
+const KEY_DEVICE = 'spotify.device'
+const KEY_MODE = 'spotify.mode'
 
 type StoredToken = { accessToken: string; refreshToken: string; expiresAt: number }
 
@@ -162,17 +168,28 @@ export function logout(): void {
   sessionStorage.removeItem(KEY_TOKEN)
 }
 
+let refreshing: Promise<StoredToken> | null = null
+
 // Token-utgången gäller bara den här enheten, så här räcker klientens klocka.
 async function accessToken(): Promise<string> {
   const token = storedToken()
   if (!token) throw new SpotifyError('Inte inloggad mot Spotify.', 401)
   if (Date.now() < token.expiresAt) return token.accessToken
-  const fresh = await requestToken({
+  // Flera anrop samtidigt ska dela på en förnyelse; Spotify kan ogiltigförklara den gamla refresh-token.
+  refreshing ??= requestToken({
     grant_type: 'refresh_token',
     refresh_token: token.refreshToken,
     client_id: SPOTIFY_CLIENT_ID,
   })
-  return fresh.accessToken
+    .catch((e: unknown) => {
+      // Fungerar inte refresh-token längre måste admin logga in igen.
+      if (e instanceof SpotifyError && e.status >= 400 && e.status < 500) logout()
+      throw e
+    })
+    .finally(() => {
+      refreshing = null
+    })
+  return (await refreshing).accessToken
 }
 
 // --- Web API --------------------------------------------------------------
@@ -206,4 +223,102 @@ export async function play(deviceId: string, spotifyUri: string, positionMs: num
 
 export async function pause(deviceId: string): Promise<void> {
   await api(`/me/player/pause?device_id=${encodeURIComponent(deviceId)}`, { method: 'PUT' })
+}
+
+// --- Enhet och reservläge -------------------------------------------------
+
+/** `spotify`: appen startar låtarna. `manual`: admin startar dem för hand från en färdig spellista. */
+export type PlaybackMode = 'spotify' | 'manual'
+
+export function getPlaybackMode(): PlaybackMode {
+  return localStorage.getItem(KEY_MODE) === 'manual' ? 'manual' : 'spotify'
+}
+
+export function setPlaybackMode(mode: PlaybackMode): void {
+  localStorage.setItem(KEY_MODE, mode)
+}
+
+/** Enheten som valts på Förbered kvällen, t.ex. ”MacBook” eller ”Vardagsrum”. */
+export function getDeviceId(): string | null {
+  return localStorage.getItem(KEY_DEVICE)
+}
+
+export function setDeviceId(deviceId: string | null): void {
+  if (deviceId) localStorage.setItem(KEY_DEVICE, deviceId)
+  else localStorage.removeItem(KEY_DEVICE)
+}
+
+// --- Låtar i quizet ---------------------------------------------------------
+
+/** En låt i quizet, med sitt nummer i spelordningen (1, 2, …). */
+export type SongCue = Pick<Song, 'spotifyUri' | 'startMs' | 'title' | 'artist'> & {
+  songId: string
+  number: number
+}
+
+/** Låtarna i spelordningen (`order`), numrerade från 1. Samma ordning som den manuella spellistan. */
+export function songCues(songs: Record<string, Song> | undefined): SongCue[] {
+  return Object.entries(songs ?? {})
+    .sort(([idA, a], [idB, b]) => a.order - b.order || idA.localeCompare(idB))
+    .map(([songId, song], index) => ({
+      songId,
+      number: index + 1,
+      spotifyUri: song.spotifyUri,
+      startMs: song.startMs,
+      title: song.title,
+      artist: song.artist,
+    }))
+}
+
+/** 45000 → ”0:45”, 65000 → ”1:05”. */
+export function formatPosition(ms: number): string {
+  const seconds = Math.max(0, Math.floor(ms / 1000))
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
+}
+
+/** ”Last Christmas – Wham!”, ”Last Christmas” eller ”Låt 2”. */
+export function songLabel(cue: SongCue): string {
+  if (!cue.title) return `Låt ${cue.number}`
+  return cue.artist ? `${cue.title} – ${cue.artist}` : cue.title
+}
+
+/** Instruktionen i reservläget: ”Starta låt 2 – Last Christmas från 0:45”. */
+export function manualInstruction(cue: SongCue): string {
+  const title = cue.title ? ` – ${cue.title}` : ''
+  return `Starta låt ${cue.number}${title} från ${formatPosition(cue.startMs)}`
+}
+
+export type StartResult =
+  /** Spotify spelar låten. */
+  | { kind: 'played'; cue: SongCue }
+  /** Admin startar låten för hand. `reason` är satt om appen försökte spela men inte kunde. */
+  | { kind: 'manual'; cue: SongCue; instruction: string; reason?: string }
+
+/**
+ * Startar en låt från `startMs`. Anropas när första frågan på en ny låt öppnas.
+ * I reservläget, eller om uppspelningen inte går, blir resultatet en instruktion som
+ * kontrollpanelen visar. Kastar aldrig: quizet ska kunna fortsätta oavsett Spotify.
+ */
+export async function startSong(cue: SongCue): Promise<StartResult> {
+  const manual = (reason?: string): StartResult => ({ kind: 'manual', cue, instruction: manualInstruction(cue), reason })
+  if (getPlaybackMode() === 'manual') return manual()
+  if (!isLoggedIn()) return manual('Inte inloggad mot Spotify.')
+  const deviceId = getDeviceId()
+  if (!deviceId) return manual('Ingen Spotify-enhet vald.')
+  try {
+    await play(deviceId, cue.spotifyUri, cue.startMs)
+    return { kind: 'played', cue }
+  } catch (e) {
+    return manual(spotifyErrorText(e))
+  }
+}
+
+/** ”Spela låten igen” i rättningsläget: samma anrop som när låten startade. */
+export const replaySong = startSong
+
+function spotifyErrorText(e: unknown): string {
+  if (!(e instanceof Error)) return String(e)
+  if (e instanceof SpotifyError && e.status === 404) return `Spotify hittar ingen aktiv enhet: ${e.message}`
+  if (e instanceof SpotifyError && e.status === 403) return `Spotify tillåter inte uppspelningen: ${e.message}`
+  return e.message
 }

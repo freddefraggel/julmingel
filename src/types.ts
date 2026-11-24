@@ -35,6 +35,9 @@ export type Song = {
   order: number
   /** `spotify:track:<id>` */
   spotifyUri: string
+  /** Visas i kontrollpanelen och i reservläget (”Starta låt 2 – Last Christmas från 0:45”). */
+  title?: string
+  artist?: string
   startMs: number
   secondsPerQuestion: number
 }
