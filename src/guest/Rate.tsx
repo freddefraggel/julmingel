@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { saveRatings } from '../data'
 import type { Criterion, GuestRatings, Rating } from '../types'
 import { Garland } from '../ui'
+import { BackButton } from './BackButton'
 
 type Props = {
   eventId: string
@@ -76,12 +77,7 @@ export function Rate({ eventId, uid, count, criteria, ratings, serving, onBack }
   return (
     <main className="page guest-page rate">
       <Garland />
-      <button type="button" className="rate__back" onClick={onBack}>
-        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M15 6l-6 6 6 6" />
-        </svg>
-        Tillbaka
-      </button>
+      <BackButton onClick={onBack} />
 
       <section className="rate__pick" aria-label="Välj glögg">
         <span className="eyebrow">Välj glögg</span>
