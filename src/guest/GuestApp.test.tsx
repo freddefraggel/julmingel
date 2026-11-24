@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SignedInUser } from '../data'
@@ -83,7 +83,10 @@ describe('återvändande gäst', () => {
     renderAt('/?e=demo&k=glogg')
     expect(await screen.findByRole('heading', { name: 'Hej Anna!' })).toBeInTheDocument()
     expect(mocked.getOwnGuest).toHaveBeenCalledWith('demo', 'u1')
-    expect(mocked.subscribeOwnRatings).toHaveBeenCalledWith('demo', 'u1', expect.any(Function), expect.any(Function))
+    // Prenumerationerna startas i en effekt efter att Hem har ritats; vänta in den.
+    await waitFor(() =>
+      expect(mocked.subscribeOwnRatings).toHaveBeenCalledWith('demo', 'u1', expect.any(Function), expect.any(Function)),
+    )
   })
 
   it('hittar tillbaka till kvällen utan länk', async () => {
@@ -117,7 +120,9 @@ describe('registrering', () => {
 
     expect(await screen.findByRole('heading', { name: 'Hej Anna!' })).toBeInTheDocument()
     expect(mocked.joinEvent).toHaveBeenCalledWith('demo', 'u1', { name: 'Anna', class: 'alkfri', joinCode: 'glogg' })
-    expect(mocked.subscribeOwnGuest).toHaveBeenCalledWith('demo', 'u1', expect.any(Function), expect.any(Function))
+    await waitFor(() =>
+      expect(mocked.subscribeOwnGuest).toHaveBeenCalledWith('demo', 'u1', expect.any(Function), expect.any(Function)),
+    )
     expect(mocked.getAssets).toHaveBeenCalledTimes(1)
   })
 
