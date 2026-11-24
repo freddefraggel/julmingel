@@ -73,6 +73,27 @@ describe('registrering', () => {
     await assertFails(join('bertil', 'hemlig'))
   })
 
+  it('inloggad användare får läsa om registreringen är öppen, men inte resten av config', async () => {
+    await assertSucceeds(get(ref(db('bertil'), `${E}/config/joinOpen`)))
+    await assertFails(get(ref(db('bertil'), `${E}/config`)))
+    await assertFails(get(ref(db(), `${E}/config/joinOpen`)))
+  })
+
+  it('gäst får läsa sin egen post', async () => {
+    await assertSucceeds(get(ref(db('anna'), `${E}/guests/anna`)))
+  })
+
+  it('gäst kan inte registrera sig två gånger', async () => {
+    await assertSucceeds(join('bertil', 'hemlig'))
+    await assertFails(join('bertil', 'hemlig'))
+  })
+
+  it('nekar för långt namn', async () => {
+    await assertFails(
+      set(ref(db('bertil'), `${E}/guests/bertil`), { name: 'x'.repeat(31), class: 'vanlig', joinCode: 'hemlig', joinedAt: serverTimestamp() }),
+    )
+  })
+
   it('nekar att registrera någon annan', async () => {
     await assertFails(
       set(ref(db('bertil'), `${E}/guests/cecilia`), { name: 'C', class: 'vanlig', joinCode: 'hemlig', joinedAt: serverTimestamp() }),
