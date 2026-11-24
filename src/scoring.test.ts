@@ -131,8 +131,8 @@ describe('score', () => {
   it('toLeaderboard ger formen för results/leaderboard', () => {
     const rows = score({ q1: { a: ans('A', 1) } }, correct, quiz, { a: { name: 'Anna' }, b: { name: 'Bo' } })
     expect(toLeaderboard(rows)).toEqual({
-      a: { points: 1, stars: 3, rank: 1 },
-      b: { points: 0, stars: 0, rank: 2 },
+      a: { points: 1, stars: 3, rank: 1, name: 'Anna' },
+      b: { points: 0, stars: 0, rank: 2, name: 'Bo' },
     })
   })
 })

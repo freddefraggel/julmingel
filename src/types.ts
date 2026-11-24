@@ -144,6 +144,8 @@ export type LeaderboardEntry = {
   points: number
   stars: number
   rank: number
+  /** Gästens namn, så att mobilerna kan visa topplistan utan att läsa guests/. */
+  name: string
 }
 
 export type GloggOfEvening = {

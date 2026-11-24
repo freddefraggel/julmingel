@@ -1143,3 +1143,142 @@ button.guess-row {
   font-weight: 800;
   line-height: 1.25;
 }
+
+/* 7b–7c. Topplista */
+.leaderboard__head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.leaderboard__head h1 {
+  font-size: 38px;
+}
+
+.candy {
+  width: 64px;
+  height: 6px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(135deg, var(--color-text) 0 6px, var(--color-red) 6px 12px);
+}
+
+.leaderboard__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.leaderboard__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 8px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 2px solid var(--color-surface);
+}
+
+.leaderboard__row--top {
+  min-height: 60px;
+  border-color: var(--color-gold);
+}
+
+.leaderboard__row--winner {
+  background: var(--color-gold);
+  color: var(--color-on-gold);
+}
+
+.leaderboard__row--hidden {
+  border: 2px dashed var(--color-border);
+  background: transparent;
+  color: var(--color-text-subtle);
+}
+
+.leaderboard__row--me:not(.leaderboard__row--winner) {
+  border-color: var(--color-rose);
+}
+
+.leaderboard__pos {
+  width: 28px;
+  flex-shrink: 0;
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.leaderboard__name {
+  flex-grow: 1;
+  min-width: 0;
+  font-size: 17px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.leaderboard__you {
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.leaderboard__points {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.leaderboard__glogg {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.leaderboard__glogg-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.leaderboard__glogg-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-pill);
+  background: var(--color-gold);
+  color: var(--color-on-gold);
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.leaderboard__glogg-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.leaderboard__glogg-class {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-subtle);
+}
+
+.leaderboard__guess {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}

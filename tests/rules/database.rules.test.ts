@@ -316,6 +316,27 @@ describe('bilder', () => {
   })
 })
 
+describe('topplistan', () => {
+  const full = { a: { points: 3, stars: 6, rank: 1, name: 'Anna' }, e: { points: 0, stars: 0, rank: 5, name: 'Eva' } }
+
+  it('hela listan i secret/leaderboard går inte att läsa för gäster, results/ går', async () => {
+    await assertSucceeds(
+      update(ref(db('admin'), E), {
+        'secret/leaderboard': full,
+        'results/leaderboard': { e: full.e },
+        'live/reveal': { step: 0 },
+      }),
+    )
+    await assertFails(get(ref(db('anna'), `${E}/secret/leaderboard`)))
+    await assertSucceeds(get(ref(db('anna'), `${E}/results/leaderboard`)))
+  })
+
+  it('gäst får inte skriva topplistan eller Kvällens glögg', async () => {
+    await assertFails(set(ref(db('anna'), `${E}/results/leaderboard/anna`), full.a))
+    await assertFails(set(ref(db('anna'), `${E}/results/gloggOfEvening/vanlig`), { gId: 'g1', avg: 5 }))
+  })
+})
+
 describe('rättningen', () => {
   // Samma skrivning som showReview() i src/data/quiz.ts
   const review = { 'live/review': { qId: 'q1' }, 'reveal/correct/q1': 'B' }

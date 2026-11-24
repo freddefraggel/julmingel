@@ -20,6 +20,7 @@ import { PHASES, phaseIndex } from './phases'
 import { PhaseList } from './PhaseList'
 import { QrDialog } from './QrDialog'
 import { QuizPanel } from './QuizPanel'
+import { RevealPanel } from './RevealPanel'
 import { ReviewPanel } from './ReviewPanel'
 import { TastingPanel } from './TastingPanel'
 
@@ -148,6 +149,10 @@ export function ControlPanel({ eventId, eventName, joinCode, onChangeEvent }: Pr
 
           {live?.phase === 'guess' && (
             <GuessPanel eventId={eventId} config={config} guests={guests} disabled={busy} save={save} />
+          )}
+
+          {live?.phase === 'reveal' && (
+            <RevealPanel eventId={eventId} config={config} live={live} guests={guests} disabled={busy} save={save} />
           )}
 
           {config && (
