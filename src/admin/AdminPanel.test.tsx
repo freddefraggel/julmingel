@@ -44,7 +44,7 @@ function signedIn(user: SignedInUser | null) {
   })
 }
 
-function eventData(live: LiveState, config: Partial<EventConfig> = {}) {
+function eventData(live: LiveState | null, config: Partial<EventConfig> = {}) {
   mocked.openAdminEvent.mockResolvedValue({ ok: true, name: 'Glöggmingel (test)', joinCode: 'glogg' })
   mocked.subscribeLive.mockImplementation((_e, callback) => {
     callback(live)
@@ -147,7 +147,7 @@ describe('välj kväll', () => {
 })
 
 describe('kontrollpanelen', () => {
-  async function openPanel(live: LiveState = { phase: 'tasting', nowText: 'Glögg 1 serveras' }, config?: Partial<EventConfig>) {
+  async function openPanel(live: LiveState | null = { phase: 'tasting', nowText: 'Glögg 1 serveras' }, config?: Partial<EventConfig>) {
     signedIn(admin)
     eventData(live, config)
     renderAt('/admin?e=demo')
@@ -156,6 +156,16 @@ describe('kontrollpanelen', () => {
     await screen.findByText(/^Registreringen är /)
     return screen.getByRole('navigation', { name: 'Kvällens flöde' })
   }
+
+  it('en ny kväll utan live/ går att starta', async () => {
+    mocked.setPhase.mockResolvedValue()
+    await openPanel(null)
+    expect(screen.getByRole('heading', { name: 'Kvällen har inte börjat' })).toBeInTheDocument()
+    const start = screen.getByRole('button', { name: 'Nästa: Registrering' })
+    expect(start).toBeEnabled()
+    fireEvent.click(start)
+    await waitFor(() => expect(mocked.setPhase).toHaveBeenCalledWith('demo', 'registration'))
+  })
 
   it('visar aktuell fas och byter fas med en skrivning', async () => {
     const flow = await openPanel()
