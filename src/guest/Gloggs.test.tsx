@@ -82,7 +82,7 @@ describe('Kvällens glögger från Hem', () => {
   it('öppnas från Hem och Tillbaka går till Hem', () => {
     render(<GuestLive eventId="demo" uid="u1" guest={anna} />)
     act(() => pushLive({ stage: 'evening' }))
-    fireEvent.click(screen.getByRole('button', { name: /Kvällens glögger/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Se kvällens glögger' }))
     expect(screen.getByRole('heading', { name: 'Kvällens glögger' })).toBeInTheDocument()
     expect(screen.getAllByRole('listitem')).toHaveLength(3)
     fireEvent.click(screen.getByRole('button', { name: 'Tillbaka' }))

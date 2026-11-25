@@ -1,33 +1,5 @@
 // Hjälpfunktioner för live/: kvällens tre lägen (#55). Rena funktioner utan Firebase.
-//
-// phaseOf är en brygga för gästens vyer, som fortfarande tänker i en gemensam
-// fas; den försvinner när gästsidan byggs om (#58, #59).
 import type { LiveState, QuestionTiming, Stage, WrapupStep } from './types'
-
-/** Den gamla fasen, härledd från live/. */
-export type Phase = 'registration' | 'tasting' | 'quiz' | 'review' | 'guess' | 'reveal' | 'done'
-
-/**
- * Fasen som gästens vyer visar. Under kvällen räknas quizet som aktivt när en
- * låt spelar eller en fråga visas eller har stängts; annars är det provningen.
- * undefined när live/ saknas.
- */
-export function phaseOf(live: LiveState | null | undefined): Phase | undefined {
-  switch (live?.stage) {
-    case 'lobby':
-      return 'registration'
-    case 'evening': {
-      const state = live.quiz?.state
-      return state === 'playing' || state === 'open' || state === 'closed' ? 'quiz' : 'tasting'
-    }
-    case 'wrapup':
-      return live.wrapup?.step ?? 'review'
-    case 'done':
-      return 'done'
-    default:
-      return undefined
-  }
-}
 
 /** Kvällens tre lägen i ordning, som knapparna överst i kontrollpanelen. */
 export const STAGES: readonly { stage: Exclude<Stage, 'done'>; label: string }[] = [

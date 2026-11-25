@@ -10,7 +10,6 @@ import { Leaderboard } from './Leaderboard'
 import { GuestMessage } from './GuestMessage'
 import { useQuizLayer } from './QuizLayer'
 import { Rate } from './Rate'
-import { phaseOf } from '../live'
 import { Review } from './Review'
 
 type Props = {
@@ -19,9 +18,6 @@ type Props = {
   /** Gästens post från registreringen eller inloggningen, tills prenumerationen svarar. */
   guest: Guest
 }
-
-/** Undersidorna som går att öppna från Hem. */
-const OPENABLE: readonly HomeTarget[] = ['ranka', 'glogger', 'gissa']
 
 /**
  * Gästens kväll efter registreringen. Prenumererar på `live/`, `config/` och
@@ -42,7 +38,7 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
   const [lost, setLost] = useState(false)
   const [view, setView] = useState<'home' | 'topplista' | HomeTarget>('home')
   const lastServing = useRef<number | null>(null)
-  const lastPhase = useRef<string | undefined>(undefined)
+  const lastStep = useRef<string | undefined>(undefined)
 
   useEffect(() => {
     const onError = () => setLost(true)
@@ -68,7 +64,9 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
     }
   }, [eventId])
 
-  const phase = phaseOf(live)
+  const stage = live?.stage
+  // Steget i rättning och avslöjande, bara när kvällen är där.
+  const step = stage === 'wrapup' ? (live?.wrapup?.step ?? 'review') : undefined
   const serving = guest ? (live?.tasting?.[guest.class]?.serving ?? null) : null
   // Rankningen är öppen i gästens klass; samma villkor som databasreglerna.
   const tastingOpen = guest ? live?.tasting?.[guest.class]?.open === true : false
@@ -82,10 +80,10 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
 
   // Gissningen öppnar: mobilen går dit av sig själv, en gång.
   useEffect(() => {
-    if (phase === lastPhase.current) return
-    lastPhase.current = phase
-    if (phase === 'guess') setView('gissa')
-  }, [phase])
+    if (step === lastStep.current) return
+    lastStep.current = step
+    if (step === 'guess') setView('gissa')
+  }, [step])
 
   // Quizfrågan läggs som ett lager över sidan gästen står på; sidan under ligger kvar.
   const quiz = useQuizLayer({ eventId, uid, config, live: live ?? null })
@@ -100,7 +98,7 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
   return (
     <GuestAssets.Provider value={assets}>
       <div className="guest-base" aria-hidden={quiz.open || undefined}>
-      {phase === 'done' ? (
+      {stage === 'done' ? (
         view === 'topplista' ? (
           <Leaderboard
             eventId={eventId}
@@ -114,7 +112,7 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
         ) : (
           <HomeAfter eventId={eventId} uid={uid} guest={guest} onOpenLeaderboard={() => setView('topplista')} />
         )
-      ) : phase === 'reveal' ? (
+      ) : step === 'reveal' ? (
         <Leaderboard
           eventId={eventId}
           uid={uid}
@@ -123,7 +121,7 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
           step={live?.wrapup?.revealStep ?? null}
           final={false}
         />
-      ) : phase === 'review' && live ? (
+      ) : step === 'review' && live ? (
         <Review eventId={eventId} uid={uid} config={config} live={live} />
       ) : view === 'ranka' ? (
         <Rate
@@ -137,7 +135,7 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
           onBack={() => setView('home')}
         />
       ) : view === 'gissa' ? (
-        <Guess eventId={eventId} uid={uid} config={config} guestClass={guest.class} phase={phase} onBack={() => setView('home')} />
+        <Guess eventId={eventId} uid={uid} config={config} guestClass={guest.class} guessOpen={step === 'guess'} onBack={() => setView('home')} />
       ) : view === 'glogger' ? (
         <Gloggs gloggs={config?.gloggs} guestClass={guest.class} onBack={() => setView('home')} />
       ) : (
@@ -146,7 +144,6 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
           live={live}
           config={config}
           ratings={ratings}
-          openable={OPENABLE}
           onOpen={(target) => setView(target)}
         />
       )}

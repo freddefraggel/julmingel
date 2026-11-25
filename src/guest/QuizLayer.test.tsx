@@ -14,7 +14,7 @@ vi.mock('../data', () => ({
   subscribeServerTimeOffset: vi.fn(),
   subscribeOwnAnswer: vi.fn(() => () => {}),
   sendAnswer: vi.fn(),
-  saveRatings: vi.fn(),
+  saveRatings: vi.fn(() => Promise.resolve()),
 }))
 
 const mocked = vi.mocked(data)
@@ -116,7 +116,7 @@ describe('Quizfrågan som lager', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Till provningen' }))
     expect(screen.getByRole('heading', { name: 'Glögg nr 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Julkänsla 4' })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('button', { name: 'Spara betyg' })).toBeEnabled()
+    expect(mocked.saveRatings).toHaveBeenCalledWith('demo', 'u1', '1', { c1: 4 })
   })
 
   it('Tiden är ute visas några sekunder, sedan är gästen tillbaka där hen var', () => {

@@ -48,15 +48,15 @@ describe('Ranka glögg', () => {
     expect(legends).toEqual(['Julkänsla', 'Sliskighetlågt = bra'])
   })
 
-  it('sparar betygen för numret i ett anrop och kvitterar', async () => {
+  it('sparar varje tryck direkt och bekräftar diskret, utan Spara-knapp', async () => {
     renderRate()
-    expect(screen.getByRole('button', { name: 'Spara betyg' })).toBeDisabled()
+    expect(screen.queryByRole('button', { name: /Spara/ })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Julkänsla 4' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Sliskighet 2' }))
     expect(screen.getByRole('button', { name: 'Julkänsla 4' })).toHaveAttribute('aria-pressed', 'true')
-    fireEvent.click(screen.getByRole('button', { name: 'Spara betyg' }))
-    expect(await screen.findByRole('status')).toHaveTextContent('Sparat! Dina betyg på glögg 2 är med.')
-    expect(mocked.saveRatings).toHaveBeenCalledWith('demo', 'u1', '2', { c1: 4, c2: 2 })
+    expect(mocked.saveRatings).toHaveBeenLastCalledWith('demo', 'u1', '2', { c1: 4 })
+    fireEvent.click(screen.getByRole('button', { name: 'Sliskighet 2' }))
+    expect(mocked.saveRatings).toHaveBeenLastCalledWith('demo', 'u1', '2', { c2: 2 })
+    expect(await screen.findByRole('status')).toHaveTextContent('Sparat ✓')
   })
 
   it('visar sparade betyg och rankade nummer', () => {
@@ -64,9 +64,7 @@ describe('Ranka glögg', () => {
     renderRate({ ratings })
     expect(screen.getByRole('button', { name: 'Glögg 1, rankad' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Julkänsla 3' })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('button', { name: 'Sparat – ändra och spara igen' })).toBeDisabled()
     fireEvent.click(screen.getByRole('button', { name: 'Julkänsla 5' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Uppdatera betyg' }))
     expect(mocked.saveRatings).toHaveBeenCalledWith('demo', 'u1', '2', { c1: 5 })
   })
 
@@ -91,8 +89,9 @@ describe('Ranka glögg', () => {
     mocked.saveRatings.mockRejectedValue(new Error('permission_denied'))
     renderRate()
     fireEvent.click(screen.getByRole('button', { name: 'Julkänsla 4' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Spara betyg' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Kunde inte spara')
+    // Trycket som inte kom fram visas inte som sparat.
+    expect(screen.getByRole('button', { name: 'Julkänsla 4' })).toHaveAttribute('aria-pressed', 'false')
   })
 
   it('Tillbaka går till Hem', () => {

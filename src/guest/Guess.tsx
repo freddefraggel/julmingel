@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { saveGuess, subscribeOwnGuess, subscribeReveal } from '../data'
-import type { Phase } from '../live'
 import type { EventConfig, EventReveal, GloggNumber, Guess as GuessData, GuestClass } from '../types'
 import { Garland } from '../ui'
 import { useAsset } from './assets'
@@ -12,7 +11,8 @@ type Props = {
   uid: string
   config: EventConfig | null
   guestClass: GuestClass
-  phase: Phase | undefined
+  /** Gissningen är öppen (`live/wrapup/step == "guess"`). */
+  guessOpen: boolean
   onBack: () => void
 }
 
@@ -43,7 +43,7 @@ export function pick(map: NumberMap, number: GloggNumber, gId: string): NumberMa
 }
 
 /** 4. Gissa glöggen: nummer → glögg, Lås mina gissningar, och facit när värden avslöjar ordningen. */
-export function Guess({ eventId, uid, config, guestClass, phase, onBack }: Props) {
+export function Guess({ eventId, uid, config, guestClass, guessOpen, onBack }: Props) {
   const [saved, setSaved] = useState<GuessData | null | undefined>(undefined)
   const [map, setMap] = useState<NumberMap>({})
   const [reveal, setReveal] = useState<EventReveal>({})
@@ -64,7 +64,7 @@ export function Guess({ eventId, uid, config, guestClass, phase, onBack }: Props
   const numbers = gloggs.map((_, i) => String(i + 1))
   const revealed = reveal.numbers?.[guestClass] ? cleanMap(reveal.numbers[guestClass]) : null
   const locked = saved?.locked === true
-  const editable = phase === 'guess' && !locked && !revealed
+  const editable = guessOpen && !locked && !revealed
   const complete = numbers.every((n) => map[n])
   const nameOf = (gId: string | undefined) => gloggs.find((g) => g.gId === gId)?.name
 

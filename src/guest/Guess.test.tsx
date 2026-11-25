@@ -4,7 +4,6 @@ import * as data from '../data'
 import type { EventConfig, EventReveal, Guess as GuessData, Guest, LiveState } from '../types'
 import { cleanMap, Guess, guessScore, pick } from './Guess'
 import { GuestLive } from './GuestLive'
-import type { Phase } from '../live'
 
 vi.mock('../data', () => ({
   subscribeServerTimeOffset: vi.fn(() => () => {}),
@@ -35,8 +34,8 @@ const config: EventConfig = {
 let pushGuess: (guess: GuessData | null) => void
 let pushReveal: (reveal: EventReveal) => void
 
-function renderGuess(phase: Phase = 'guess') {
-  return render(<Guess eventId="demo" uid="u1" config={config} guestClass="vanlig" phase={phase} onBack={() => {}} />)
+function renderGuess(guessOpen = true) {
+  return render(<Guess eventId="demo" uid="u1" config={config} guestClass="vanlig" guessOpen={guessOpen} onBack={() => {}} />)
 }
 
 beforeEach(() => {
@@ -117,7 +116,7 @@ describe('Gissa glöggen', () => {
   })
 
   it('går inte att ändra utanför gissningsfasen', () => {
-    renderGuess('reveal')
+    renderGuess(false)
     expect(screen.getByText('Gissningen är stängd.')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Lås mina gissningar' })).not.toBeInTheDocument()
   })
@@ -158,7 +157,7 @@ describe('Gissa glöggen i kvällens flöde', () => {
     expect(screen.getByRole('heading', { name: 'Vilken glögg är vilken?' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Tillbaka' }))
     expect(screen.getByRole('heading', { name: 'Hej Anna!' })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /Gissa glöggen/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Gissa nu' }))
     expect(screen.getByRole('heading', { name: 'Vilken glögg är vilken?' })).toBeInTheDocument()
   })
 })
