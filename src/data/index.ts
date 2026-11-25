@@ -23,7 +23,6 @@ export {
   openAdminEvent,
   removeGuest,
   setJoinOpen,
-  setPhase,
   setStage,
   setWrapupStep,
   subscribeGuests,

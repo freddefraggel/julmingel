@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { setTasting, subscribeAllRatings, subscribeAssets, subscribeNumbers } from '../data'
+import { setTasting, setTastingOpen, subscribeAllRatings, subscribeAssets, subscribeNumbers } from '../data'
 import type { EventConfig, EventSecret, Guest, GuestClass, GuestRatings, LiveState, TastingState } from '../types'
-import { Button, Tabs } from '../ui'
+import { Button, Chip, Tabs } from '../ui'
 import { CLASS_LABEL, CLASSES } from './preparation'
 import {
   guestsInClass,
@@ -34,6 +34,7 @@ export function TastingPanel({ eventId, config, live, guests, disabled, save }: 
   const [numbers, setNumbers] = useState<NonNullable<EventSecret['numbers']> | null>(null)
   const [ratings, setRatings] = useState<Record<string, GuestRatings>>({})
   const [assets, setAssets] = useState<Record<string, string>>({})
+  const [showOrder, setShowOrder] = useState(false)
 
   useEffect(() => {
     const unsubscribers = [
@@ -70,10 +71,27 @@ export function TastingPanel({ eventId, config, live, guests, disabled, save }: 
     void save(() => setTasting(eventId, cls, { serving, next: number }))
   }
 
-  if (numbers === null) return <p className="muted">Hämtar serveringsordningen…</p>
+  const open = state?.open === true
+
+  const head = (
+    <div className="tasting__head">
+      <h2 className="control__column-title">Glöggprovning</h2>
+      <Chip tone={open ? 'green' : 'rose'}>{open ? 'Öppen' : 'Stängd'}</Chip>
+    </div>
+  )
+
+  if (numbers === null) {
+    return (
+      <div className="tasting">
+        {head}
+        <p className="muted">Hämtar serveringsordningen…</p>
+      </div>
+    )
+  }
 
   return (
     <div className="tasting">
+      {head}
       <Tabs
         label="Glöggprovning"
         value={cls}
@@ -147,6 +165,21 @@ export function TastingPanel({ eventId, config, live, guests, disabled, save }: 
             )}
           </div>
 
+          <div className="tasting__footer">
+            <button type="button" className="link-button" aria-expanded={showOrder} onClick={() => setShowOrder((v) => !v)}>
+              {showOrder ? 'Dölj serveringsordningen' : 'Visa hela serveringsordningen'}
+            </button>
+            <Button
+              variant="secondary"
+              size="small"
+              disabled={disabled}
+              onClick={() => void save(() => setTastingOpen(eventId, cls, !open))}
+            >
+              {open ? 'Stäng provningen' : 'Öppna provningen'}
+            </Button>
+          </div>
+
+          {showOrder && (
           <section className="tasting-order" aria-label="Serveringsordning">
             <span className="eyebrow">Serveringsordning</span>
             <ol className="tasting-order__list">
@@ -176,6 +209,7 @@ export function TastingPanel({ eventId, config, live, guests, disabled, save }: 
               glögg härnäst.
             </span>
           </section>
+          )}
         </div>
       )}
     </div>

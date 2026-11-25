@@ -173,6 +173,14 @@ describe('Tiden är ute', () => {
     expect(screen.queryByRole('button', { name: /1994/ })).not.toBeInTheDocument()
   })
 
+  it('Till provningen finns också när tiden är ute', () => {
+    const onLeave = vi.fn()
+    atServerTime(OPENED + 30_000)
+    render(<Quiz eventId="demo" uid="u1" config={config} live={live('q1')} onLeave={onLeave} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Till provningen' }))
+    expect(onLeave).toHaveBeenCalled()
+  })
+
   it('säger till när gästen inte hann svara, och visar inte förra frågans antal', () => {
     atServerTime(OPENED + 30_000)
     renderQuiz(live('q2', { answered: { qId: 'q1', count: 14, total: 18 } }))

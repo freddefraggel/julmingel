@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { phaseChanges, phaseOf, quizTiming } from './live'
+import { phaseOf, quizTiming, stageChanges, stageIndex, wrapupStepChanges } from './live'
 
 describe('phaseOf', () => {
   it('härleder den gamla fasen från de tre lägena', () => {
@@ -7,49 +7,46 @@ describe('phaseOf', () => {
     expect(phaseOf({ stage: 'lobby' })).toBe('registration')
     expect(phaseOf({ stage: 'evening' })).toBe('tasting')
     expect(phaseOf({ stage: 'evening', tasting: { vanlig: { open: true, serving: 1, next: 2 } } })).toBe('tasting')
-    expect(phaseOf({ stage: 'evening', quiz: { state: 'idle' } })).toBe('quiz')
+    expect(phaseOf({ stage: 'evening', quiz: { state: 'idle' } })).toBe('tasting')
+    expect(phaseOf({ stage: 'evening', quiz: { state: 'playing', qId: 'q1' } })).toBe('quiz')
+    expect(phaseOf({ stage: 'evening', quiz: { state: 'closed', qId: 'q1' } })).toBe('quiz')
     expect(phaseOf({ stage: 'wrapup', wrapup: { step: 'guess' } })).toBe('guess')
     expect(phaseOf({ stage: 'wrapup' })).toBe('review')
     expect(phaseOf({ stage: 'done' })).toBe('done')
   })
 })
 
-describe('phaseChanges', () => {
-  it('provningen öppnar båda klasserna och tar bort quizet', () => {
-    expect(phaseChanges('tasting')).toEqual({
-      'live/stage': 'evening',
-      'live/tasting/vanlig/open': true,
-      'live/tasting/alkfri/open': true,
-      'live/quiz': null,
-    })
+describe('stageChanges', () => {
+  it('innan start och kvällen pågår skriver bara läget', () => {
+    expect(stageChanges('lobby', null)).toEqual({ 'live/stage': 'lobby' })
+    expect(stageChanges('evening', { stage: 'lobby' })).toEqual({ 'live/stage': 'evening' })
+    expect(stageChanges('done', { stage: 'wrapup' })).toEqual({ 'live/stage': 'done' })
   })
 
-  it('quizet stänger provningen men behåller kvällens läge', () => {
-    expect(phaseChanges('quiz')).toEqual({
-      'live/stage': 'evening',
+  it('rättning och avslöjande stänger provningen och en låt eller fråga som pågår', () => {
+    expect(stageChanges('wrapup', { stage: 'evening', quiz: { state: 'open', qId: 'q1', openedAt: 1, durationMs: 2 } })).toEqual({
+      'live/stage': 'wrapup',
+      'live/wrapup/step': 'review',
       'live/tasting/vanlig/open': false,
       'live/tasting/alkfri/open': false,
-      'live/quiz/state': 'idle',
+      'live/quiz/state': 'closed',
     })
+    expect(stageChanges('wrapup', { stage: 'evening', quiz: { state: 'closed', qId: 'q1' } })).not.toHaveProperty('live/quiz/state')
   })
 
-  it('rättning, gissning och avslöjande är steg i avslutningen', () => {
-    expect(phaseChanges('guess')).toMatchObject({ 'live/stage': 'wrapup', 'live/wrapup/step': 'guess', 'live/quiz': null })
-    expect(phaseChanges('registration')).toMatchObject({ 'live/stage': 'lobby' })
-    expect(phaseChanges('done')).toMatchObject({ 'live/stage': 'done' })
+  it('behåller steget om admin går tillbaka till avslutningen', () => {
+    expect(stageChanges('wrapup', { stage: 'evening', wrapup: { step: 'reveal' } })).toMatchObject({ 'live/wrapup/step': 'reveal' })
+  })
+})
+
+describe('wrapupStepChanges och stageIndex', () => {
+  it('ett steg sätter också läget, och Klart sätter done', () => {
+    expect(wrapupStepChanges('guess')).toEqual({ 'live/stage': 'wrapup', 'live/wrapup/step': 'guess' })
+    expect(wrapupStepChanges('done')).toEqual({ 'live/stage': 'done' })
   })
 
-  it('varje fas i listan ger tillbaka samma fas', () => {
-    for (const phase of ['registration', 'tasting', 'quiz', 'review', 'guess', 'reveal', 'done'] as const) {
-      const live: Record<string, unknown> = {}
-      for (const [path, value] of Object.entries(phaseChanges(phase))) {
-        const keys = path.replace(/^live\//, '').split('/')
-        let node = live
-        keys.slice(0, -1).forEach((k) => (node = (node[k] ??= {}) as Record<string, unknown>))
-        if (value !== null) node[keys[keys.length - 1]!] = value
-      }
-      expect(phaseOf(live as never)).toBe(phase)
-    }
+  it('stageIndex: klart räknas som avslutningen', () => {
+    expect([undefined, 'lobby', 'evening', 'wrapup', 'done'].map((s) => stageIndex(s as never))).toEqual([-1, 0, 1, 2, 2])
   })
 })
 

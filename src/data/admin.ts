@@ -1,6 +1,6 @@
 import { get, ref, set, update } from 'firebase/database'
-import { phaseChanges, type Phase } from '../live'
-import type { Guest, GuestClass, Stage, WrapupStep } from '../types'
+import { stageChanges, wrapupStepChanges } from '../live'
+import type { Guest, GuestClass, LiveState, Stage, WrapupStep } from '../types'
 import { eventPath, subscribe, type OnError } from './db'
 import { firebase } from './firebase'
 import { isPermissionDenied } from './errors'
@@ -35,22 +35,17 @@ export function subscribeGuests(
   return subscribe<Record<string, Guest>>(eventPath(eventId, 'guests'), (guests) => callback(guests ?? {}), onError)
 }
 
-/** Kvällens läge: `live/stage`. */
-export function setStage(eventId: string, stage: Stage): Promise<void> {
-  return set(ref(firebase().db, eventPath(eventId, 'live', 'stage')), stage)
-}
-
-/** Steget i rättning och avslöjande: `live/wrapup/step`. */
-export function setWrapupStep(eventId: string, step: WrapupStep): Promise<void> {
-  return set(ref(firebase().db, eventPath(eventId, 'live', 'wrapup', 'step')), step)
-}
-
 /**
- * Den gamla faslistan i kontrollpanelen, översatt till de tre lägena i ett
- * anrop (se phaseChanges i src/live.ts). Ersätts när kontrollpanelen byggs om (#57).
+ * Kvällens läge, `live/stage`, i ett anrop. Rättning och avslöjande stänger
+ * också provningen och en låt eller fråga som pågår (se stageChanges i src/live.ts).
  */
-export function setPhase(eventId: string, phase: Phase): Promise<void> {
-  return update(ref(firebase().db, eventPath(eventId)), phaseChanges(phase))
+export function setStage(eventId: string, stage: Stage, live?: LiveState | null): Promise<void> {
+  return update(ref(firebase().db, eventPath(eventId)), stageChanges(stage, live))
+}
+
+/** Steget i rättning och avslöjande, `live/wrapup/step`, eller Klart (`live/stage = "done"`). */
+export function setWrapupStep(eventId: string, step: WrapupStep | 'done'): Promise<void> {
+  return update(ref(firebase().db, eventPath(eventId)), wrapupStepChanges(step))
 }
 
 /** Öppnar eller stänger registreringen (`config/joinOpen`). */

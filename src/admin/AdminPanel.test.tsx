@@ -17,7 +17,8 @@ vi.mock('../data', () => ({
   subscribeLive: vi.fn(),
   subscribeConfig: vi.fn(),
   subscribeGuests: vi.fn(),
-  setPhase: vi.fn(),
+  setStage: vi.fn(),
+  setWrapupStep: vi.fn(),
   setJoinOpen: vi.fn(),
   changeGuestClass: vi.fn(),
   removeGuest: vi.fn(),
@@ -25,6 +26,13 @@ vi.mock('../data', () => ({
   subscribeAllRatings: vi.fn(() => () => {}),
   subscribeAssets: vi.fn(() => () => {}),
   setTasting: vi.fn(),
+  setTastingOpen: vi.fn(),
+  subscribeCorrect: vi.fn(() => () => {}),
+  subscribeServerTimeOffset: vi.fn(() => () => {}),
+  subscribeAnswers: vi.fn(() => () => {}),
+  subscribeReveal: vi.fn(() => () => {}),
+  subscribeAllGuesses: vi.fn(() => () => {}),
+  showReview: vi.fn(),
 }))
 
 const mocked = vi.mocked(data)
@@ -72,7 +80,7 @@ function renderAt(url: string) {
 beforeEach(() => {
   vi.resetAllMocks()
   localStorage.clear()
-  for (const write of [mocked.setPhase, mocked.setJoinOpen, mocked.changeGuestClass, mocked.removeGuest]) {
+  for (const write of [mocked.setStage, mocked.setWrapupStep, mocked.setJoinOpen, mocked.changeGuestClass, mocked.removeGuest]) {
     write.mockResolvedValue(undefined)
   }
 })
@@ -125,7 +133,7 @@ describe('välj kväll', () => {
     renderAt('/admin')
     fireEvent.change(await screen.findByLabelText('Vilken kväll vill du styra?'), { target: { value: 'demo' } })
     fireEvent.click(screen.getByRole('button', { name: 'Öppna' }))
-    expect(await screen.findByRole('navigation', { name: 'Kvällens flöde' })).toBeInTheDocument()
+    expect(await screen.findByRole('group', { name: 'Kvällens läge' })).toBeInTheDocument()
     expect(mocked.openAdminEvent).toHaveBeenCalledWith('demo')
     expect(localStorage.getItem('julmingel.adminEvent')).toBe('demo')
   })
@@ -146,41 +154,60 @@ describe('välj kväll', () => {
 })
 
 describe('kontrollpanelen', () => {
-  async function openPanel(live: LiveState | null = { stage: 'evening' }, config?: Partial<EventConfig>) {
+  async function openPanel(live: LiveState | null = { stage: 'lobby' }, config?: Partial<EventConfig>) {
     signedIn(admin)
     eventData(live, config)
     renderAt('/admin?e=demo')
     // Vänta tills alla tre prenumerationerna har levererat.
-    await screen.findByText('3 gäster inne')
-    await screen.findByText(/^Registreringen är /)
-    return screen.getByRole('navigation', { name: 'Kvällens flöde' })
+    await screen.findByText('3 gäster')
+    return screen.getByRole('group', { name: 'Kvällens läge' })
   }
 
+  it('visar kvällens tre lägen överst, med det aktuella markerat', async () => {
+    const stages = await openPanel({ stage: 'evening' })
+    const buttons = within(stages).getAllByRole('button')
+    expect(buttons.map((b) => b.textContent)).toEqual(['Innan start ✓', 'Kvällen pågår', 'Rättning och avslöjande'])
+    expect(within(stages).getByRole('button', { name: 'Kvällen pågår' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
   it('en ny kväll utan live/ går att starta', async () => {
-    mocked.setPhase.mockResolvedValue()
     await openPanel(null)
-    expect(screen.getByRole('heading', { name: 'Kvällen har inte börjat' })).toBeInTheDocument()
-    const start = screen.getByRole('button', { name: 'Nästa: Registrering' })
-    expect(start).toBeEnabled()
-    fireEvent.click(start)
-    await waitFor(() => expect(mocked.setPhase).toHaveBeenCalledWith('demo', 'registration'))
+    expect(screen.getByText('Kvällen har inte börjat')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Starta kvällen' }))
+    await waitFor(() => expect(mocked.setStage).toHaveBeenCalledWith('demo', 'evening', null))
   })
 
-  it('visar aktuell fas och byter fas med en skrivning', async () => {
-    const flow = await openPanel()
-    const tasting = within(flow).getByRole('button', { name: /Glöggprovning/ })
-    expect(tasting).toHaveAttribute('aria-current', 'step')
-    expect(within(flow).getAllByRole('button')).toHaveLength(7)
-
-    fireEvent.click(within(flow).getByRole('button', { name: /Musikquiz/ }))
-    await waitFor(() => expect(mocked.setPhase).toHaveBeenCalledWith('demo', 'quiz'))
-    expect(mocked.setPhase).toHaveBeenCalledTimes(1)
+  it('under kvällen visas Glöggprovning och Musikquiz sida vid sida', async () => {
+    await openPanel({ stage: 'evening' }, { songs: {}, questions: {} })
+    expect(screen.getByRole('region', { name: 'Glöggprovning' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Musikquiz' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Glöggprovning' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Musikquiz' })).toBeInTheDocument()
   })
 
-  it('går till nästa fas', async () => {
-    await openPanel({ stage: 'lobby' })
-    fireEvent.click(screen.getByRole('button', { name: 'Nästa: Glöggprovning' }))
-    await waitFor(() => expect(mocked.setPhase).toHaveBeenCalledWith('demo', 'tasting'))
+  it('byter läge med en skrivning, och skickar med live/ så att rättningen kan stänga det som pågår', async () => {
+    const live: LiveState = { stage: 'evening', quiz: { state: 'playing', songId: 's1', qId: 'q1' } }
+    const stages = await openPanel(live)
+    fireEvent.click(within(stages).getByRole('button', { name: 'Rättning och avslöjande' }))
+    await waitFor(() => expect(mocked.setStage).toHaveBeenCalledWith('demo', 'wrapup', live))
+    expect(mocked.setStage).toHaveBeenCalledTimes(1)
+  })
+
+  it('rättning och avslöjande har flikar för stegen, och Klart', async () => {
+    await openPanel({ stage: 'wrapup', wrapup: { step: 'guess' } })
+    const tabs = screen.getByRole('tablist', { name: 'Rättning och avslöjande' })
+    expect(within(tabs).getByRole('tab', { name: 'Gissa glöggen' })).toHaveAttribute('aria-selected', 'true')
+    fireEvent.click(within(tabs).getByRole('tab', { name: 'Avslöjande' }))
+    await waitFor(() => expect(mocked.setWrapupStep).toHaveBeenCalledWith('demo', 'reveal'))
+    fireEvent.click(within(tabs).getByRole('tab', { name: 'Klart' }))
+    await waitFor(() => expect(mocked.setWrapupStep).toHaveBeenCalledWith('demo', 'done'))
+  })
+
+  it('klart markeras under Rättning och avslöjande', async () => {
+    const stages = await openPanel({ stage: 'done' })
+    expect(within(stages).getByRole('button', { name: 'Rättning och avslöjande' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('tab', { name: 'Klart' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByText(/Kvällen är klar/)).toBeInTheDocument()
   })
 
   it('stänger och öppnar registreringen', async () => {
@@ -191,10 +218,15 @@ describe('kontrollpanelen', () => {
 
   it('visar antal gäster och märker möjliga dubbletter', async () => {
     await openPanel()
-    expect(await screen.findByText('3 gäster inne')).toBeInTheDocument()
     expect(screen.getAllByText('Dubblett?')).toHaveLength(2)
     expect(screen.getByText('Vanlig 2')).toBeInTheDocument()
     expect(screen.getByText('Alkoholfri 1')).toBeInTheDocument()
+  })
+
+  it('gästlistan finns kvar under kvällen, i en ruta som fälls ut', async () => {
+    await openPanel({ stage: 'evening' }, { songs: {}, questions: {} })
+    expect(screen.getByText('Gäster · 3')).toBeInTheDocument()
+    expect(screen.getByLabelText('Klass för Bertil')).toBeInTheDocument()
   })
 
   it('byter klass efter bekräftelse', async () => {
@@ -217,15 +249,15 @@ describe('kontrollpanelen', () => {
   })
 
   it('visar ett fel när en skrivning nekas', async () => {
-    mocked.setPhase.mockRejectedValue(new Error('PERMISSION_DENIED'))
-    const flow = await openPanel()
-    fireEvent.click(within(flow).getByRole('button', { name: /Rättning/ }))
+    mocked.setStage.mockRejectedValue(new Error('PERMISSION_DENIED'))
+    const stages = await openPanel()
+    fireEvent.click(within(stages).getByRole('button', { name: 'Kvällen pågår' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Kunde inte spara')
   })
 
   it('visar QR-koden med gästlänken', async () => {
     await openPanel()
-    fireEvent.click(screen.getByRole('button', { name: 'Visa QR-kod' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Visa QR' }))
     const dialog = screen.getByRole('dialog', { name: 'Skanna för att gå med' })
     const image = await within(dialog).findByRole('img')
     expect(image.getAttribute('src')).toMatch(/^data:image\/svg\+xml/)
