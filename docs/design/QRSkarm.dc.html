@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<title>Välkomstskärm med QR-kod</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&amp;family=Nunito:wght@400;600;700;800&amp;display=swap">
+<style>
+body{margin:0;font-family:'Nunito',sans-serif;color:#F7ECDC}
+.bulbs{filter:drop-shadow(0 0 4px rgba(232,176,75,.6))}.bulbs ellipse{animation:tw 2.6s ease-in-out infinite}.bulbs ellipse:nth-child(3n+2){animation-delay:.9s}.bulbs ellipse:nth-child(3n){animation-delay:1.7s}@keyframes tw{0%,100%{opacity:1}50%{opacity:.4}}
+.flake{pointer-events:none;position:absolute;top:-10px;border-radius:50%;background:#F7ECDC;opacity:.3;animation:fall 14s linear infinite}@keyframes fall{0%{transform:translate(0,-20px)}100%{transform:translate(24px,830px)}}
+.candy{height:8px;border-radius:4px;background:repeating-linear-gradient(135deg,#F7ECDC 0 8px,#C4454F 8px 16px)}
+@media (prefers-reduced-motion:reduce){.bulbs ellipse,.flake{animation:none}}
+</style>
+</helmet>
+<div style="position: relative; overflow: hidden; width: 1280px; height: 800px; box-sizing: border-box; background: #2B1015; padding: 96px 96px 72px; display: flex; gap: 80px; align-items: center">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 28px; min-width: 0">
+<span style="font-size: 18px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: #E8B04B">Glöggmingel</span>
+<h1 style="margin: 0; font-family: 'Fraunces', serif; font-size: 76px; line-height: 1.02; font-weight: 700; color: #F7ECDC">Välkommen in i värmen!</h1>
+<div class="candy" aria-hidden="true" style="width: 120px"></div>
+<p style="margin: 0; font-size: 24px; line-height: 1.45; color: #D9C3AE; max-width: 560px">Ta en kopp glögg och var med i kvällens glöggprovning och musikquiz.</p>
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; gap: 16px"><span style="width: 44px; height: 44px; border-radius: 22px; background: #E8B04B; color: #2B1015; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; flex-shrink: 0">1</span><span style="font-size: 22px; font-weight: 700">Scanna koden med kameran</span></div>
+<div style="display: flex; align-items: center; gap: 16px"><span style="width: 44px; height: 44px; border-radius: 22px; background: #E8B04B; color: #2B1015; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; flex-shrink: 0">2</span><span style="font-size: 22px; font-weight: 700">Skriv ditt namn</span></div>
+<div style="display: flex; align-items: center; gap: 16px"><span style="width: 44px; height: 44px; border-radius: 22px; background: #E8B04B; color: #2B1015; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; flex-shrink: 0">3</span><span style="font-size: 22px; font-weight: 700">Välj vanlig eller alkoholfri provning</span></div>
+</div>
+</div>
+<div style="width: 420px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 32px; border-radius: 32px; background: #F7ECDC; box-sizing: border-box">
+<div role="img" aria-label="QR-kod till kvällens sida" style="width: 340px; height: 340px; position: relative; background: #FFFFFF; border-radius: 12px">
+<div style="position: absolute; left: 20px; top: 20px; width: 72px; height: 72px; box-sizing: border-box; border: 12px solid #2B1015; border-radius: 6px"></div>
+<div style="position: absolute; right: 20px; top: 20px; width: 72px; height: 72px; box-sizing: border-box; border: 12px solid #2B1015; border-radius: 6px"></div>
+<div style="position: absolute; left: 20px; bottom: 20px; width: 72px; height: 72px; box-sizing: border-box; border: 12px solid #2B1015; border-radius: 6px"></div>
+<span style="position: absolute; left: 0; right: 0; top: 160px; text-align: center; font-size: 15px; font-weight: 700; color: #7A4A50">[QR-kod från appen]</span>
+</div>
+<span style="font-size: 18px; font-weight: 800; color: #2B1015">Scanna för att vara med</span>
+</div>
+<span class="flake" style="left: 6%; width: 5px; height: 5px; animation-duration: 14s; animation-delay: -3s"></span>
+<span class="flake" style="left: 19%; width: 4px; height: 4px; animation-duration: 17s; animation-delay: -9s"></span>
+<span class="flake" style="left: 33%; width: 6px; height: 6px; animation-duration: 15s; animation-delay: -6s"></span>
+<span class="flake" style="left: 47%; width: 4px; height: 4px; animation-duration: 18s; animation-delay: -1s"></span>
+<span class="flake" style="left: 58%; width: 5px; height: 5px; animation-duration: 14s; animation-delay: -11s"></span>
+<span class="flake" style="left: 94%; width: 4px; height: 4px; animation-duration: 16s; animation-delay: -4s"></span>
+<svg aria-hidden="true" width="152" height="116" viewBox="0 0 76 58" style="position: absolute; left: 40px; bottom: 24px; transform: scaleX(-1)">
+<path d="M4 46Q36 32 72 14" fill="none" stroke="#2F5D46" stroke-width="2.5" stroke-linecap="round"></path>
+<path d="M12 42l-5-9M12 42l7-4M22 38l-4-10M22 38l8-3M32 33l-3-10M32 33l8-2M42 28l-2-10M42 28l8-1M52 23l-1-9M52 23l8 0M62 18l0-8M62 18l7 1" fill="none" stroke="#4E8A63" stroke-width="2" stroke-linecap="round"></path>
+<circle cx="27" cy="41" r="3" fill="#C4454F"></circle>
+<circle cx="32" cy="44" r="3" fill="#C4454F"></circle>
+<path d="M56 56C42 46 44 34 51 35C54 35 56 38 56 40C56 38 58 35 61 35C68 34 70 46 56 56z" fill="#B5703F"></path>
+<path d="M50 41q3 3 6 0t6 0" fill="none" stroke="#F7ECDC" stroke-width="1.4" stroke-linecap="round"></path>
+</svg>
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 1280px; height: 48px; pointer-events: none">
+<svg width="1280" height="48" viewBox="0 0 1280 48">
+<path d="M0 8Q80 34 160 8T320 8T480 8T640 8T800 8T960 8T1120 8T1280 8" fill="none" stroke="#7A4A50" stroke-width="2"></path>
+<g class="bulbs">
+<ellipse cx="40" cy="27" rx="6" ry="8" fill="#E8B04B"></ellipse>
+<ellipse cx="80" cy="30" rx="6" ry="8" fill="#C4454F"></ellipse>
+<ellipse cx="120" cy="27" rx="6" ry="8" fill="#8FBF9A"></ellipse>
+<ellipse cx="200" cy="27" rx="6" ry="8" fill="#F7ECDC"></ellipse>
+<ellipse cx="240" cy="30" rx="6" ry="8" fill="#E8B04B"></ellipse>
+<ellipse cx="280" cy="27" rx="6" ry="8" fill="#C4454F"></ellipse>
+<ellipse cx="360" cy="27" rx="6" ry="8" fill="#8FBF9A"></ellipse>
+<ellipse cx="400" cy="30" rx="6" ry="8" fill="#F7ECDC"></ellipse>
+<ellipse cx="440" cy="27" rx="6" ry="8" fill="#E8B04B"></ellipse>
+<ellipse cx="520" cy="27" rx="6" ry="8" fill="#C4454F"></ellipse>
+<ellipse cx="560" cy="30" rx="6" ry="8" fill="#8FBF9A"></ellipse>
+<ellipse cx="600" cy="27" rx="6" ry="8" fill="#F7ECDC"></ellipse>
+<ellipse cx="680" cy="27" rx="6" ry="8" fill="#E8B04B"></ellipse>
+<ellipse cx="720" cy="30" rx="6" ry="8" fill="#C4454F"></ellipse>
+<ellipse cx="760" cy="27" rx="6" ry="8" fill="#8FBF9A"></ellipse>
+<ellipse cx="840" cy="27" rx="6" ry="8" fill="#F7ECDC"></ellipse>
+<ellipse cx="880" cy="30" rx="6" ry="8" fill="#E8B04B"></ellipse>
+<ellipse cx="920" cy="27" rx="6" ry="8" fill="#C4454F"></ellipse>
+<ellipse cx="1000" cy="27" rx="6" ry="8" fill="#8FBF9A"></ellipse>
+<ellipse cx="1040" cy="30" rx="6" ry="8" fill="#F7ECDC"></ellipse>
+<ellipse cx="1080" cy="27" rx="6" ry="8" fill="#E8B04B"></ellipse>
+<ellipse cx="1160" cy="27" rx="6" ry="8" fill="#C4454F"></ellipse>
+<ellipse cx="1200" cy="30" rx="6" ry="8" fill="#8FBF9A"></ellipse>
+<ellipse cx="1240" cy="27" rx="6" ry="8" fill="#F7ECDC"></ellipse>
+</g>
+</svg>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
