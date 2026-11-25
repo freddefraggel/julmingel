@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { sendAnswer, subscribeOwnAnswer, subscribeServerTimeOffset } from '../data'
 import { starsFor } from '../scoring'
-import type { Answer, Choice, EventConfig, LiveState } from '../types'
+import { quizTiming } from '../live'
+import type { Answer, Choice, EventConfig, LiveState, QuestionTiming } from '../types'
 import { CupTimer, Garland, Stars } from '../ui'
 import { useAsset } from './assets'
 
@@ -61,7 +62,10 @@ export function Quiz({ eventId, uid, config, live }: Props) {
     return subscribeOwnAnswer(eventId, qId, uid, setAnswer)
   }, [eventId, qId, uid])
 
-  if (!quiz) {
+  const timing = quizTiming(live)
+  const currentQId = quiz?.qId
+
+  if (!quiz || !currentQId || quiz.state === 'idle') {
     return (
       <QuizPage label="">
         <div className="quiz-wait">
@@ -72,18 +76,30 @@ export function Quiz({ eventId, uid, config, live }: Props) {
     )
   }
 
-  const position = questionPosition(config, quiz.qId)
+  // Spela låt: låten går, men frågan och tiden kommer först med Visa fråga.
+  if (quiz.state === 'playing' || !timing) {
+    return (
+      <QuizPage label={questionPosition(config, currentQId)?.label ?? ''}>
+        <div className="quiz-wait">
+          <h1>Lyssna noga …</h1>
+          <p className="muted">Frågan kommer strax.</p>
+        </div>
+      </QuizPage>
+    )
+  }
+
+  const position = questionPosition(config, currentQId)
   const serverNow = now + offset
-  const msLeft = quiz.openedAt + quiz.durationMs - serverNow
-  const open = msLeft > 0
+  const msLeft = timing.openedAt + timing.durationMs - serverNow
+  const open = quiz.state === 'open' && msLeft > 0
   const chosen = pending ?? answer?.choice ?? null
 
   async function choose(choice: Choice) {
-    if (!quiz || !open) return
+    if (!currentQId || !open) return
     setPending(choice)
     setError(null)
     try {
-      await sendAnswer(eventId, quiz.qId, uid, choice)
+      await sendAnswer(eventId, currentQId, uid, choice)
     } catch {
       setError('Svaret kom inte fram. Tiden kan vara ute.')
     }
@@ -102,11 +118,21 @@ export function Quiz({ eventId, uid, config, live }: Props) {
   }
 
   if (!open) {
-    return <TimeUp label={position.label} config={config} live={live} answer={answer} sameSongNext={position.sameSongNext} />
+    return (
+      <TimeUp
+        label={position.label}
+        config={config}
+        live={live}
+        qId={currentQId}
+        timing={timing}
+        answer={answer}
+        sameSongNext={position.sameSongNext}
+      />
+    )
   }
 
   const { question } = position
-  const potential = starsFor(serverNow, quiz)
+  const potential = starsFor(serverNow, timing)
 
   return (
     <QuizPage label={position.label}>
@@ -119,7 +145,7 @@ export function Quiz({ eventId, uid, config, live }: Props) {
           <span />
         </span>
         <span className="quiz-bar__text">Låten spelas nu</span>
-        <CupTimer secondsLeft={msLeft / 1000} totalSeconds={quiz.durationMs / 1000} />
+        <CupTimer secondsLeft={msLeft / 1000} totalSeconds={timing.durationMs / 1000} />
       </div>
       <div className="quiz-stars">
         <span className="muted">{chosen ? 'Byt svar om du vill – det senaste gäller' : 'Svara snabbt för fler stjärnor'}</span>
@@ -191,16 +217,17 @@ type TimeUpProps = {
   label: string
   config: EventConfig | null
   live: LiveState
+  qId: string
+  timing: QuestionTiming
   answer: Answer | null
   sameSongNext: boolean
 }
 
 /** 6. Tiden är ute: låst svar, möjliga stjärnor och hur många som har svarat. */
-function TimeUp({ label, config, live, answer, sameSongNext }: TimeUpProps) {
-  const quiz = live.quiz!
-  const question = config?.questions?.[quiz.qId]
-  const stars = answer ? starsFor(answer.at, quiz) : 0
-  const answered = live.answered?.qId === quiz.qId ? live.answered : null
+function TimeUp({ label, config, live, qId, timing, answer, sameSongNext }: TimeUpProps) {
+  const question = config?.questions?.[qId]
+  const stars = answer ? starsFor(answer.at, timing) : 0
+  const answered = live.answered?.qId === qId ? live.answered : null
   const text = answer && question && question.answerType === 'text' ? `${answer.choice} · ${question.options[answer.choice]}` : answer?.choice
 
   return (

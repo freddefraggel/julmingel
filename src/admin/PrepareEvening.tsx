@@ -9,7 +9,7 @@ import {
   setGloggImage,
   subscribeAssets,
 } from '../data'
-import type { Choice, GuestClass, Phase } from '../types'
+import type { Choice, GuestClass, Stage } from '../types'
 import { Button, Card, Tabs } from '../ui'
 import { readAdminEventId } from './adminEvent'
 import { ImageField } from './ImageField'
@@ -32,7 +32,7 @@ import {
 } from './preparation'
 import './prepare.css'
 
-type Load = { kind: 'loading' } | { kind: 'failed' } | { kind: 'ready'; saved: Saved; baseline: Draft; phase: Phase | null }
+type Load = { kind: 'loading' } | { kind: 'failed' } | { kind: 'ready'; saved: Saved; baseline: Draft; stage: Stage | null }
 type SaveStatus = { kind: 'idle' } | { kind: 'saving' } | { kind: 'saved' } | { kind: 'error'; messages: string[] }
 
 /** Förbered kvällen (#/admin/forbered): kvällens namn och kod, glögger per klass, kriterier, låtar och quizfrågor. */
@@ -67,11 +67,11 @@ function Prepare({ eventId }: { eventId: string }) {
     let active = true
     setLoad({ kind: 'loading' })
     loadPreparation(eventId)
-      .then(({ config, joinCode, numbers, correct, phase }) => {
+      .then(({ config, joinCode, numbers, correct, stage }) => {
         if (!active) return
         const saved: Saved = { config, joinCode, numbers, correct }
         const baseline = toDraft(saved, eventId)
-        setLoad({ kind: 'ready', saved, baseline, phase })
+        setLoad({ kind: 'ready', saved, baseline, stage })
         // Designens kriterier finns alltid med; de sparas med nästa Spara.
         setDraft(withDefaultCriteria(baseline, () => newConfigId(eventId, 'criteria')))
       })
@@ -123,7 +123,7 @@ function Prepare({ eventId }: { eventId: string }) {
     )
   }
 
-  const { saved, phase } = load
+  const { saved, stage } = load
 
   function edit(change: (d: Draft) => Draft) {
     setDraft((d) => (d ? change(d) : d))
@@ -155,7 +155,7 @@ function Prepare({ eventId }: { eventId: string }) {
         numbers: payload['secret/numbers'],
         correct: payload['secret/correct'],
       }
-      setLoad({ kind: 'ready', saved: nextSaved, baseline: toDraft(nextSaved, eventId), phase })
+      setLoad({ kind: 'ready', saved: nextSaved, baseline: toDraft(nextSaved, eventId), stage })
       setStatus({ kind: 'saved' })
     } catch {
       setStatus({ kind: 'error', messages: ['Kunde inte spara. Kontrollera nätet och försök igen.'] })
@@ -240,7 +240,7 @@ function Prepare({ eventId }: { eventId: string }) {
             eventId={eventId}
             draft={draft}
             assets={assets}
-            tastingStarted={phase !== null && phase !== 'registration'}
+            tastingStarted={stage !== null && stage !== 'lobby'}
             onEdit={edit}
             onImage={changeImage}
             newId={() => newConfigId(eventId, 'gloggs')}

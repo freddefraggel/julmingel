@@ -39,8 +39,30 @@
         },
         "live": {
           ".read": "data.parent().child('guests/' + auth.uid).exists()",
+          "stage": {
+            ".validate": "newData.val() === 'lobby' || newData.val() === 'evening' || newData.val() === 'wrapup' || newData.val() === 'done'"
+          },
+          "tasting": {
+            "$class": {
+              ".validate": "$class === 'vanlig' || $class === 'alkfri'",
+              "open": {
+                ".validate": "newData.isBoolean()"
+              }
+            }
+          },
           "quiz": {
-            ".validate": "newData.child('openedAt').val() === newData.parent().parent().child('secret/quizTimes/' + newData.child('qId').val() + '/openedAt').val() && newData.child('durationMs').val() === newData.parent().parent().child('secret/quizTimes/' + newData.child('qId').val() + '/durationMs').val()"
+            ".validate": "newData.hasChild('state') && (newData.child('state').val() !== 'open' || (newData.hasChildren(['qId', 'openedAt', 'durationMs']) && newData.child('openedAt').val() === newData.parent().parent().child('secret/quizTimes/' + newData.child('qId').val() + '/openedAt').val() && newData.child('durationMs').val() === newData.parent().parent().child('secret/quizTimes/' + newData.child('qId').val() + '/durationMs').val()))",
+            "state": {
+              ".validate": "newData.val() === 'idle' || newData.val() === 'playing' || newData.val() === 'open' || newData.val() === 'closed'"
+            }
+          },
+          "wrapup": {
+            "step": {
+              ".validate": "newData.val() === 'review' || newData.val() === 'guess' || newData.val() === 'reveal'"
+            },
+            "revealStep": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 4 && newData.val() % 1 === 0"
+            }
           }
         },
         "reveal": {
@@ -78,7 +100,7 @@
             ".read": "auth.uid === $uid",
             "$number": {
               "$cId": {
-                ".write": "auth.uid === $uid && root.child('events/' + $e + '/live/phase').val() === 'tasting'",
+                ".write": "auth.uid === $uid && root.child('events/' + $e + '/live/tasting/' + root.child('events/' + $e + '/guests/' + $uid + '/class').val() + '/open').val() === true",
                 ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 5 && newData.val() % 1 === 0 && root.child('events/' + $e + '/config/criteria/' + $cId).exists() && root.child('events/' + $e + '/secret/numbers/' + root.child('events/' + $e + '/guests/' + $uid + '/class').val() + '/' + $number).exists()"
               }
             }
@@ -89,7 +111,7 @@
           "$q": {
             "$uid": {
               ".read": "auth.uid === $uid",
-              ".write": "auth.uid === $uid && root.child('events/' + $e + '/guests/' + $uid).exists() && root.child('events/' + $e + '/live/phase').val() === 'quiz' && root.child('events/' + $e + '/live/quiz/qId').val() === $q && now <= root.child('events/' + $e + '/live/quiz/openedAt').val() + root.child('events/' + $e + '/live/quiz/durationMs').val()",
+              ".write": "auth.uid === $uid && root.child('events/' + $e + '/guests/' + $uid).exists() && root.child('events/' + $e + '/live/quiz/state').val() === 'open' && root.child('events/' + $e + '/live/quiz/qId').val() === $q && now <= root.child('events/' + $e + '/live/quiz/openedAt').val() + root.child('events/' + $e + '/live/quiz/durationMs').val()",
               ".validate": "newData.hasChildren(['choice', 'at'])",
               "choice": {
                 ".validate": "newData.isString() && newData.val().matches(/^[ABCD]$/)"
@@ -107,7 +129,7 @@
         "guesses": {
           "$uid": {
             ".read": "auth.uid === $uid",
-            ".write": "auth.uid === $uid && root.child('events/' + $e + '/guests/' + $uid).exists() && root.child('events/' + $e + '/live/phase').val() === 'guess' && data.child('locked').val() !== true",
+            ".write": "auth.uid === $uid && root.child('events/' + $e + '/guests/' + $uid).exists() && root.child('events/' + $e + '/live/wrapup/step').val() === 'guess' && data.child('locked').val() !== true",
             ".validate": "newData.hasChildren(['locked'])",
             "map": {
               "$number": {

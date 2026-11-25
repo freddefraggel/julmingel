@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { saveGuess, subscribeOwnGuess, subscribeReveal } from '../data'
-import type { EventConfig, EventReveal, GloggNumber, Guess as GuessData, GuestClass, Phase } from '../types'
+import type { Phase } from '../live'
+import type { EventConfig, EventReveal, GloggNumber, Guess as GuessData, GuestClass } from '../types'
 import { Garland } from '../ui'
 import { useAsset } from './assets'
 import { BackButton } from './BackButton'

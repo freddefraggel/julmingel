@@ -21,7 +21,7 @@ type Props = {
  */
 export function ReviewPanel({ eventId, config, live, guests, disabled, save }: Props) {
   const plan = quizPlan(config)
-  const currentId = live?.review?.qId
+  const currentId = live?.wrapup?.qId
   const index = plan.findIndex((p) => p.qId === currentId)
   const current = plan[index] ?? null
 

@@ -137,7 +137,7 @@ describe('Ranka glögg i kvällens flöde', () => {
 
   it('Hem öppnar Ranka glögg, och Tillbaka går till Hem', () => {
     render(<GuestLive eventId="demo" uid="u1" guest={anna} />)
-    act(() => pushLive({ phase: 'tasting' }))
+    act(() => pushLive({ stage: 'evening', tasting: { vanlig: { open: true, serving: null, next: null } } }))
     fireEvent.click(screen.getByRole('button', { name: /Ranka glögg/ }))
     expect(screen.getByRole('heading', { name: 'Glögg nr 1' })).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: /^Glögg \d/ })).toHaveLength(2)
@@ -147,21 +147,21 @@ describe('Ranka glögg i kvällens flöde', () => {
 
   it('mobilen hoppar till glöggen som serveras i gästens klass', () => {
     render(<GuestLive eventId="demo" uid="u1" guest={anna} />)
-    act(() => pushLive({ phase: 'tasting', tasting: { alkfri: { serving: 1, next: null } } }))
+    act(() => pushLive({ stage: 'evening', tasting: { alkfri: { open: true, serving: 1, next: null } } }))
     expect(screen.getByRole('heading', { name: 'Hej Anna!' })).toBeInTheDocument()
-    act(() => pushLive({ phase: 'tasting', tasting: { vanlig: { serving: 2, next: null } } }))
+    act(() => pushLive({ stage: 'evening', tasting: { vanlig: { open: true, serving: 2, next: null } } }))
     expect(screen.getByRole('heading', { name: 'Glögg nr 2' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Tillbaka' }))
     // Samma glögg serveras fortfarande: gästen får stanna på Hem.
-    act(() => pushLive({ phase: 'tasting', nowText: 'Paus', tasting: { vanlig: { serving: 2, next: null } } }))
+    act(() => pushLive({ stage: 'evening', answered: { qId: 'q0', count: 0, total: 0 }, tasting: { vanlig: { open: true, serving: 2, next: null } } }))
     expect(screen.getByRole('heading', { name: 'Hej Anna!' })).toBeInTheDocument()
   })
 
   it('lämnar Ranka glögg när provningen är slut', () => {
     render(<GuestLive eventId="demo" uid="u1" guest={anna} />)
-    act(() => pushLive({ phase: 'tasting', tasting: { vanlig: { serving: 1, next: 2 } } }))
+    act(() => pushLive({ stage: 'evening', tasting: { vanlig: { open: true, serving: 1, next: 2 } } }))
     expect(screen.getByRole('heading', { name: 'Glögg nr 1' })).toBeInTheDocument()
-    act(() => pushLive({ phase: 'review', tasting: { vanlig: { serving: 1, next: 2 } } }))
+    act(() => pushLive({ stage: 'wrapup', wrapup: { step: 'review' }, tasting: { vanlig: { open: false, serving: 1, next: 2 } } }))
     expect(screen.queryByRole('heading', { name: 'Glögg nr 1' })).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Rättningen börjar snart' })).toBeInTheDocument()
   })

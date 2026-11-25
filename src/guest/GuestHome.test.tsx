@@ -1,7 +1,8 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as data from '../data'
-import type { EventConfig, Guest, GuestRatings, LiveState, Phase } from '../types'
+import type { EventConfig, Guest, GuestRatings, LiveState } from '../types'
+import type { Phase } from '../live'
 import { GuestAssets, useAsset } from './assets'
 import { GuestHome } from './GuestHome'
 import { GuestLive } from './GuestLive'
@@ -28,22 +29,31 @@ const config: EventConfig = {
   },
 }
 
+/** live/ för en av de gamla faserna, som vyerna fortfarande visar (se src/live.ts). */
+function liveFor(phase: Phase): LiveState {
+  if (phase === 'registration') return { stage: 'lobby' }
+  if (phase === 'tasting') return { stage: 'evening' }
+  if (phase === 'quiz') return { stage: 'evening', quiz: { state: 'idle' } }
+  if (phase === 'done') return { stage: 'done' }
+  return { stage: 'wrapup', wrapup: { step: phase } }
+}
+
 function home(phase: Phase, extra: Partial<LiveState> = {}, ratings: GuestRatings = {}, onOpen = vi.fn()) {
-  render(<GuestHome guest={anna} live={{ phase, ...extra }} config={config} ratings={ratings} onOpen={onOpen} />)
+  render(<GuestHome guest={anna} live={{ ...liveFor(phase), ...extra }} config={config} ratings={ratings} onOpen={onOpen} />)
   return onOpen
 }
 
 afterEach(cleanup)
 
 describe('Hem', () => {
-  it('hälsar gästen och visar Just nu från live/nowText', () => {
-    home('tasting', { nowText: 'Glögg nummer 2 serveras' })
+  it('hälsar gästen och visar Just nu efter kvällens läge', () => {
+    home('tasting')
     expect(screen.getByRole('heading', { name: 'Hej Anna!' })).toBeInTheDocument()
-    expect(screen.getByText('Glögg nummer 2 serveras')).toBeInTheDocument()
+    expect(screen.getByText('Glöggprovning pågår')).toBeInTheDocument()
   })
 
-  it('visar en text för fasen när nowText saknas', () => {
-    home('quiz', { nowText: '  ' })
+  it('Just nu visar quizet när det är igång', () => {
+    home('quiz')
     expect(screen.getByText('Musikquiz pågår')).toBeInTheDocument()
   })
 
@@ -84,7 +94,7 @@ describe('Hem', () => {
   })
 
   it('korten är inte klickbara när undersidan saknas', () => {
-    render(<GuestHome guest={anna} live={{ phase: 'tasting' }} config={config} ratings={{}} />)
+    render(<GuestHome guest={anna} live={{ stage: 'evening' }} config={config} ratings={{}} />)
     expect(screen.queryAllByRole('button')).toEqual([])
     expect(screen.getByText('0 av 3 provade')).toBeInTheDocument()
   })
@@ -123,18 +133,18 @@ describe('GuestLive', () => {
     mocked.getAssets.mockResolvedValue({ img1: 'data:image/webp;base64,AAA' })
   })
 
-  it('följer live/phase när admin byter fas', () => {
+  it('följer live/ när admin startar kvällen', () => {
     render(<GuestLive eventId="demo" uid="u1" guest={anna} />)
-    act(() => pushLive({ phase: 'registration' }))
+    act(() => pushLive({ stage: 'lobby' }))
     expect(screen.getByText('Ranka glögg öppnar när provningen börjar')).toBeInTheDocument()
-    act(() => pushLive({ phase: 'tasting', nowText: 'Nummer 1 serveras' }))
-    expect(screen.getByText('Nummer 1 serveras')).toBeInTheDocument()
+    act(() => pushLive({ stage: 'evening' }))
+    expect(screen.getByText('Glöggprovning pågår')).toBeInTheDocument()
     expect(screen.getByText('1 av 3 provade')).toBeInTheDocument()
   })
 
   it('räknar glögger i gästens nya klass när admin byter klass', () => {
     render(<GuestLive eventId="demo" uid="u1" guest={anna} />)
-    act(() => pushLive({ phase: 'tasting' }))
+    act(() => pushLive({ stage: 'evening' }))
     act(() => pushGuest({ ...anna, class: 'alkfri' }))
     expect(screen.getByText('1 av 1 provade')).toBeInTheDocument()
   })
@@ -153,8 +163,8 @@ describe('GuestLive', () => {
 
   it('förladdar bilderna en gång, även när live/ ändras', async () => {
     render(<GuestLive eventId="demo" uid="u1" guest={anna} />)
-    act(() => pushLive({ phase: 'tasting' }))
-    act(() => pushLive({ phase: 'tasting' }))
+    act(() => pushLive({ stage: 'evening' }))
+    act(() => pushLive({ stage: 'evening' }))
     await act(async () => {})
     expect(mocked.getAssets).toHaveBeenCalledTimes(1)
     expect(mocked.getAssets).toHaveBeenCalledWith('demo')

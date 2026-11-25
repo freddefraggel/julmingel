@@ -4,8 +4,10 @@
 export { isWrongCredentials, onUserChanged, signInAdmin, signInGuest, signOut, type SignedInUser } from './auth'
 export { eventPath, subscribeConfig, subscribeLive, subscribeServerTimeOffset, type OnError } from './db'
 export {
+  closeQuestion,
   getQuizTimes,
   openQuestion,
+  playSong,
   sendAnswer,
   setAnsweredCount,
   showReview,
@@ -20,8 +22,9 @@ export {
   openAdminEvent,
   removeGuest,
   setJoinOpen,
-  setNowText,
   setPhase,
+  setStage,
+  setWrapupStep,
   subscribeGuests,
   type AdminEventResult,
 } from './admin'
@@ -29,6 +32,6 @@ export { getAssets, removeAsset, saveAsset, subscribeAssets } from './assets'
 export { subscribeOwnGuest } from './guests'
 export { saveRatings, subscribeOwnRatings } from './ratings'
 export { loadPreparation, newConfigId, savePreparation, setAnswerImage, setGloggImage, type Preparation } from './prepare'
-export { setTasting, subscribeAllRatings, subscribeNumbers } from './tasting'
+export { setTasting, setTastingOpen, subscribeAllRatings, subscribeNumbers } from './tasting'
 export { revealNumbers, saveGuess, subscribeAllGuesses, subscribeOwnGuess } from './guesses'
 export { loadResultsInput, subscribeResults, writeResults, type ResultsInput } from './results'

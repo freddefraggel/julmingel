@@ -62,7 +62,7 @@ export function numberAfter(rows: readonly TastingRow[], serving: number | null)
  * Vad som ska skrivas när admin trycker på ”Servera nr N”: N serveras, och
  * nästa nummer i ordningen förbereds.
  */
-export function serve(rows: readonly TastingRow[], number: number): TastingState {
+export function serve(rows: readonly TastingRow[], number: number): Omit<TastingState, 'open'> {
   return { serving: number, next: numberAfter(rows, number) }
 }
 

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import type { EventConfig, Guest, GuestRatings, LiveState, Phase } from '../types'
+import { phaseOf, type Phase } from '../live'
+import type { EventConfig, Guest, GuestRatings, LiveState } from '../types'
 import { Chip, Garland, Snow } from '../ui'
 
 /** Undersidorna som Hem länkar till. */
@@ -18,7 +19,7 @@ type Props = {
 
 const ORDER: Phase[] = ['registration', 'tasting', 'quiz', 'review', 'guess', 'reveal', 'done']
 
-/** Visas under Just nu när admin inte har skrivit något i `live/nowText`. */
+/** Visas under Just nu, efter kvällens läge. */
 const NOW_TEXT: Record<Phase, string> = {
   registration: 'Kvällen börjar snart',
   tasting: 'Glöggprovning pågår',
@@ -29,11 +30,11 @@ const NOW_TEXT: Record<Phase, string> = {
   done: 'Tack för i kväll!',
 }
 
-/** 2. Hem: Just nu, Ranka glögg, Musikquiz, Kvällens glögger, Gissa glöggen. Korten följer `live/phase`. */
+/** 2. Hem: Just nu, Ranka glögg, Musikquiz, Kvällens glögger, Gissa glöggen. Korten följer kvällens läge i `live/`. */
 export function GuestHome({ guest, live, config, ratings, onOpen, openable }: Props) {
   const opener = (target: HomeTarget) =>
     onOpen && (!openable || openable.includes(target)) ? () => onOpen(target) : undefined
-  const phase = live?.phase ?? 'registration'
+  const phase = phaseOf(live) ?? 'registration'
   const at = ORDER.indexOf(phase)
   const before = (p: Phase) => at < ORDER.indexOf(p)
 
@@ -57,7 +58,7 @@ export function GuestHome({ guest, live, config, ratings, onOpen, openable }: Pr
         <BellIcon />
         <div className="home-now__text">
           <span className="eyebrow">Just nu</span>
-          <span className="home-now__value">{live?.nowText?.trim() || NOW_TEXT[phase]}</span>
+          <span className="home-now__value">{NOW_TEXT[phase]}</span>
         </div>
       </section>
 

@@ -10,6 +10,7 @@ import { Leaderboard } from './Leaderboard'
 import { GuestMessage } from './GuestMessage'
 import { Quiz } from './Quiz'
 import { Rate } from './Rate'
+import { phaseOf } from '../live'
 import { Review } from './Review'
 
 type Props = {
@@ -24,7 +25,7 @@ const OPENABLE: readonly HomeTarget[] = ['ranka', 'glogger', 'gissa']
 
 /**
  * Gästens kväll efter registreringen. Prenumererar på `live/`, `config/` och
- * gästens egna noder, och renderar den fas som står i `live/phase`. Ingen
+ * gästens egna noder, och renderar läget som står i `live/`. Ingen
  * mobil styr sitt eget flöde, så en omladdad mobil hamnar alltid rätt.
  *
  * Under musikquizet visar mobilen frågan som quizledaren har öppnat, och
@@ -67,15 +68,17 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
     }
   }, [eventId])
 
-  const phase = live?.phase
+  const phase = phaseOf(live)
   const serving = guest ? (live?.tasting?.[guest.class]?.serving ?? null) : null
+  // Rankningen är öppen i gästens klass; samma villkor som databasreglerna.
+  const tastingOpen = guest ? live?.tasting?.[guest.class]?.open === true : false
 
   // Värden serverar en ny glögg: mobilen hoppar till Ranka glögg, även efter en omladdning.
   useEffect(() => {
-    if (phase !== 'tasting' || serving === null || serving === lastServing.current) return
+    if (!tastingOpen || serving === null || serving === lastServing.current) return
     lastServing.current = serving
     setView('ranka')
-  }, [phase, serving])
+  }, [tastingOpen, serving])
 
   // Gissningen öppnar: mobilen går dit av sig själv, en gång.
   useEffect(() => {
@@ -102,7 +105,7 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
             uid={uid}
             guestClass={guest.class}
             config={config}
-            step={live?.reveal?.step ?? null}
+            step={live?.wrapup?.revealStep ?? null}
             final
             onBack={() => setView('home')}
           />
@@ -115,12 +118,12 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
           uid={uid}
           guestClass={guest.class}
           config={config}
-          step={live?.reveal?.step ?? null}
+          step={live?.wrapup?.revealStep ?? null}
           final={false}
         />
       ) : phase === 'review' && live ? (
         <Review eventId={eventId} uid={uid} config={config} live={live} />
-      ) : view === 'ranka' && phase === 'tasting' ? (
+      ) : view === 'ranka' && tastingOpen ? (
         <Rate
           eventId={eventId}
           uid={uid}

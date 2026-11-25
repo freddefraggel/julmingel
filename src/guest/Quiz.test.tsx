@@ -32,8 +32,8 @@ const config: EventConfig = {
 const OFFSET = 5_000
 const OPENED = 100_000
 const live = (qId = 'q1', extra: Partial<LiveState> = {}): LiveState => ({
-  phase: 'quiz',
-  quiz: { qId, openedAt: OPENED, durationMs: 20_000 },
+  stage: 'evening',
+  quiz: { state: 'open', songId: 's2', qId, openedAt: OPENED, durationMs: 20_000 },
   ...extra,
 })
 
@@ -121,8 +121,21 @@ describe('Quizfrågan', () => {
     expect(screen.getByRole('img', { name: '5 sekunder kvar' })).toBeInTheDocument()
   })
 
+  it('Spela låt: lyssna, ingen fråga och ingen timer än', () => {
+    renderQuiz({ stage: 'evening', quiz: { state: 'playing', songId: 's2', qId: 'q1' } })
+    expect(screen.getByRole('heading', { name: 'Lyssna noga …' })).toBeInTheDocument()
+    expect(screen.getByText('Låt 2 · fråga 1 av 2')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Vilket år släpptes låten?' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: /sekunder kvar/ })).not.toBeInTheDocument()
+  })
+
+  it('en stängd fråga är låst även om tiden inte har gått ut', () => {
+    renderQuiz(live('q1', { quiz: { state: 'closed', songId: 's2', qId: 'q1', openedAt: OPENED, durationMs: 20_000 } }))
+    expect(screen.getByRole('heading', { name: 'Tiden är ute!' })).toBeInTheDocument()
+  })
+
   it('väntar när ingen fråga är öppnad än', () => {
-    renderQuiz({ phase: 'quiz' })
+    renderQuiz({ stage: 'evening', quiz: { state: 'idle' } })
     expect(screen.getByRole('heading', { name: 'Musikquizet börjar snart' })).toBeInTheDocument()
   })
 })

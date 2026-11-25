@@ -1,4 +1,4 @@
-import type { Phase } from '../types'
+import type { Phase } from '../live'
 import { PHASES, phaseIndex } from './phases'
 
 type Props = {
@@ -7,7 +7,7 @@ type Props = {
   onSelect: (phase: Phase) => void
 }
 
-/** Kvällens flöde: en knapp per fas. Varje tryck är en skrivning till live/phase. */
+/** Kvällens flöde: en knapp per fas. Varje tryck blir ett anrop till de tre lägena i live/ (phaseChanges i src/live.ts). */
 export function PhaseList({ current, disabled, onSelect }: Props) {
   const currentIndex = phaseIndex(current)
   return (

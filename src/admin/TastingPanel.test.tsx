@@ -61,13 +61,13 @@ afterEach(cleanup)
 
 describe('Glöggprovning hos admin', () => {
   it('visar flikar med nummer och antal gäster per klass', () => {
-    renderPanel({ phase: 'tasting', tasting: { vanlig: { serving: 2, next: 3 } } })
+    renderPanel({ stage: 'evening', tasting: { vanlig: { open: true, serving: 2, next: 3 } } })
     expect(screen.getByRole('tab', { name: 'Vanlig · nr 2 av 3 · 2 gäster', selected: true })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'Alkoholfri · 1 glögg · 1 gäst' })).toBeInTheDocument()
   })
 
   it('visar vad som serveras nu och hur många som har rankat', () => {
-    renderPanel({ phase: 'tasting', tasting: { vanlig: { serving: 2, next: 3 } } })
+    renderPanel({ stage: 'evening', tasting: { vanlig: { open: true, serving: 2, next: 3 } } })
     const now = screen.getByRole('region', { name: 'Serveras nu' })
     expect(within(now).getByText('Nr 2')).toBeInTheDocument()
     expect(within(now).getByText('Klassisk röd')).toBeInTheDocument()
@@ -79,20 +79,20 @@ describe('Glöggprovning hos admin', () => {
   })
 
   it('Servera skriver live/tasting för klassen och förbereder nästa', async () => {
-    renderPanel({ phase: 'tasting', tasting: { vanlig: { serving: 2, next: 3 } } })
+    renderPanel({ stage: 'evening', tasting: { vanlig: { open: true, serving: 2, next: 3 } } })
     fireEvent.click(screen.getByRole('button', { name: /Servera nr 3/ }))
     expect(mocked.setTasting).toHaveBeenCalledWith('demo', 'vanlig', { serving: 3, next: null })
   })
 
   it('börjar med nr 1 innan något har serverats', () => {
-    renderPanel({ phase: 'tasting' })
+    renderPanel({ stage: 'evening' })
     expect(within(screen.getByRole('region', { name: 'Serveras nu' })).getByText('Inget än')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /Servera nr 1/ }))
     expect(mocked.setTasting).toHaveBeenCalledWith('demo', 'vanlig', { serving: 1, next: 2 })
   })
 
   it('serveringsordningen visar status, och admin kan förbereda en annan glögg', () => {
-    renderPanel({ phase: 'tasting', tasting: { vanlig: { serving: 2, next: 3 } } })
+    renderPanel({ stage: 'evening', tasting: { vanlig: { open: true, serving: 2, next: 3 } } })
     const order = screen.getByRole('region', { name: 'Serveringsordning' })
     const rows = within(order).getAllByRole('listitem')
     expect(rows.map((r) => r.textContent)).toEqual(['1Vit glöggServerad', '2Klassisk rödServeras nu', '3PortvinsglöggFörbered'])
@@ -101,13 +101,13 @@ describe('Glöggprovning hos admin', () => {
   })
 
   it('säger till när alla är serverade', () => {
-    renderPanel({ phase: 'tasting', tasting: { vanlig: { serving: 3, next: null } } })
+    renderPanel({ stage: 'evening', tasting: { vanlig: { open: true, serving: 3, next: null } } })
     expect(screen.getByText('Alla glögger i vanlig är serverade.')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Servera/ })).not.toBeInTheDocument()
   })
 
   it('styr klasserna var för sig', () => {
-    renderPanel({ phase: 'tasting', tasting: { vanlig: { serving: 2, next: 3 } } })
+    renderPanel({ stage: 'evening', tasting: { vanlig: { open: true, serving: 2, next: 3 } } })
     fireEvent.click(screen.getByRole('tab', { name: /Alkoholfri/ }))
     fireEvent.click(screen.getByRole('button', { name: /Servera nr 1/ }))
     expect(mocked.setTasting).toHaveBeenCalledWith('demo', 'alkfri', { serving: 1, next: null })

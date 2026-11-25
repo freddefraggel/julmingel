@@ -85,7 +85,7 @@ describe('Hem efter kvällen', () => {
       return () => {}
     })
     render(<GuestLive eventId="demo" uid="u1" guest={anna} />)
-    act(() => pushLive({ phase: 'done', reveal: { step: 4 } }))
+    act(() => pushLive({ stage: 'done', wrapup: { step: 'reveal', revealStep: 4 } }))
     expect(screen.getByRole('img', { name: 'Guldpokal' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Kvällens glögg' }))
     expect(screen.getByRole('heading', { name: 'Topplista' })).toBeInTheDocument()

@@ -14,7 +14,7 @@ describe('avslöjandet', () => {
       e: { points: 5, stars: 0, rank: 5, name: 'E' },
       f: { points: 4, stars: 0, rank: 6, name: 'F' },
     })
-    expect(changes['live/reveal']).toEqual({ step: 0 })
+    expect(changes['live/wrapup/revealStep']).toEqual(0)
     // Topp 4 och Kvällens glögg finns inte där gästerna kan läsa.
     expect(JSON.stringify(changes['results/leaderboard'])).not.toMatch(/"[ABCD]"/)
     expect(changes['results/gloggOfEvening']).toBeNull()
@@ -23,7 +23,7 @@ describe('avslöjandet', () => {
   it('steg 1–4 lägger till 4:an, 3:an, 2:an och vinnaren, en rad per steg', () => {
     expect([1, 2, 3, 4].map((s) => rowForStep(rows, s as 1 | 2 | 3 | 4)?.uid)).toEqual(['d', 'c', 'b', 'a'])
     expect(stepChanges(rows, 1, glogg)).toEqual({
-      'live/reveal': { step: 1 },
+      'live/wrapup/revealStep': 1,
       'results/leaderboard/d': { points: 6, stars: 0, rank: 4, name: 'D' },
     })
   })
@@ -39,7 +39,7 @@ describe('avslöjandet', () => {
   it('klarar färre än fyra gäster', () => {
     const two = rows.slice(0, 2)
     expect(startChanges(two)['results/leaderboard']).toEqual({})
-    expect(stepChanges(two, 1, glogg)).toEqual({ 'live/reveal': { step: 1 } })
+    expect(stepChanges(two, 1, glogg)).toEqual({ 'live/wrapup/revealStep': 1 })
     expect(stepChanges(two, 4, glogg)).toHaveProperty('results/leaderboard/a')
   })
 

@@ -1,5 +1,5 @@
 import { get, push, ref, set, update } from 'firebase/database'
-import type { Choice, EventConfig, EventSecret, Phase } from '../types'
+import type { Choice, EventConfig, EventSecret, Stage } from '../types'
 import { eventPath } from './db'
 import { firebase } from './firebase'
 
@@ -8,25 +8,25 @@ export type Preparation = {
   joinCode: string | null
   numbers: NonNullable<EventSecret['numbers']> | null
   correct: NonNullable<EventSecret['correct']> | null
-  phase: Phase | null
+  stage: Stage | null
 }
 
-/** Läser det som Förbered kvällen redigerar: config/, kod, nummer och facit från secret/, och fasen. */
+/** Läser det som Förbered kvällen redigerar: config/, kod, nummer och facit från secret/, och kvällens läge. */
 export async function loadPreparation(eventId: string): Promise<Preparation> {
   const db = firebase().db
-  const [config, joinCode, numbers, correct, phase] = await Promise.all([
+  const [config, joinCode, numbers, correct, stage] = await Promise.all([
     get(ref(db, eventPath(eventId, 'config'))),
     get(ref(db, eventPath(eventId, 'secret', 'joinCode'))),
     get(ref(db, eventPath(eventId, 'secret', 'numbers'))),
     get(ref(db, eventPath(eventId, 'secret', 'correct'))),
-    get(ref(db, eventPath(eventId, 'live', 'phase'))),
+    get(ref(db, eventPath(eventId, 'live', 'stage'))),
   ])
   return {
     config: config.val() as EventConfig | null,
     joinCode: joinCode.exists() ? String(joinCode.val()) : null,
     numbers: numbers.val() as NonNullable<EventSecret['numbers']> | null,
     correct: correct.val() as NonNullable<EventSecret['correct']> | null,
-    phase: phase.val() as Phase | null,
+    stage: stage.val() as Stage | null,
   }
 }
 

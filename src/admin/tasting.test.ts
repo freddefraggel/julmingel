@@ -11,7 +11,7 @@ const numbers = { '2': 'gb', '1': 'ga', '3': 'gc' }
 
 describe('tastingRows', () => {
   it('ger serveringsordningen med status', () => {
-    const rows = tastingRows(numbers, gloggs, { serving: 2, next: 3 })
+    const rows = tastingRows(numbers, gloggs, { open: true, serving: 2, next: 3 })
     expect(rows.map((r) => [r.number, r.gId, r.name, r.status])).toEqual([
       [1, 'ga', 'Röd', 'done'],
       [2, 'gb', 'Vit', 'now'],
@@ -22,11 +22,11 @@ describe('tastingRows', () => {
 
   it('allt väntar innan något har serverats', () => {
     expect(tastingRows(numbers, gloggs, undefined).map((r) => r.status)).toEqual(['wait', 'wait', 'wait'])
-    expect(tastingRows(numbers, gloggs, { serving: null, next: 1 }).map((r) => r.status)).toEqual(['next', 'wait', 'wait'])
+    expect(tastingRows(numbers, gloggs, { open: true, serving: null, next: 1 }).map((r) => r.status)).toEqual(['next', 'wait', 'wait'])
   })
 
   it('klarar att admin hoppar över ett nummer', () => {
-    expect(tastingRows(numbers, gloggs, { serving: 3, next: 1 }).map((r) => r.status)).toEqual(['next', 'done', 'now'])
+    expect(tastingRows(numbers, gloggs, { open: true, serving: 3, next: 1 }).map((r) => r.status)).toEqual(['next', 'done', 'now'])
   })
 
   it('tom när klassen saknar nummer', () => {
