@@ -255,15 +255,14 @@ describe('kontrollpanelen', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Kunde inte spara')
   })
 
-  it('visar QR-koden med gästlänken', async () => {
+  it('Visa QR öppnar välkomstskärmen', async () => {
     await openPanel()
-    fireEvent.click(screen.getByRole('button', { name: 'Visa QR' }))
-    const dialog = screen.getByRole('dialog', { name: 'Skanna för att gå med' })
-    const image = await within(dialog).findByRole('img')
-    expect(image.getAttribute('src')).toMatch(/^data:image\/svg\+xml/)
-    expect(within(dialog).getByText(/#\/\?e=demo&k=glogg$/)).toBeInTheDocument()
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Stäng' }))
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Visa QR' })).toHaveAttribute('href', '/admin/qr')
+  })
+
+  it('påminner om att hålla registreringen öppen, eftersom en utskriven kod slutar fungera', async () => {
+    await openPanel()
+    expect(screen.getByText(/en utskriven kod slutar fungera när registreringen stängs/)).toBeInTheDocument()
   })
 })
 

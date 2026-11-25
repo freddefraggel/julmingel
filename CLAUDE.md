@@ -15,7 +15,7 @@ Vite + React + TypeScript, Firebase Realtime Database + Auth (Spark), GitHub Pag
 ## Regler att inte bryta
 
 - Sajten ligger på `https://freddefraggel.github.io/julmingel/`, så Vite `base` är `'/julmingel/'`. Specen skriver `/glogg/`, men `/julmingel/` gäller.
-- Använd `HashRouter`: `#/` för gäst, `#/admin` och `#/admin/forbered` för admin.
+- Använd `HashRouter`: `#/` för gäst, `#/admin`, `#/admin/forbered`, `#/admin/qr` och `#/admin/qr/print` för admin.
 - Bara `src/data/` får importera Firebase. Övrigt: `src/guest/`, `src/admin/`, `src/scoring.ts`, `src/spotify.ts`, `src/types.ts`.
 - Färger, typsnitt och rundning finns som CSS-variabler i `src/styles/tokens.css`. Använd dem i stället för hårdkodade hex-värden. Grundkomponenterna (knapp, kort, chip, flikar, stjärnor, glöggkopp-timer) ligger i `src/ui/`.
 - Facit (`secret/correct`, `secret/numbers`, topp 4 före avslöjandet) får aldrig hamna där gäster kan läsa det.

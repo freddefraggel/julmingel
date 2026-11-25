@@ -1,0 +1,239 @@
+/* Välkomstskärm med QR (docs/design/QRSkarm.dc.html) och A4-affisch (QRA4.dc.html). */
+.candy {
+  height: 6px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(135deg, var(--color-text) 0 6px, var(--color-red) 6px 12px);
+}
+
+.qr-step__number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-pill);
+  background: var(--color-gold);
+  color: var(--color-on-gold);
+  font-weight: 800;
+  font-size: 20px;
+}
+
+.qr-welcome__code {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 340px;
+  height: 340px;
+  padding: 18px;
+  border-radius: var(--radius-2xl);
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+
+.qr-welcome__code img {
+  width: 100%;
+  height: 100%;
+}
+
+/* Skärmen, för en surfplatta vid dörren */
+.qr-welcome {
+  position: relative;
+  overflow: hidden;
+  min-height: 100dvh;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  padding: 64px 56px;
+}
+
+.qr-welcome__text {
+  flex: 1 1 420px;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.qr-welcome__brand,
+.qr-print__brand {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+}
+
+.qr-welcome h1 {
+  font-size: 64px;
+  line-height: 1.05;
+}
+
+.qr-welcome__candy {
+  width: 120px;
+}
+
+.qr-welcome__lead {
+  font-size: 24px;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+}
+
+.qr-welcome__steps,
+.qr-print__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.qr-welcome__steps li {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.qr-welcome__side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.qr-welcome__scan {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-gold);
+}
+
+.qr-welcome__tools {
+  position: absolute;
+  left: 24px;
+  bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.qr-welcome__warning {
+  color: var(--color-rose);
+  font-weight: 700;
+}
+
+/* A4-affischen: ljus bakgrund som sparar bläck */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+.qr-print {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  background: var(--color-surface-2);
+}
+
+.qr-print__tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.qr-print__sheet {
+  width: 210mm;
+  min-height: 297mm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  padding: 22mm 18mm 16mm;
+  background: var(--color-text);
+  color: var(--color-bg);
+  text-align: center;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.qr-print__brand {
+  color: var(--color-red);
+}
+
+.qr-print h1 {
+  font-size: 60px;
+  line-height: 1.05;
+}
+
+.qr-print__candy {
+  width: 110px;
+}
+
+.qr-print__lead {
+  max-width: 520px;
+  font-size: 21px;
+  line-height: 1.4;
+}
+
+.qr-print .qr-welcome__code {
+  width: 380px;
+  height: 380px;
+  border: 3px solid var(--color-bg);
+}
+
+.qr-print__steps {
+  flex-direction: row;
+  justify-content: center;
+  gap: 28px;
+}
+
+.qr-print__steps li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: 160px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.qr-print__steps .qr-step__number {
+  width: 40px;
+  height: 40px;
+  font-size: 18px;
+}
+
+.qr-print__end {
+  margin-top: auto;
+  font-family: var(--font-heading);
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--color-red);
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .qr-print {
+    padding: 0;
+    background: none;
+  }
+
+  .qr-print__sheet {
+    width: 210mm;
+    height: 297mm;
+  }
+}
