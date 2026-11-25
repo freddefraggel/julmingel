@@ -61,6 +61,11 @@ describe('Hem innan start', () => {
     expect(screen.queryAllByRole('button')).toEqual([])
   })
 
+  it('visar kvällens namn ovanför välkomsten', () => {
+    home({ stage: 'lobby' }, {}, vi.fn(), { ...config, name: 'Gröna Villans Glöggmingel 2026' })
+    expect(screen.getByText('Gröna Villans Glöggmingel 2026')).toBeInTheDocument()
+  })
+
   it('visar Innan start tills live/ har svarat', () => {
     home(null)
     expect(screen.getByRole('heading', { name: 'Välkommen, Anna' })).toBeInTheDocument()

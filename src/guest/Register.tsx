@@ -1,5 +1,5 @@
-import { useId, useState, type FormEvent } from 'react'
-import { joinEvent, signInGuest, type JoinResult } from '../data'
+import { useEffect, useId, useState, type FormEvent } from 'react'
+import { getEventName, joinEvent, signInGuest, type JoinResult } from '../data'
 import type { Guest, GuestClass } from '../types'
 import { Button, Garland, Snow } from '../ui'
 
@@ -33,6 +33,18 @@ export function Register({ eventId, joinCode, onJoined }: Props) {
   const [guestClass, setGuestClass] = useState<GuestClass>('vanlig')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [eventName, setEventName] = useState<string | null>(null)
+
+  // Vilken kväll gästen går med i. Kvällens namn är inte hemligt.
+  useEffect(() => {
+    let active = true
+    getEventName(eventId).then((name) => {
+      if (active) setEventName(name)
+    })
+    return () => {
+      active = false
+    }
+  }, [eventId])
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
@@ -66,7 +78,7 @@ export function Register({ eventId, joinCode, onJoined }: Props) {
     <main className="page guest-page register">
       <Garland />
       <Snow />
-      <span className="brand">Glöggmingel</span>
+      <span className="brand">{eventName ?? 'Glöggmingel'}</span>
 
       <div className="register__body">
         <div className="register__title">

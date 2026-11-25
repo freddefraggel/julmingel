@@ -45,6 +45,7 @@ export function GuestHome({ guest, live, config, ratings, onOpen }: Props) {
       <main className="page guest-page home">
         <Garland />
         <Snow />
+        {config?.name && <span className="brand">{config.name}</span>}
         <h1>Välkommen, {guest.name}</h1>
         <section className="home-tonight" aria-label="Ikväll">
           <span className="eyebrow">Ikväll</span>

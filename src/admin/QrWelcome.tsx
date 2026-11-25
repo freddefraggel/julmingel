@@ -41,6 +41,7 @@ export default function QrWelcome({ print = false }: { print?: boolean }) {
   const eventId = useMemo(() => readAdminEventId(search), [search])
   const [state, setState] = useState<State>({ kind: 'loading' })
   const [joinOpen, setJoinOpen] = useState<boolean | null>(null)
+  const [eventName, setEventName] = useState<string | null>(null)
 
   useEffect(() => {
     if (!eventId) return
@@ -49,7 +50,10 @@ export default function QrWelcome({ print = false }: { print?: boolean }) {
       if (!active) return
       setState(result.ok ? { kind: 'ready', eventId, joinCode: result.joinCode } : { kind: 'failed' })
     })
-    const unsubscribe = subscribeConfig(eventId, (config) => setJoinOpen(config?.joinOpen === true))
+    const unsubscribe = subscribeConfig(eventId, (config) => {
+      setJoinOpen(config?.joinOpen === true)
+      setEventName(config?.name?.trim() || null)
+    })
     return () => {
       active = false
       unsubscribe()
@@ -96,7 +100,7 @@ export default function QrWelcome({ print = false }: { print?: boolean }) {
           {closedWarning}
         </div>
         <section className="qr-print__sheet">
-          <span className="qr-print__brand">Glöggmingel</span>
+          <span className="qr-print__brand">{eventName ?? 'Glöggmingel'}</span>
           <h1>
             Välkommen in <br />i värmen!
           </h1>
@@ -122,7 +126,7 @@ export default function QrWelcome({ print = false }: { print?: boolean }) {
       <Garland />
       <Snow />
       <section className="qr-welcome__text">
-        <span className="qr-welcome__brand">Glöggmingel</span>
+        <span className="qr-welcome__brand">{eventName ?? 'Glöggmingel'}</span>
         <h1>Välkommen in i värmen!</h1>
         <div className="candy qr-welcome__candy" aria-hidden="true" />
         <p className="qr-welcome__lead">Ta en kopp glögg och var med i kvällens glöggprovning och musikquiz.</p>
