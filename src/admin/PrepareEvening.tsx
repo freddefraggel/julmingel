@@ -14,6 +14,7 @@ import { Button, Card, Tabs } from '../ui'
 import { readAdminEventId } from './adminEvent'
 import { ImageField } from './ImageField'
 import { QuizCard } from './QuizCard'
+import { ResetCard } from './ResetCard'
 import { RowActions } from './RowActions'
 import { SpotifySetup } from './SpotifySetup'
 import {
@@ -246,6 +247,7 @@ function Prepare({ eventId }: { eventId: string }) {
             newId={() => newConfigId(eventId, 'gloggs')}
           />
           <CriteriaCard draft={draft} onEdit={edit} newId={() => newConfigId(eventId, 'criteria')} />
+          <ResetCard eventId={eventId} />
         </div>
         <div className="prepare__column">
           <QuizCard
