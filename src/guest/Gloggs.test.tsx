@@ -7,6 +7,8 @@ import { Gloggs, gloggsInSecretOrder } from './Gloggs'
 import { GuestLive } from './GuestLive'
 
 vi.mock('../data', () => ({
+  subscribeServerTimeOffset: vi.fn(() => () => {}),
+  subscribeOwnAnswer: vi.fn(() => () => {}),
   saveRatings: vi.fn(),
   subscribeLive: vi.fn(),
   subscribeConfig: vi.fn(),

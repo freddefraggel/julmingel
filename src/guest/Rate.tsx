@@ -14,6 +14,8 @@ type Props = {
   ratings: GuestRatings
   /** Numret som serveras nu (`live/tasting/{class}/serving`), eller null. */
   serving: number | null
+  /** Rankningen är öppen i gästens klass. Stängd: betygen syns men går inte att ändra. */
+  open?: boolean
   onBack: () => void
 }
 
@@ -22,7 +24,7 @@ type Status = { kind: 'idle' } | { kind: 'saving' } | { kind: 'saved'; number: n
 const VALUES: readonly Rating[] = [1, 2, 3, 4, 5]
 
 /** 3. Ranka glögg: välj nummer, 1–5 per kriterium, Spara. Följer numret som serveras, men gästen kan gå tillbaka. */
-export function Rate({ eventId, uid, count, criteria, ratings, serving, onBack }: Props) {
+export function Rate({ eventId, uid, count, criteria, ratings, serving, open = true, onBack }: Props) {
   const [current, setCurrent] = useState<number>(() => clamp(serving ?? 1, count))
   // Ändringar som inte är sparade, per nummer, så att inget försvinner när gästen byter glögg.
   const [drafts, setDrafts] = useState<Record<number, Record<string, Rating>>>({})
@@ -107,6 +109,12 @@ export function Rate({ eventId, uid, count, criteria, ratings, serving, onBack }
 
       <h1>Glögg nr {current}</h1>
 
+      {!open && (
+        <p className="rate__closed" role="status">
+          Provningen är stängd – tack för dina betyg!
+        </p>
+      )}
+
       {sorted.length === 0 ? (
         <p className="muted">Värden har inte lagt in några kriterier än.</p>
       ) : (
@@ -127,6 +135,7 @@ export function Rate({ eventId, uid, count, criteria, ratings, serving, onBack }
                       className={`rate-criterion__value${on ? ' rate-criterion__value--on' : ''}`}
                       aria-pressed={values[cId] === v}
                       aria-label={`${criterion.name} ${v}`}
+                      disabled={!open}
                       onClick={() => pick(cId, v)}
                     >
                       {v}
@@ -155,7 +164,7 @@ export function Rate({ eventId, uid, count, criteria, ratings, serving, onBack }
         <button
           type="button"
           className="btn btn--primary btn--large btn--block"
-          disabled={!changed || status.kind === 'saving'}
+          disabled={!open || !changed || status.kind === 'saving'}
           onClick={() => void save()}
         >
           {label}

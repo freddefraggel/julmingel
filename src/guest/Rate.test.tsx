@@ -6,6 +6,7 @@ import { GuestLive } from './GuestLive'
 import { Rate } from './Rate'
 
 vi.mock('../data', () => ({
+  subscribeServerTimeOffset: vi.fn(() => () => {}),
   saveRatings: vi.fn(),
   subscribeLive: vi.fn(),
   subscribeConfig: vi.fn(),
