@@ -1,20 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { phaseOf, quizTiming, stageChanges, stageIndex, wrapupStepChanges } from './live'
-
-describe('phaseOf', () => {
-  it('härleder den gamla fasen från de tre lägena', () => {
-    expect(phaseOf(null)).toBeUndefined()
-    expect(phaseOf({ stage: 'lobby' })).toBe('registration')
-    expect(phaseOf({ stage: 'evening' })).toBe('tasting')
-    expect(phaseOf({ stage: 'evening', tasting: { vanlig: { open: true, serving: 1, next: 2 } } })).toBe('tasting')
-    expect(phaseOf({ stage: 'evening', quiz: { state: 'idle' } })).toBe('tasting')
-    expect(phaseOf({ stage: 'evening', quiz: { state: 'playing', qId: 'q1' } })).toBe('quiz')
-    expect(phaseOf({ stage: 'evening', quiz: { state: 'closed', qId: 'q1' } })).toBe('quiz')
-    expect(phaseOf({ stage: 'wrapup', wrapup: { step: 'guess' } })).toBe('guess')
-    expect(phaseOf({ stage: 'wrapup' })).toBe('review')
-    expect(phaseOf({ stage: 'done' })).toBe('done')
-  })
-})
+import { quizTiming, stageChanges, stageIndex, wrapupStepChanges } from './live'
 
 describe('stageChanges', () => {
   it('innan start och kvällen pågår skriver bara läget', () => {

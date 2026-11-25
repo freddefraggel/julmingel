@@ -2,7 +2,6 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as data from '../data'
 import type { EventConfig, Guest, GuestRatings, LiveState } from '../types'
-import type { Phase } from '../live'
 import { GuestAssets, useAsset } from './assets'
 import { GuestHome } from './GuestHome'
 import { GuestLive } from './GuestLive'
@@ -32,78 +31,86 @@ const config: EventConfig = {
 }
 
 /** live/ för en av de gamla faserna, som vyerna fortfarande visar (se src/live.ts). */
-function liveFor(phase: Phase): LiveState {
-  if (phase === 'registration') return { stage: 'lobby' }
-  if (phase === 'tasting') return { stage: 'evening' }
-  if (phase === 'quiz') return { stage: 'evening', quiz: { state: 'playing', qId: 'q1' } }
-  if (phase === 'done') return { stage: 'done' }
-  return { stage: 'wrapup', wrapup: { step: phase } }
+const TRACK = 'spotify:track:2FRnf9qhLbvw8fu4IBXx78'
+const withQuiz: EventConfig = {
+  ...config,
+  songs: { s1: { order: 1, spotifyUri: TRACK, startMs: 0, secondsPerQuestion: 20 } },
+  questions: Object.fromEntries(
+    [1, 2, 3, 4].map((n) => [`q${n}`, { songId: 's1', order: n, text: `Fråga ${n}`, answerType: 'text' as const, options: { A: 'a', B: 'b', C: 'c', D: 'd' } }]),
+  ),
 }
 
-function home(phase: Phase, extra: Partial<LiveState> = {}, ratings: GuestRatings = {}, onOpen = vi.fn()) {
-  render(<GuestHome guest={anna} live={{ ...liveFor(phase), ...extra }} config={config} ratings={ratings} onOpen={onOpen} />)
+function home(live: LiveState | null, ratings: GuestRatings = {}, onOpen = vi.fn(), cfg: EventConfig = config) {
+  render(<GuestHome guest={anna} live={live} config={cfg} ratings={ratings} onOpen={onOpen} />)
   return onOpen
 }
 
 afterEach(cleanup)
 
-describe('Hem', () => {
-  it('hälsar gästen och visar Just nu efter kvällens läge', () => {
-    home('tasting')
-    expect(screen.getByRole('heading', { name: 'Hej Anna!' })).toBeInTheDocument()
-    expect(screen.getByText('Glöggprovning pågår')).toBeInTheDocument()
-  })
-
-  it('Just nu visar quizet när det är igång', () => {
-    home('quiz')
-    expect(screen.getByText('Musikquiz pågår')).toBeInTheDocument()
-  })
-
-  it('före provningen är Ranka glögg, Kvällens glögger och Gissa glöggen låsta', () => {
-    const onOpen = home('registration')
-    expect(screen.getByText('Ranka glögg öppnar när provningen börjar')).toBeInTheDocument()
-    expect(screen.getByText('Kvällens glögger visas när provningen börjar')).toBeInTheDocument()
-    expect(screen.getByText('Gissa glöggen öppnar i slutet av kvällen')).toBeInTheDocument()
-    expect(screen.getByText('Startar snart')).toBeInTheDocument()
+describe('Hem innan start', () => {
+  it('välkomnar gästen och berättar om kvällen, utan kort för det som inte har öppnat', () => {
+    home({ stage: 'lobby' })
+    expect(screen.getByRole('heading', { name: 'Välkommen, Anna' })).toBeInTheDocument()
+    const tonight = screen.getByRole('region', { name: 'Ikväll' })
+    expect(within(tonight).getAllByRole('listitem').map((li) => li.querySelector('strong')!.textContent)).toEqual([
+      'Glöggprovning',
+      'Musikquiz',
+      'Avslöjande',
+    ])
+    expect(screen.getByText('Kvällen börjar snart')).toBeInTheDocument()
     expect(screen.queryAllByRole('button')).toEqual([])
-    expect(onOpen).not.toHaveBeenCalled()
   })
 
-  it('under provningen går Ranka glögg att öppna och visar hur många som är provade', () => {
-    // Nummer 3 har ett tomt objekt och räknas inte som provad.
-    const onOpen = home('tasting', {}, { '1': { c1: 4 }, '2': { c1: 3, c2: 5 }, '3': {} })
-    const ranka = screen.getByRole('button', { name: /Ranka glögg/ })
-    expect(within(ranka).getByText('2 av 3 provade')).toBeInTheDocument()
-    fireEvent.click(ranka)
-    fireEvent.click(screen.getByRole('button', { name: /Kvällens glögger/ }))
+  it('visar Innan start tills live/ har svarat', () => {
+    home(null)
+    expect(screen.getByRole('heading', { name: 'Välkommen, Anna' })).toBeInTheDocument()
+  })
+})
+
+describe('Hem under kvällen', () => {
+  const open = (serving: number | null) => ({ vanlig: { open: true, serving, next: null } })
+
+  it('ett enda glöggkort: vad som serveras, hur många gästen har rankat, Ranka nr N och Se kvällens glögger', () => {
+    const onOpen = home({ stage: 'evening', tasting: open(3) }, { '1': { c1: 4 }, '2': { c1: 3, c2: 5 }, '3': {} })
+    const card = screen.getByRole('region', { name: 'Glöggprovning' })
+    expect(card).toHaveTextContent('Nu serveras nr 3 · du har rankat 2 av 3')
+    fireEvent.click(within(card).getByRole('button', { name: 'Ranka nr 3' }))
+    fireEvent.click(within(card).getByRole('button', { name: 'Se kvällens glögger' }))
     expect(onOpen.mock.calls).toEqual([['ranka'], ['glogger']])
   })
 
-  it('efter provningen är Ranka glögg klar och går inte att öppna', () => {
-    home('quiz', {}, { '1': { c1: 4 } })
-    expect(screen.queryByRole('button', { name: /Ranka glögg/ })).not.toBeInTheDocument()
-    expect(screen.getByText('1 av 3 provade')).toBeInTheDocument()
-    expect(screen.getByText('Pågår')).toBeInTheDocument()
+  it('inget Just nu-kort, inget quizkort och ingen låst Gissa glöggen', () => {
+    home({ stage: 'evening', tasting: open(1) })
+    expect(screen.queryByText(/Just nu/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Musikquiz' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/Gissa glöggen/)).not.toBeInTheDocument()
   })
 
-  it('Gissa glöggen öppnar i gissningsfasen och låses sedan', () => {
-    const onOpen = home('guess')
-    fireEvent.click(screen.getByRole('button', { name: /Gissa glöggen/ }))
-    expect(onOpen).toHaveBeenCalledWith('gissa')
+  it('en rad om quizet: hur många frågor som är klara', () => {
+    home({ stage: 'evening', quiz: { state: 'closed', qId: 'q3' } }, {}, vi.fn(), withQuiz)
+    expect(screen.getByText(/3 av 4 frågor klara · nästa kan komma när som helst/)).toBeInTheDocument()
     cleanup()
-    home('reveal')
-    expect(screen.getByText('Gissningarna är låsta')).toBeInTheDocument()
+    home({ stage: 'evening', quiz: { state: 'open', qId: 'q2', openedAt: 1, durationMs: 2 } }, {}, vi.fn(), withQuiz)
+    expect(screen.getByText(/1 av 4 frågor klara/)).toBeInTheDocument()
+    cleanup()
+    home({ stage: 'evening', quiz: { state: 'closed', qId: 'q4' } }, {}, vi.fn(), withQuiz)
+    expect(screen.getByText(/alla frågor klara/)).toBeInTheDocument()
   })
 
-  it('korten är inte klickbara när undersidan saknas', () => {
-    render(<GuestHome guest={anna} live={{ stage: 'evening' }} config={config} ratings={{}} />)
-    expect(screen.queryAllByRole('button')).toEqual([])
-    expect(screen.getByText('0 av 3 provade')).toBeInTheDocument()
+  it('provningen har inte börjat, eller är stängd', () => {
+    home({ stage: 'evening' })
+    expect(screen.getByText('Glöggprovningen börjar snart')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Ranka/ })).not.toBeInTheDocument()
+    cleanup()
+    home({ stage: 'evening', tasting: { vanlig: { open: false, serving: 3, next: null } } })
+    expect(screen.getByText('Provningen är stängd – tack för dina betyg')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Se kvällens glögger' })).toBeInTheDocument()
   })
 
-  it('visar fas registrering tills live/ har svarat', () => {
-    render(<GuestHome guest={anna} live={null} config={null} ratings={{}} />)
-    expect(screen.getByText('Kvällen börjar snart')).toBeInTheDocument()
+  it('Gissa glöggen visas först när steget är guess', () => {
+    const onOpen = home({ stage: 'wrapup', wrapup: { step: 'guess' } })
+    fireEvent.click(within(screen.getByRole('region', { name: 'Gissa glöggen' })).getByRole('button', { name: 'Gissa nu' }))
+    expect(onOpen).toHaveBeenCalledWith('gissa')
   })
 })
 
@@ -138,17 +145,16 @@ describe('GuestLive', () => {
   it('följer live/ när admin startar kvällen', () => {
     render(<GuestLive eventId="demo" uid="u1" guest={anna} />)
     act(() => pushLive({ stage: 'lobby' }))
-    expect(screen.getByText('Ranka glögg öppnar när provningen börjar')).toBeInTheDocument()
-    act(() => pushLive({ stage: 'evening' }))
-    expect(screen.getByText('Glöggprovning pågår')).toBeInTheDocument()
-    expect(screen.getByText('1 av 3 provade')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Välkommen, Anna' })).toBeInTheDocument()
+    act(() => pushLive({ stage: 'evening', tasting: { vanlig: { open: true, serving: null, next: null } } }))
+    expect(screen.getByText(/du har rankat 1 av 3/)).toBeInTheDocument()
   })
 
   it('räknar glögger i gästens nya klass när admin byter klass', () => {
     render(<GuestLive eventId="demo" uid="u1" guest={anna} />)
-    act(() => pushLive({ stage: 'evening' }))
+    act(() => pushLive({ stage: 'evening', tasting: { alkfri: { open: true, serving: null, next: null } } }))
     act(() => pushGuest({ ...anna, class: 'alkfri' }))
-    expect(screen.getByText('1 av 1 provade')).toBeInTheDocument()
+    expect(screen.getByText(/du har rankat 1 av 1/)).toBeInTheDocument()
   })
 
   it('säger till när admin har tagit bort gästen', () => {

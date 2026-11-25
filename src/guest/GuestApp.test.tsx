@@ -83,7 +83,7 @@ describe('återvändande gäst', () => {
     signedIn({ uid: 'u1', isAnonymous: true })
     mocked.getOwnGuest.mockResolvedValue(anna)
     renderAt('/?e=demo&k=glogg')
-    expect(await screen.findByRole('heading', { name: 'Hej Anna!' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Välkommen, Anna' })).toBeInTheDocument()
     expect(mocked.getOwnGuest).toHaveBeenCalledWith('demo', 'u1')
     // Prenumerationerna startas i en effekt efter att Hem har ritats; vänta in den.
     await waitFor(() =>
@@ -96,7 +96,7 @@ describe('återvändande gäst', () => {
     signedIn({ uid: 'u1', isAnonymous: true })
     mocked.getOwnGuest.mockResolvedValue(anna)
     renderAt('/')
-    expect(await screen.findByRole('heading', { name: 'Hej Anna!' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Välkommen, Anna' })).toBeInTheDocument()
   })
 
   it('visar registreringen om inloggad användare inte gått med', async () => {
@@ -120,7 +120,7 @@ describe('registrering', () => {
     fireEvent.click(screen.getByLabelText('Alkoholfri'))
     fireEvent.click(screen.getByRole('button', { name: 'Gå med' }))
 
-    expect(await screen.findByRole('heading', { name: 'Hej Anna!' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Välkommen, Anna' })).toBeInTheDocument()
     expect(mocked.joinEvent).toHaveBeenCalledWith('demo', 'u1', { name: 'Anna', class: 'alkfri', joinCode: 'glogg' })
     await waitFor(() =>
       expect(mocked.subscribeOwnGuest).toHaveBeenCalledWith('demo', 'u1', expect.any(Function), expect.any(Function)),

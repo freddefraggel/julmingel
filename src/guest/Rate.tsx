@@ -19,15 +19,18 @@ type Props = {
   onBack: () => void
 }
 
-type Status = { kind: 'idle' } | { kind: 'saving' } | { kind: 'saved'; number: number } | { kind: 'error'; message: string }
+type Status = { kind: 'idle' } | { kind: 'saved'; number: number } | { kind: 'error'; message: string }
 
 const VALUES: readonly Rating[] = [1, 2, 3, 4, 5]
 
-/** 3. Ranka glögg: välj nummer, 1–5 per kriterium, Spara. Följer numret som serveras, men gästen kan gå tillbaka. */
+/**
+ * 3. Ranka glögg: välj nummer och 1–5 per kriterium. Varje tryck sparas direkt,
+ * med en diskret bekräftelse. Följer numret som serveras, men gästen kan gå tillbaka.
+ */
 export function Rate({ eventId, uid, count, criteria, ratings, serving, open = true, onBack }: Props) {
   const [current, setCurrent] = useState<number>(() => clamp(serving ?? 1, count))
-  // Ändringar som inte är sparade, per nummer, så att inget försvinner när gästen byter glögg.
-  const [drafts, setDrafts] = useState<Record<number, Record<string, Rating>>>({})
+  // Tryck som är på väg till databasen, per nummer, så att knappen visar valet direkt.
+  const [pending, setPending] = useState<Record<number, Record<string, Rating>>>({})
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
 
   // Värden serverar en ny glögg: hoppa dit.
@@ -40,41 +43,25 @@ export function Rate({ eventId, uid, count, criteria, ratings, serving, open = t
 
   const sorted = Object.entries(criteria ?? {}).sort(([a, x], [b, y]) => x.order - y.order || (a < b ? -1 : 1))
   const saved = ratings[String(current)] ?? {}
-  const values = { ...saved, ...drafts[current] }
-  const changed = Object.keys(drafts[current] ?? {}).some((cId) => drafts[current]![cId] !== saved[cId])
+  const values = { ...saved, ...pending[current] }
   const isRated = (n: number) => Object.keys(ratings[String(n)] ?? {}).length > 0
 
-  function pick(cId: string, value: Rating) {
-    setDrafts((d) => ({ ...d, [current]: { ...d[current], [cId]: value } }))
-    setStatus({ kind: 'idle' })
-  }
-
-  async function save() {
+  async function pick(cId: string, value: Rating) {
     const number = current
-    const toSave = drafts[number]
-    if (!toSave || Object.keys(toSave).length === 0) return
-    setStatus({ kind: 'saving' })
+    setPending((p) => ({ ...p, [number]: { ...p[number], [cId]: value } }))
     try {
-      await saveRatings(eventId, uid, String(number), toSave)
-      setDrafts((d) => {
-        const rest = { ...d }
-        delete rest[number]
-        return rest
-      })
+      await saveRatings(eventId, uid, String(number), { [cId]: value })
       setStatus({ kind: 'saved', number })
     } catch {
+      // Ta bort trycket som inte kom fram, så att knapparna visar det som faktiskt är sparat.
+      setPending((p) => {
+        const rest = { ...p[number] }
+        delete rest[cId]
+        return { ...p, [number]: rest }
+      })
       setStatus({ kind: 'error', message: 'Kunde inte spara. Provningen kan vara stängd – fråga värden.' })
     }
   }
-
-  const label =
-    status.kind === 'saving'
-      ? 'Sparar…'
-      : isRated(current) && !changed
-        ? 'Sparat – ändra och spara igen'
-        : isRated(current)
-          ? 'Uppdatera betyg'
-          : 'Spara betyg'
 
   return (
     <main className="page guest-page rate">
@@ -136,7 +123,7 @@ export function Rate({ eventId, uid, count, criteria, ratings, serving, open = t
                       aria-pressed={values[cId] === v}
                       aria-label={`${criterion.name} ${v}`}
                       disabled={!open}
-                      onClick={() => pick(cId, v)}
+                      onClick={() => void pick(cId, v)}
                     >
                       {v}
                     </button>
@@ -150,10 +137,10 @@ export function Rate({ eventId, uid, count, criteria, ratings, serving, open = t
 
       <div className="rate__spacer" />
 
-      <div className="rate__save">
+      <div className="rate__save" aria-live="polite">
         {status.kind === 'saved' && status.number === current && (
           <p role="status" className="rate__ok">
-            Sparat! Dina betyg på glögg {current} är med.
+            Sparat ✓
           </p>
         )}
         {status.kind === 'error' && (
@@ -161,14 +148,6 @@ export function Rate({ eventId, uid, count, criteria, ratings, serving, open = t
             {status.message}
           </p>
         )}
-        <button
-          type="button"
-          className="btn btn--primary btn--large btn--block"
-          disabled={!open || !changed || status.kind === 'saving'}
-          onClick={() => void save()}
-        >
-          {label}
-        </button>
       </div>
     </main>
   )
