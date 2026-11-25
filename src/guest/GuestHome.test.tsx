@@ -35,7 +35,7 @@ const config: EventConfig = {
 function liveFor(phase: Phase): LiveState {
   if (phase === 'registration') return { stage: 'lobby' }
   if (phase === 'tasting') return { stage: 'evening' }
-  if (phase === 'quiz') return { stage: 'evening', quiz: { state: 'idle' } }
+  if (phase === 'quiz') return { stage: 'evening', quiz: { state: 'playing', qId: 'q1' } }
   if (phase === 'done') return { stage: 'done' }
   return { stage: 'wrapup', wrapup: { step: phase } }
 }
@@ -169,8 +169,8 @@ describe('GuestLive', () => {
     expect(screen.getByRole('heading', { name: 'Lyssna noga …' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Till provningen' }))
     expect(screen.getByRole('heading', { name: 'Hej Anna!' })).toBeInTheDocument()
-    act(() => pushLive({ stage: 'evening', quiz: { state: 'idle', qId: 'q1' } }))
-    expect(screen.getByRole('heading', { name: 'Musikquizet börjar snart' })).toBeInTheDocument()
+    act(() => pushLive({ stage: 'evening', quiz: { state: 'playing', songId: 's2', qId: 'q2' } }))
+    expect(screen.getByRole('heading', { name: 'Lyssna noga …' })).toBeInTheDocument()
   })
 
   it('förladdar bilderna en gång, även när live/ ändras', async () => {

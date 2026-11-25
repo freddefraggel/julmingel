@@ -145,6 +145,7 @@ export function Quiz({ eventId, uid, config, live, onLeave }: Props) {
         timing={timing}
         answer={answer}
         sameSongNext={position.sameSongNext}
+        onLeave={onLeave}
       />
     )
   }
@@ -257,17 +258,18 @@ type TimeUpProps = {
   timing: QuestionTiming
   answer: Answer | null
   sameSongNext: boolean
+  onLeave?: () => void
 }
 
 /** 6. Tiden är ute: låst svar, möjliga stjärnor och hur många som har svarat. */
-function TimeUp({ label, config, live, qId, timing, answer, sameSongNext }: TimeUpProps) {
+function TimeUp({ label, config, live, qId, timing, answer, sameSongNext, onLeave }: TimeUpProps) {
   const question = config?.questions?.[qId]
   const stars = answer ? starsFor(answer.at, timing) : 0
   const answered = live.answered?.qId === qId ? live.answered : null
   const text = answer && question && question.answerType === 'text' ? `${answer.choice} · ${question.options[answer.choice]}` : answer?.choice
 
   return (
-    <QuizPage label={label}>
+    <QuizPage label={label} onLeave={onLeave}>
       <div className="quiz-done">
         <div className="quiz-done__icon" aria-hidden="true">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

@@ -9,6 +9,7 @@ vi.mock('../data', () => ({
   subscribeAllRatings: vi.fn(),
   subscribeAssets: vi.fn(),
   setTasting: vi.fn(),
+  setTastingOpen: vi.fn(),
 }))
 
 const mocked = vi.mocked(data)
@@ -93,11 +94,25 @@ describe('Glöggprovning hos admin', () => {
 
   it('serveringsordningen visar status, och admin kan förbereda en annan glögg', () => {
     renderPanel({ stage: 'evening', tasting: { vanlig: { open: true, serving: 2, next: 3 } } })
+    fireEvent.click(screen.getByRole('button', { name: 'Visa hela serveringsordningen' }))
     const order = screen.getByRole('region', { name: 'Serveringsordning' })
     const rows = within(order).getAllByRole('listitem')
     expect(rows.map((r) => r.textContent)).toEqual(['1Vit glöggServerad', '2Klassisk rödServeras nu', '3PortvinsglöggFörbered'])
     fireEvent.click(within(order).getByRole('button', { name: 'Förbered nr 1 härnäst' }))
     expect(mocked.setTasting).toHaveBeenCalledWith('demo', 'vanlig', { serving: 2, next: 1 })
+  })
+
+  it('Stäng provningen sätter open: false för klassen, och Öppna sätter tillbaka', async () => {
+    mocked.setTastingOpen.mockResolvedValue()
+    renderPanel({ stage: 'evening', tasting: { vanlig: { open: true, serving: 2, next: 3 } } })
+    expect(screen.getByText('Öppen')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Stäng provningen' }))
+    expect(mocked.setTastingOpen).toHaveBeenCalledWith('demo', 'vanlig', false)
+    cleanup()
+    renderPanel({ stage: 'evening', tasting: { vanlig: { open: false, serving: 2, next: 3 } } })
+    expect(screen.getByText('Stängd')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Öppna provningen' }))
+    expect(mocked.setTastingOpen).toHaveBeenCalledWith('demo', 'vanlig', true)
   })
 
   it('säger till när alla är serverade', () => {

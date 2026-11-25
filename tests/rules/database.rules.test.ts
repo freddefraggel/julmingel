@@ -7,7 +7,7 @@ import {
 import { get, ref, serverTimestamp, set, update } from 'firebase/database'
 import { readFileSync } from 'node:fs'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { phaseChanges } from '../../src/live'
+import { stageChanges, wrapupStepChanges } from '../../src/live'
 
 const E = 'events/test'
 let env: RulesTestEnvironment
@@ -556,12 +556,14 @@ describe('tre oberoende lägen', () => {
     await assertFails(rate())
   })
 
-  it.each(['registration', 'tasting', 'quiz', 'review', 'guess', 'reveal', 'done'] as const)(
-    'faslistans skrivning för %s (phaseChanges) godkänns',
-    async (phase) => {
-      await assertSucceeds(update(ref(db('admin'), E), phaseChanges(phase)))
-    },
-  )
+  it.each(['lobby', 'evening', 'wrapup', 'done'] as const)('lägesknappen %s (stageChanges) godkänns', async (stage) => {
+    const live = { stage: 'evening' as const, quiz: { state: 'open' as const, qId: 'q1', openedAt: Date.now(), durationMs: 60_000 } }
+    await assertSucceeds(update(ref(db('admin'), E), stageChanges(stage, live)))
+  })
+
+  it.each(['review', 'guess', 'reveal', 'done'] as const)('stegfliken %s (wrapupStepChanges) godkänns', async (step) => {
+    await assertSucceeds(update(ref(db('admin'), E), wrapupStepChanges(step)))
+  })
 
   it('gissningen kräver steget guess, inte bara att kvällen är i avslutningen', async () => {
     await setLive({ stage: 'wrapup', wrapup: { step: 'review' } })
