@@ -55,7 +55,6 @@ export default function AdminPanel() {
       <ControlPanel
         eventId={state.eventId}
         eventName={state.name}
-        joinCode={state.joinCode}
         onChangeEvent={() => chooseEvent(null)}
       />
     )

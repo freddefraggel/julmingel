@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   changeGuestClass,
@@ -16,7 +16,6 @@ import { Button, Card, Chip } from '../ui'
 import { SignOutButton } from './AdminGate'
 import { GuessPanel } from './GuessPanel'
 import { GuestList } from './GuestList'
-import { QrDialog } from './QrDialog'
 import { QuizPanel } from './QuizPanel'
 import { RevealPanel } from './RevealPanel'
 import { ReviewPanel } from './ReviewPanel'
@@ -25,7 +24,6 @@ import { TastingPanel } from './TastingPanel'
 type Props = {
   eventId: string
   eventName: string
-  joinCode: string
   onChangeEvent: () => void
 }
 
@@ -33,7 +31,7 @@ type Props = {
  * Admin – styr kvällen (docs/design/AdminKontroll.dc.html): kvällens tre lägen
  * överst, och under kvällen Glöggprovning och Musikquiz sida vid sida.
  */
-export function ControlPanel({ eventId, eventName, joinCode, onChangeEvent }: Props) {
+export function ControlPanel({ eventId, eventName, onChangeEvent }: Props) {
   // undefined medan live/ hämtas; null när kvällen inte har någon live/ än (en ny kväll).
   const [live, setLive] = useState<LiveState | null | undefined>(undefined)
   const [config, setConfig] = useState<EventConfig | null>(null)
@@ -41,8 +39,6 @@ export function ControlPanel({ eventId, eventName, joinCode, onChangeEvent }: Pr
   const [lostConnection, setLostConnection] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const [showQr, setShowQr] = useState(false)
-  const closeQr = useCallback(() => setShowQr(false), [])
 
   useEffect(() => {
     const onError = () => setLostConnection(true)
@@ -94,7 +90,11 @@ export function ControlPanel({ eventId, eventName, joinCode, onChangeEvent }: Pr
     <Card compact className="control__join">
       <div className="control__join-text">
         <strong>Registreringen är {joinOpen ? 'öppen' : 'stängd'}</strong>
-        <span className="muted">{joinOpen ? 'Nya gäster kan gå med via QR-koden.' : 'Inga nya gäster kan gå med.'}</span>
+        <span className="muted">
+          {joinOpen
+            ? 'Nya gäster kan gå med via QR-koden. Håll den öppen tills alla har kommit – en utskriven kod slutar fungera när registreringen stängs.'
+            : 'Inga nya gäster kan gå med, inte heller med en utskriven QR-kod.'}
+        </span>
       </div>
       <Chip tone={joinOpen ? 'green' : 'rose'}>{joinOpen ? 'Öppen' : 'Stängd'}</Chip>
       <Button variant="secondary" size="small" disabled={busy} onClick={() => void save(() => setJoinOpen(eventId, !joinOpen))}>
@@ -134,9 +134,9 @@ export function ControlPanel({ eventId, eventName, joinCode, onChangeEvent }: Pr
           <span className="control__count">
             {guestCount === null ? 'Hämtar gäster…' : `${guestCount} ${guestCount === 1 ? 'gäst' : 'gäster'}`}
           </span>
-          <Button variant="secondary" size="small" onClick={() => setShowQr(true)}>
+          <Link to="/admin/qr" className="btn btn--secondary btn--small">
             Visa QR
-          </Button>
+          </Link>
           <Link to="/admin/forbered" className="btn btn--secondary btn--small">
             Förbered kvällen
           </Link>
@@ -231,7 +231,6 @@ export function ControlPanel({ eventId, eventName, joinCode, onChangeEvent }: Pr
         <Link to="/admin/spotify">Testa Spotify</Link>
       </footer>
 
-      {showQr && <QrDialog eventId={eventId} joinCode={joinCode} joinOpen={joinOpen} onClose={closeQr} />}
     </main>
   )
 }
