@@ -52,3 +52,24 @@ export function quizTiming(live: LiveState | null | undefined): QuestionTiming |
   if (!quiz || typeof quiz.openedAt !== 'number' || typeof quiz.durationMs !== 'number') return null
   return { openedAt: quiz.openedAt, durationMs: quiz.durationMs }
 }
+
+/**
+ * Skrivningarna för *Nollställ kvällen*: allt som gästerna och kvällen har
+ * skrivit tas bort i ett anrop, men inte förberedelserna (config/, assets/,
+ * kod, glöggordning och facit). Utan live/ visar kontrollpanelen att kvällen
+ * inte har börjat.
+ */
+export function resetChanges(includeGuests: boolean): Record<string, null> {
+  const changes: Record<string, null> = {
+    ratings: null,
+    answers: null,
+    guesses: null,
+    results: null,
+    reveal: null,
+    'secret/quizTimes': null,
+    'secret/leaderboard': null,
+    live: null,
+  }
+  if (includeGuests) changes.guests = null
+  return changes
+}

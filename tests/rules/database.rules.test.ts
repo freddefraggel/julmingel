@@ -7,7 +7,7 @@ import {
 import { get, ref, serverTimestamp, set, update } from 'firebase/database'
 import { readFileSync } from 'node:fs'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { stageChanges, wrapupStepChanges } from '../../src/live'
+import { resetChanges, stageChanges, wrapupStepChanges } from '../../src/live'
 
 const E = 'events/test'
 let env: RulesTestEnvironment
@@ -568,5 +568,38 @@ describe('tre oberoende lägen', () => {
   it('gissningen kräver steget guess, inte bara att kvällen är i avslutningen', async () => {
     await setLive({ stage: 'wrapup', wrapup: { step: 'review' } })
     await assertFails(set(ref(db('anna'), `${E}/guesses/anna`), { map: { 1: 'g1' }, locked: false }))
+  })
+})
+
+describe('nollställ kvällen', () => {
+  it('admin tar bort kvällens resultat i ett anrop, och förberedelserna finns kvar', async () => {
+    await env.withSecurityRulesDisabled((ctx) =>
+      update(ref(ctx.database(), E), {
+        'ratings/anna': { 1: { c1: 4 } },
+        'answers/q1/anna': { choice: 'A', at: 1 },
+        'results/leaderboard/anna': { points: 1, stars: 3, rank: 1, name: 'Anna' },
+        'secret/quizTimes/q1': { openedAt: 1, durationMs: 20_000 },
+      }),
+    )
+    await assertSucceeds(update(ref(db('admin'), E), resetChanges(false)))
+    const after = await read(E)
+    expect(after.ratings).toBeUndefined()
+    expect(after.answers).toBeUndefined()
+    expect(after.results).toBeUndefined()
+    expect(after.live).toBeUndefined()
+    expect(after.secret.quizTimes).toBeUndefined()
+    expect(after.secret.joinCode).toBe('hemlig')
+    expect(after.secret.correct).toEqual({ q1: 'B' })
+    expect(after.config.name).toBe('Test')
+    expect(after.guests.anna).toBeDefined()
+  })
+
+  it('med gästerna tas även guests/ bort', async () => {
+    await assertSucceeds(update(ref(db('admin'), E), resetChanges(true)))
+    expect((await read(E)).guests).toBeUndefined()
+  })
+
+  it('gäster får inte nollställa kvällen', async () => {
+    await assertFails(update(ref(db('anna'), E), resetChanges(false)))
   })
 })

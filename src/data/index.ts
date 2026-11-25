@@ -31,7 +31,15 @@ export {
 export { getAssets, removeAsset, saveAsset, subscribeAssets } from './assets'
 export { subscribeOwnGuest } from './guests'
 export { saveRatings, subscribeOwnRatings } from './ratings'
-export { loadPreparation, newConfigId, savePreparation, setAnswerImage, setGloggImage, type Preparation } from './prepare'
+export {
+  loadPreparation,
+  newConfigId,
+  resetEvening,
+  savePreparation,
+  setAnswerImage,
+  setGloggImage,
+  type Preparation,
+} from './prepare'
 export { setTasting, setTastingOpen, subscribeAllRatings, subscribeNumbers } from './tasting'
 export { revealNumbers, saveGuess, subscribeAllGuesses, subscribeOwnGuess } from './guesses'
 export { loadResultsInput, subscribeResults, writeResults, type ResultsInput } from './results'

@@ -1,5 +1,6 @@
 import { get, push, ref, set, update } from 'firebase/database'
 import type { Choice, EventConfig, EventSecret, Stage } from '../types'
+import { resetChanges } from '../live'
 import { eventPath } from './db'
 import { firebase } from './firebase'
 
@@ -57,4 +58,9 @@ export function setGloggImage(eventId: string, gId: string, imageId: string): Pr
 /** Som setGloggImage, för ett bildsvar på en fråga som redan är sparad med svarstypen Bild. */
 export function setAnswerImage(eventId: string, qId: string, choice: Choice, imageId: string): Promise<void> {
   return set(ref(firebase().db, eventPath(eventId, 'config', 'questions', qId, 'options', choice)), imageId)
+}
+
+/** *Nollställ kvällen* efter ett testvarv (se resetChanges i src/live.ts). Gästerna tas bort bara om admin väljer det. */
+export function resetEvening(eventId: string, includeGuests: boolean): Promise<void> {
+  return update(ref(firebase().db, eventPath(eventId)), resetChanges(includeGuests))
 }
