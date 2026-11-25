@@ -68,6 +68,25 @@ export type SavePayload = {
 
 export const DEFAULT_SECONDS = 30
 
+/** Kriterierna från designen (docs/design/Ranka.dc.html). Förval när en kväll saknar kriterier. */
+export const DEFAULT_CRITERIA: readonly Omit<DraftCriterion, 'cId'>[] = [
+  { name: 'Julkänsla', lowIsGood: false },
+  { name: 'Mysfaktor', lowIsGood: false },
+  { name: 'Doft', lowIsGood: false },
+  { name: 'Sliskighet', lowIsGood: true },
+  { name: 'Kvalmighet', lowIsGood: true },
+  { name: 'Påtår?', lowIsGood: false },
+]
+
+/**
+ * Lägger in designens kriterier när utkastet inte har några. De är osparade
+ * tills admin trycker på Spara, och kan tas bort eller kompletteras som vanligt.
+ */
+export function withDefaultCriteria(draft: Draft, newId: () => string): Draft {
+  if (draft.criteria.length > 0) return draft
+  return { ...draft, criteria: DEFAULT_CRITERIA.map((c) => ({ cId: newId(), ...c })) }
+}
+
 const emptyOptions = (): Options => ({ A: '', B: '', C: '', D: '' })
 
 export function newSong(songId: string): DraftSong {

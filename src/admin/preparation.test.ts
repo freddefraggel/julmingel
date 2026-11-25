@@ -12,6 +12,7 @@ import {
   toDraft,
   toPayload,
   unusedImages,
+  withDefaultCriteria,
   type Draft,
   type Saved,
 } from './preparation'
@@ -305,5 +306,25 @@ describe('tider och rubrik', () => {
     expect(quizSummary([])).toBe('Musikquiz · 0 låtar · 0 frågor')
     expect(quizSummary(draft.songs.slice(1))).toBe('Musikquiz · 1 låt · 1 fråga')
     expect(questionNumber(draft.songs, 1, 0)).toBe(3)
+  })
+})
+
+describe('withDefaultCriteria', () => {
+  it('lägger in designens sex kriterier när utkastet saknar kriterier', () => {
+    let n = 0
+    const draft = withDefaultCriteria(toDraft({ config: null, joinCode: null, numbers: null }, 'demo'), () => `k${++n}`)
+    expect(draft.criteria).toEqual([
+      { cId: 'k1', name: 'Julkänsla', lowIsGood: false },
+      { cId: 'k2', name: 'Mysfaktor', lowIsGood: false },
+      { cId: 'k3', name: 'Doft', lowIsGood: false },
+      { cId: 'k4', name: 'Sliskighet', lowIsGood: true },
+      { cId: 'k5', name: 'Kvalmighet', lowIsGood: true },
+      { cId: 'k6', name: 'Påtår?', lowIsGood: false },
+    ])
+  })
+
+  it('rör inte kriterier som redan finns', () => {
+    const draft = toDraft(saved, 'demo')
+    expect(withDefaultCriteria(draft, () => 'ny')).toBe(draft)
   })
 })

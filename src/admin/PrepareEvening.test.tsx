@@ -182,6 +182,29 @@ describe('Förbered kvällen', () => {
   })
 })
 
+describe('Förvalda kriterier', () => {
+  it('en kväll utan kriterier får designens kriterier, som sparas med Spara', async () => {
+    await open({ ...preparation, config: { ...preparation.config!, criteria: undefined } })
+    const names = ['Julkänsla', 'Mysfaktor', 'Doft', 'Sliskighet', 'Kvalmighet', 'Påtår?']
+    names.forEach((name, i) => expect(screen.getByLabelText(`Namn på kriterium ${i + 1}`)).toHaveValue(name))
+    expect(screen.getAllByLabelText('lågt = bra').map((box) => (box as HTMLInputElement).checked)).toEqual([
+      false, false, false, true, true, false,
+    ])
+    expect(screen.getByText('Osparade ändringar')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Ta bort Påtår?' }))
+    save()
+    await screen.findByText('Sparat')
+    const criteria = savedChanges()['config/criteria'] as Record<string, { name: string; order: number }>
+    expect(Object.values(criteria).map((c) => [c.name, c.order])).toEqual([
+      ['Julkänsla', 1],
+      ['Mysfaktor', 2],
+      ['Doft', 3],
+      ['Sliskighet', 4],
+      ['Kvalmighet', 5],
+    ])
+  })
+})
+
 describe('Musikquiz', () => {
   const TRACK = 'spotify:track:2FRnf9qhLbvw8fu4IBXx78'
   const withQuiz: Preparation = {

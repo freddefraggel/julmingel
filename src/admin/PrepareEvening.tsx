@@ -24,6 +24,7 @@ import {
   toDraft,
   toPayload,
   unusedImages,
+  withDefaultCriteria,
   type Draft,
   type DraftCriterion,
   type DraftGlogg,
@@ -71,7 +72,8 @@ function Prepare({ eventId }: { eventId: string }) {
         const saved: Saved = { config, joinCode, numbers, correct }
         const baseline = toDraft(saved, eventId)
         setLoad({ kind: 'ready', saved, baseline, phase })
-        setDraft(baseline)
+        // Designens kriterier finns alltid med; de sparas med nästa Spara.
+        setDraft(withDefaultCriteria(baseline, () => newConfigId(eventId, 'criteria')))
       })
       .catch(() => {
         if (active) setLoad({ kind: 'failed' })
