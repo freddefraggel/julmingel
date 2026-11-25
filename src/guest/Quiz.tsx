@@ -13,6 +13,8 @@ type Props = {
   uid: string
   config: EventConfig | null
   live: LiveState
+  /** *Till provningen*: gästen lämnar quizvyn tills nästa fråga visas. */
+  onLeave?: () => void
 }
 
 /** Var frågan ligger: ”Låt 2 · fråga 1 av 3”, och om nästa fråga gäller samma låt. */
@@ -29,6 +31,8 @@ export function questionPosition(config: EventConfig | null, qId: string) {
   return {
     question,
     label: `Låt ${songNumber > 0 ? songNumber : '?'} · fråga ${index + 1} av ${inSong.length}`,
+    songNumber,
+    songCount: inSong.length,
     sameSongNext: index < inSong.length - 1,
   }
 }
@@ -38,7 +42,7 @@ export function questionPosition(config: EventConfig | null, qId: string) {
  * i serverns tid (`.info/serverTimeOffset`), så att mobilens klocka eller en
  * omladdning inte ändrar sluttiden.
  */
-export function Quiz({ eventId, uid, config, live }: Props) {
+export function Quiz({ eventId, uid, config, live, onLeave }: Props) {
   const quiz = live.quiz
   const [offset, setOffset] = useState(0)
   const [now, setNow] = useState(() => Date.now())
@@ -76,14 +80,28 @@ export function Quiz({ eventId, uid, config, live }: Props) {
     )
   }
 
-  // Spela låt: låten går, men frågan och tiden kommer först med Visa fråga.
+  // 5a. Spela låt: låten går, men frågan och tiden kommer först med Visa fråga.
   if (quiz.state === 'playing' || !timing) {
+    const song = questionPosition(config, currentQId)
     return (
-      <QuizPage label={questionPosition(config, currentQId)?.label ?? ''}>
-        <div className="quiz-wait">
+      <QuizPage label={song ? `Musikquiz · låt ${song.songNumber}` : ''} onLeave={onLeave} title={false}>
+        <div className="quiz-listen">
+          <span className="quiz-listen__eq" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+            <span />
+            <span />
+            <span />
+          </span>
           <h1>Lyssna noga …</h1>
-          <p className="muted">Frågan kommer strax.</p>
+          <p className="quiz-listen__text">Frågan kommer strax.</p>
         </div>
+        {song && (
+          <p className="quiz-listen__count">
+            {song.songCount === 1 ? '1 fråga om den här låten' : `${song.songCount} frågor om den här låten`}
+          </p>
+        )}
       </QuizPage>
     )
   }
@@ -178,12 +196,30 @@ export function Quiz({ eventId, uid, config, live }: Props) {
   )
 }
 
-function QuizPage({ label, children }: { label: string; children: ReactNode }) {
+type QuizPageProps = {
+  label: string
+  children: ReactNode
+  /** Länken *Till provningen* uppe till vänster. */
+  onLeave?: () => void
+  /** Rubriken *Musikquiz*; 5a visar i stället bara låten till höger. */
+  title?: boolean
+}
+
+function QuizPage({ label, children, onLeave, title = true }: QuizPageProps) {
   return (
     <main className="page guest-page quiz">
       <Garland />
       <div className="quiz__head">
-        <span className="eyebrow eyebrow--gold">Musikquiz</span>
+        {onLeave ? (
+          <button type="button" className="guest-back" onClick={onLeave}>
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 6l-6 6 6 6" />
+            </svg>
+            Till provningen
+          </button>
+        ) : (
+          title && <span className="eyebrow eyebrow--gold">Musikquiz</span>
+        )}
         {label && <span className="quiz__position">{label}</span>}
       </div>
       {children}

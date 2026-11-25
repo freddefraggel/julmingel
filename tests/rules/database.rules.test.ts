@@ -528,6 +528,11 @@ describe('tre oberoende lägen', () => {
   const answer = () => set(ref(db('anna'), `${E}/answers/q1/anna`), { choice: 'A', at: serverTimestamp() })
   const rate = () => set(ref(db('anna'), `${E}/ratings/anna/1/c1`), 4)
 
+  it('Pausa låten och Hoppa över låten (idle med qId) godkänns utan tider, och tar inte emot svar', async () => {
+    await assertSucceeds(set(ref(db('admin'), `${E}/live/quiz`), { state: 'idle', qId: 'q1' }))
+    await assertFails(answer())
+  })
+
   it('nekar svar medan låten spelar men frågan inte visats', async () => {
     await setLive({ stage: 'evening', quiz: { state: 'playing', songId: 's1', qId: 'q1' } })
     await assertFails(answer())

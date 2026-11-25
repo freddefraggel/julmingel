@@ -7,6 +7,9 @@ import { QuizPanel } from './QuizPanel'
 
 vi.mock('../data', () => ({
   openQuestion: vi.fn(),
+  playSong: vi.fn(),
+  closeQuestion: vi.fn(),
+  setQuizIdle: vi.fn(),
   setAnsweredCount: vi.fn(),
   subscribeAnswers: vi.fn(),
   subscribeAssets: vi.fn(),
@@ -54,11 +57,23 @@ function renderPanel(live: LiveState) {
   return render(<QuizPanel eventId="demo" config={config} live={live} guests={guests} disabled={false} save={save} />)
 }
 
+/** En öppen fråga, öppnad vid servertid 95 000. Mobilens klocka står på 100 000 och servern ligger 5 s före. */
+const open = (qId: string, extra: Partial<LiveState> = {}): LiveState => ({
+  stage: 'evening',
+  quiz: { state: 'open', songId: qId === 'q3' ? 's2' : 's1', qId, openedAt: 95_000, durationMs: qId === 'q3' ? 20_000 : 30_000 },
+  ...extra,
+})
+
+const primary = () => screen.getByRole('button', { name: /^(Spela låt \d|Visa fråga|Fråga \d|Alla frågor)/ })
+
 beforeEach(() => {
   vi.clearAllMocks()
   vi.useFakeTimers({ shouldAdvanceTime: true })
   vi.setSystemTime(100_000)
   mocked.openQuestion.mockResolvedValue()
+  mocked.playSong.mockResolvedValue()
+  mocked.closeQuestion.mockResolvedValue()
+  mocked.setQuizIdle.mockResolvedValue()
   mocked.setAnsweredCount.mockResolvedValue()
   mocked.subscribeAnswers.mockImplementation((_e, _q, callback) => {
     pushAnswers = callback
@@ -73,7 +88,6 @@ beforeEach(() => {
     callback({ q1: 'B', q2: 'A', q3: 'C' })
     return () => {}
   })
-  // Mobilens klocka går 5 s efter servern.
   mocked.subscribeServerTimeOffset.mockImplementation((callback) => {
     callback(5_000)
     return () => {}
@@ -87,56 +101,98 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-describe('Musikquizet hos admin', () => {
-  it('startar quizet med första frågan och första låten', async () => {
+describe('Musikquizet hos admin: Spela låt, sedan Visa fråga', () => {
+  it('idle: Spela låt 1 startar låten utan fråga och utan tid', async () => {
     renderPanel({ stage: 'evening', quiz: { state: 'idle' } })
-    expect(screen.getByText('Inte startat')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /Starta quizet/ }))
+    expect(screen.getByText('Gästerna ser provningen – ingen fråga')).toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Svar' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Spela låt 1' }))
     await waitFor(() => expect(mockedSpotify.startSong).toHaveBeenCalled())
-    expect(mocked.openQuestion).toHaveBeenCalledWith('demo', 'q1', 's1', 30_000)
+    expect(mocked.playSong).toHaveBeenCalledWith('demo', 's1', 'q1')
+    expect(mocked.openQuestion).not.toHaveBeenCalled()
     expect(mockedSpotify.startSong.mock.calls[0]![0]).toMatchObject({ songId: 's1', startMs: 30_000 })
   })
 
-  it('visar frågan, position, svar live och sekunder kvar mot serverns tid', () => {
-    // Öppnad för 10 s sedan i serverns tid (mobilens 100 s + 5 s offset).
-    renderPanel({ stage: 'evening', quiz: { state: 'open', qId: 'q1', openedAt: 95_000, durationMs: 30_000 } })
-    expect(screen.getByText('Låt 1 · fråga 1 av 2 · visas nu')).toBeInTheDocument()
+  it('playing: Visa fråga 1 startar tiden, och låten startas inte igen', async () => {
+    renderPanel({ stage: 'evening', quiz: { state: 'playing', songId: 's1', qId: 'q1' } })
+    expect(screen.getByText('Gästerna ser ”Lyssna noga …” – ingen timer')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Visa fråga 1' }))
+    await waitFor(() => expect(mocked.openQuestion).toHaveBeenCalledWith('demo', 'q1', 's1', 30_000))
+    expect(mockedSpotify.startSong).not.toHaveBeenCalled()
+  })
+
+  it('open: knappen är avstängd och visar sekunderna kvar mot serverns tid', () => {
+    renderPanel(open('q1'))
+    expect(primary()).toBeDisabled()
+    expect(primary()).toHaveTextContent('Fråga 1 är öppen · 20 s kvar')
+    expect(screen.getByText('Låt 1 · fråga 1 av 2 · öppen')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Vilket år släpptes låten?' })).toBeInTheDocument()
-    expect(screen.getByText(/Totalt fråga 1 av 3 · Svar: 0 \/ 3/)).toBeInTheDocument()
-    expect(screen.getByText('20 s kvar')).toBeInTheDocument()
     act(() => pushAnswers({ u1: { choice: 'B', at: 96_000 }, u3: { choice: 'A', at: 97_000 } }))
     expect(screen.getByText(/Svar: 2 \/ 3/)).toBeInTheDocument()
     const answers = within(screen.getByRole('list', { name: 'Svar' })).getAllByRole('listitem')
     expect(answers.map((a) => a.textContent)).toEqual(['A · 1 svar1984', 'B · 1 svar1994', 'C · 0 svar2003', 'D · 0 svar2011'])
     expect(within(screen.getByRole('region', { name: 'Väntar på svar' })).getByText('Bo')).toBeInTheDocument()
+  })
+
+  it('stänger frågan när tiden är ute, en gång', async () => {
+    renderPanel(open('q1'))
     act(() => vi.advanceTimersByTime(21_000))
-    expect(screen.getByText('Tiden är ute')).toBeInTheDocument()
+    await waitFor(() => expect(mocked.closeQuestion).toHaveBeenCalledWith('demo'))
+    act(() => vi.advanceTimersByTime(2_000))
+    expect(mocked.closeQuestion).toHaveBeenCalledTimes(1)
   })
 
-  it('visar rätt svar först när admin ber om det', () => {
-    renderPanel({ stage: 'evening', quiz: { state: 'open', qId: 'q1', openedAt: 95_000, durationMs: 30_000 } })
-    expect(screen.queryByText(/· rätt ·/)).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Visa rätt svar' }))
-    expect(screen.getByText('B · rätt · 0 svar')).toBeInTheDocument()
+  it('Stäng frågan nu stänger direkt', async () => {
+    renderPanel(open('q1'))
+    fireEvent.click(screen.getByRole('button', { name: 'Stäng frågan nu' }))
+    await waitFor(() => expect(mocked.closeQuestion).toHaveBeenCalledWith('demo'))
   })
 
-  it('nästa fråga på samma låt startar inte låten igen', async () => {
-    renderPanel({ stage: 'evening', quiz: { state: 'open', qId: 'q1', openedAt: 95_000, durationMs: 30_000 } })
-    const next = screen.getByRole('button', { name: /Nästa fråga/ })
-    expect(next).toHaveTextContent('Samma låt fortsätter')
-    fireEvent.click(next)
+  it('closed: nästa fråga på samma låt visas direkt, utan att låten startas om', async () => {
+    renderPanel({ stage: 'evening', quiz: { state: 'closed', songId: 's1', qId: 'q1', openedAt: 60_000, durationMs: 30_000 } })
+    expect(screen.getByText('Gästerna är tillbaka i provningen')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Visa fråga 2 · samma låt' }))
     await waitFor(() => expect(mocked.openQuestion).toHaveBeenCalledWith('demo', 'q2', 's1', 30_000))
+    expect(mocked.playSong).not.toHaveBeenCalled()
     expect(mockedSpotify.startSong).not.toHaveBeenCalled()
   })
 
-  it('första frågan på nästa låt startar den låten', async () => {
-    renderPanel({ stage: 'evening', quiz: { state: 'open', qId: 'q2', openedAt: 95_000, durationMs: 30_000 } })
-    const next = screen.getByRole('button', { name: /Nästa fråga/ })
-    expect(next).toHaveTextContent('Ny låt: låt 2 startar')
-    fireEvent.click(next)
-    await waitFor(() => expect(mockedSpotify.startSong).toHaveBeenCalled())
-    expect(mocked.openQuestion).toHaveBeenCalledWith('demo', 'q3', 's2', 20_000)
+  it('closed på sista frågan till en låt: Spela låt 2', async () => {
+    renderPanel({ stage: 'evening', quiz: { state: 'closed', songId: 's1', qId: 'q2', openedAt: 60_000, durationMs: 30_000 } })
+    fireEvent.click(screen.getByRole('button', { name: 'Spela låt 2' }))
+    await waitFor(() => expect(mocked.playSong).toHaveBeenCalledWith('demo', 's2', 'q3'))
     expect(mockedSpotify.startSong.mock.calls[0]![0]).toMatchObject({ songId: 's2' })
+  })
+
+  it('efter sista frågan är quizet klart', () => {
+    renderPanel({ stage: 'evening', quiz: { state: 'closed', songId: 's2', qId: 'q3', openedAt: 60_000, durationMs: 20_000 } })
+    expect(primary()).toBeDisabled()
+    expect(primary()).toHaveTextContent('Alla frågor klara – starta rättningen när ni vill')
+  })
+
+  it('Pausa låten stannar och fortsätter med samma låt sedan', async () => {
+    renderPanel({ stage: 'evening', quiz: { state: 'playing', songId: 's1', qId: 'q1' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Pausa låten' }))
+    await waitFor(() => expect(mocked.setQuizIdle).toHaveBeenCalledWith('demo', 'q1'))
+  })
+
+  it('Hoppa över låten går till första frågan på nästa låt', async () => {
+    renderPanel({ stage: 'evening', quiz: { state: 'idle', qId: 'q1' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Hoppa över låten' }))
+    await waitFor(() => expect(mocked.setQuizIdle).toHaveBeenCalledWith('demo', 'q3'))
+  })
+
+  it('idle med qId fortsätter där quizet pausades', () => {
+    renderPanel({ stage: 'evening', quiz: { state: 'idle', qId: 'q3' } })
+    expect(screen.getByRole('button', { name: 'Spela låt 2' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Hoppa över låten' })).not.toBeInTheDocument()
+  })
+
+  it('visar rätt svar först när admin ber om det', () => {
+    renderPanel(open('q1'))
+    expect(screen.queryByText(/· rätt ·/)).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Visa rätt svar' }))
+    expect(screen.getByText('B · rätt · 0 svar')).toBeInTheDocument()
   })
 
   it('visar vad som spelar, eller instruktionen i reservläget', async () => {
@@ -146,14 +202,14 @@ describe('Musikquizet hos admin', () => {
       instruction: 'Starta låt 2 – Jingle Bells från 0:00',
       reason: 'Ingen Spotify-enhet vald.',
     }))
-    const { rerender } = renderPanel({ stage: 'evening', quiz: { state: 'open', qId: 'q2', openedAt: 95_000, durationMs: 30_000 } })
-    fireEvent.click(screen.getByRole('button', { name: /Nästa fråga/ }))
+    const { rerender } = renderPanel({ stage: 'evening', quiz: { state: 'idle', qId: 'q3' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Spela låt 2' }))
     await waitFor(() => expect(mockedSpotify.startSong).toHaveBeenCalled())
     rerender(
       <QuizPanel
         eventId="demo"
         config={config}
-        live={{ stage: 'evening', quiz: { state: 'open', qId: 'q3', openedAt: 100_000, durationMs: 20_000 } }}
+        live={{ stage: 'evening', quiz: { state: 'playing', songId: 's2', qId: 'q3' } }}
         guests={guests}
         disabled={false}
         save={save}
@@ -164,31 +220,28 @@ describe('Musikquizet hos admin', () => {
   })
 
   it('Härnäst visar de kommande frågorna och markerar ny låt', () => {
-    renderPanel({ stage: 'evening', quiz: { state: 'open', qId: 'q1', openedAt: 95_000, durationMs: 30_000 } })
+    renderPanel(open('q1'))
     const items = within(screen.getByRole('region', { name: 'Härnäst' })).getAllByRole('listitem')
     expect(items.map((i) => i.textContent)).toEqual(['Låt 1 · fråga 2 av 2Vem sjunger?', 'Ny låt · Låt 2 startarVad heter låten?'])
   })
 
   it('skriver antalet svar till live/answered åt gästerna, men inte vilka svar', () => {
-    renderPanel({ stage: 'evening', quiz: { state: 'open', qId: 'q1', openedAt: 95_000, durationMs: 30_000 } })
+    renderPanel(open('q1'))
     expect(mocked.setAnsweredCount).toHaveBeenLastCalledWith('demo', { qId: 'q1', count: 0, total: 3 })
     act(() => pushAnswers({ u1: { choice: 'B', at: 96_000 }, u2: { choice: 'C', at: 97_000 } }))
     expect(mocked.setAnsweredCount).toHaveBeenLastCalledWith('demo', { qId: 'q1', count: 2, total: 3 })
   })
 
-  it('skriver inte om live/answered när det redan stämmer', () => {
-    renderPanel({ stage: 'evening', quiz: { state: 'open', qId: 'q1', openedAt: 95_000, durationMs: 30_000 }, answered: { qId: 'q1', count: 0, total: 3 } })
+  it('skriver inte om live/answered när det redan stämmer, och inget medan låten bara spelar', () => {
+    renderPanel(open('q1', { answered: { qId: 'q1', count: 0, total: 3 } }))
+    expect(mocked.setAnsweredCount).not.toHaveBeenCalled()
+    cleanup()
+    renderPanel({ stage: 'evening', quiz: { state: 'playing', songId: 's1', qId: 'q1' } })
     expect(mocked.setAnsweredCount).not.toHaveBeenCalled()
   })
 
-  it('säger till när alla frågor är visade', () => {
-    renderPanel({ stage: 'evening', quiz: { state: 'open', qId: 'q3', openedAt: 95_000, durationMs: 20_000 } })
-    expect(screen.getByText(/Alla frågor är visade/)).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /Nästa fråga/ })).not.toBeInTheDocument()
-  })
-
   it('Spela låten igen startar om låten från början', async () => {
-    renderPanel({ stage: 'evening', quiz: { state: 'open', qId: 'q2', openedAt: 95_000, durationMs: 30_000 } })
+    renderPanel(open('q2'))
     fireEvent.click(screen.getByRole('button', { name: 'Spela låten igen' }))
     await waitFor(() => expect(mockedSpotify.replaySong).toHaveBeenCalled())
     expect(mockedSpotify.replaySong.mock.calls[0]![0]).toMatchObject({ songId: 's1' })

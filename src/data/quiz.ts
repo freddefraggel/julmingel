@@ -25,6 +25,14 @@ export function openQuestion(eventId: string, qId: string, songId: string, durat
   })
 }
 
+/**
+ * Quizet står still: låten är pausad eller överhoppad. `qId` är frågan som
+ * quizet fortsätter med när admin trycker på *Spela låt* igen.
+ */
+export function setQuizIdle(eventId: string, qId: string): Promise<void> {
+  return set(ref(firebase().db, eventPath(eventId, 'live', 'quiz')), { state: 'idle', qId })
+}
+
 /** Stänger frågan när tiden är ute. Svaren är redan låsta av reglerna; mobilerna tar bort frågan. */
 export function closeQuestion(eventId: string): Promise<void> {
   return set(ref(firebase().db, eventPath(eventId, 'live', 'quiz', 'state')), 'closed')

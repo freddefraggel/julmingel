@@ -121,12 +121,29 @@ describe('Quizfrågan', () => {
     expect(screen.getByRole('img', { name: '5 sekunder kvar' })).toBeInTheDocument()
   })
 
-  it('Spela låt: lyssna, ingen fråga och ingen timer än', () => {
+  it('Spela låt (5a): lyssna, inga svarsknappar och ingen timer', () => {
     renderQuiz({ stage: 'evening', quiz: { state: 'playing', songId: 's2', qId: 'q1' } })
     expect(screen.getByRole('heading', { name: 'Lyssna noga …' })).toBeInTheDocument()
-    expect(screen.getByText('Låt 2 · fråga 1 av 2')).toBeInTheDocument()
+    expect(screen.getByText('Frågan kommer strax.')).toBeInTheDocument()
+    expect(screen.getByText('Musikquiz · låt 2')).toBeInTheDocument()
+    expect(screen.getByText('2 frågor om den här låten')).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Vilket år släpptes låten?' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^[A-D]:/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('img', { name: /sekunder kvar/ })).not.toBeInTheDocument()
+    expect(mocked.sendAnswer).not.toHaveBeenCalled()
+  })
+
+  it('Till provningen lämnar quizvyn', () => {
+    const onLeave = vi.fn()
+    render(<Quiz eventId="demo" uid="u1" config={config} live={{ stage: 'evening', quiz: { state: 'playing', songId: 's2', qId: 'q1' } }} onLeave={onLeave} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Till provningen' }))
+    expect(onLeave).toHaveBeenCalled()
+  })
+
+  it('stjärnorna räknas från när frågan visades, inte från när låten startade', () => {
+    // Låten har spelat länge; frågan visades för 2 s sedan, så alla tre stjärnor finns kvar.
+    renderQuiz(live('q1'))
+    expect(screen.getByRole('img', { name: '3 av 3 snabbhetsstjärnor kvar' })).toBeInTheDocument()
   })
 
   it('en stängd fråga är låst även om tiden inte har gått ut', () => {
