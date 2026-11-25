@@ -2,9 +2,18 @@
 
 > **Avvikelse från originalet:** repot heter `julmingel`, så sajten ligger på `https://freddefraggel.github.io/julmingel/`. Överallt där specen nedan säger `/glogg/` gäller `/julmingel/` (Vite `base`, QR-länk, Spotify redirect-URI).
 
-**Status:** Spikad 2026-11-24 · Fredrik Hedberg
+**Status:** Spikad 2026-11-24, uppdaterad 2026-11-25 efter testvarvet · Fredrik Hedberg
 **Levande version:** https://claude.ai/artifact/MKN29w97mrS49UYqoebuZp
 **Underlag:** [Kravspec](https://claude.ai/artifact/F2woPSBydp32gg4UvoTQor) · [Designcanvas](https://claude.ai/artifact/9RMonfT3HJ84ksjJFVr3PB) · sammanfattning av designen i [design.md](design.md)
+
+## Ändrat 2026-11-25 (efter testvarvet)
+
+- **Ingen gemensam fas.** `live/phase` ersätts av tre oberoende lägen: `live/stage` (innan start, pågår, rättning och avslöjande), `live/tasting/{class}` och `live/quiz`. Glöggprovningen och musikquizet kan vara igång samtidigt och varvas fritt.
+- **Quizet i två steg.** *Spela låt* (`quiz.state = "playing"`: låten startar, ingen timer, inga svar) och *Visa fråga* (`quiz.state = "open"`: tiden startar).
+- **Frågan som lager.** En öppen fråga läggs över gästens startsida och tas bort när tiden är ute. Inga automatiska sidbyten när något stängs.
+- **Databasreglerna** jämför med respektive läge i stället för fasen.
+- **Spotify:** *Uppdatera enheter* och flytt av uppspelning till vald enhet, för enheter som inte syns (t.ex. en iPad som sover).
+- **QR:** välkomstskärm för surfplatta och A4-affisch för utskrift.
 
 ## Sammanfattning och hostingbeslut
 
@@ -12,7 +21,7 @@
 
 GitHub Pages räcker inte ensamt. Pages serverar bara statiska filer, men kravspecen kräver tre saker som behöver en backend:
 
-- **Delat tillstånd** – alla mobiler ska se samma fas, fråga och glögg.
+- **Delat tillstånd** – alla mobiler ska se samma läge, fråga och glögg.
 - **Realtid** – admin trycker, mobilerna följer direkt.
 - **Tid på servern** – svarstid och stjärnor får inte gå att fuska med genom att ändra mobilens klocka eller ladda om.
 
@@ -52,8 +61,8 @@ Mobiler och admin-enhet läser och skriver mot samma databas; bara admin-enheten
 | Ramverk | Vite + React + TypeScript | Snabb utvecklingsloop, liten statisk build |
 | Styling | Vanlig CSS med variabler från designcanvasen (#2B1015, #E8B04B, #D98A7E); Fraunces och Nunito via `@fontsource` | Inga externa fontanrop, matchar designen |
 | Data och realtid | Firebase JS SDK (modulär): `firebase/database`, `firebase/auth` | Realtid, servertid och behörighet utan server |
-| Routing | `HashRouter`: `#/` gäst, `#/admin` kontrollpanel, `#/admin/forbered` konfiguration | Fungerar på GitHub Pages utan omskrivningar |
-| QR-kod | `qrcode` (npm), ritas på admin-skärmen | Liten, inga nätverksanrop |
+| Routing | `HashRouter`: `#/` gäst, `#/admin` kontrollpanel, `#/admin/forbered` konfiguration, `#/admin/qr` välkomstskärm, `#/admin/qr/print` A4-affisch | Fungerar på GitHub Pages utan omskrivningar |
+| QR-kod | `qrcode` (npm), ritas på välkomstskärmen och A4-affischen | Liten, inga nätverksanrop |
 | Test | Vitest för poängräkning, `@firebase/rules-unit-testing` för regler | De två ställen där fel syns först på kvällen |
 
 **Kodstruktur.** `src/guest/` och `src/admin/` för vyerna, `src/data/` som enda ställe som pratar med Firebase (gör Azure-bytet möjligt), `src/scoring.ts` för alla beräkningar och `src/spotify.ts` för uppspelning. Delade typer i `src/types.ts`.
@@ -80,17 +89,16 @@ Allt för en kväll ligger under `/events/{eventId}` och är uppdelat efter vem 
     quizTimes/{qId}: { openedAt, durationMs }   ← skrivs med live/quiz, för stjärnorna
     leaderboard                          ← hela topplistan före avslöjandet
   live/                                  ← admin skriver, alla läser
-    phase: "registration"|"tasting"|"quiz"|"review"|"guess"|"reveal"|"done"
-    nowText                              ← ”Just nu: …”
-    tasting/{class}: { serving, next }
-    quiz: { qId, openedAt, durationMs }  ← openedAt = ServerValue.TIMESTAMP
-    review: { qId }
-    reveal: { step: 0–4 }
+    stage: "lobby"|"evening"|"wrapup"|"done"   ← kvällens tre lägen + klar
+    tasting/{class}: { open, serving, next }   ← oberoende av quizet
+    quiz: { state: "idle"|"playing"|"open"|"closed",
+            songId, qId, openedAt, durationMs } ← openedAt = ServerValue.TIMESTAMP
+    wrapup: { step: "review"|"guess"|"reveal", qId, revealStep: 0–4 }
     answered: { qId, count, total }      ← ”Har svarat x av y”; gäster får inte läsa andras svar
   reveal/                                ← admin kopierar hit vid avslöjande
     correct/{qId}, numbers/{class}/{number}
   guests/{uid}: { name, class, joinCode, joinedAt }
-  ratings/{uid}/{number}/{cId}: 1–5     ← numret inom gästens klass
+  ratings/{uid}/{number}/{cId}: 1–5     ← numret inom gästens klass, sparas vid varje tryck
   answers/{qId}/{uid}: { choice, at }    ← at = ServerValue.TIMESTAMP
   guesses/{uid}: { map: { number: gId }, locked }
   results/                               ← admin beräknar och skriver
@@ -106,11 +114,11 @@ Allt för en kväll ligger under `/events/{eventId}` och är uppdelat efter vem 
 
 ## Realtid, tid och poängräkning
 
-Admin-enheten är den enda som skriver till `live/`; alla mobiler prenumererar på den med `onValue` och renderar den fas som står där. Ingen mobil styr sitt eget flöde, så en omladdad mobil hamnar alltid rätt.
+Admin-enheten är den enda som skriver till `live/`; alla mobiler prenumererar på den med `onValue` och renderar läget som står där – kvällens läge, provningen och quizet var för sig. Ingen mobil styr sitt eget flöde, så en omladdad mobil hamnar alltid rätt.
 
-**Fasbyten.** Varje knapp hos admin är en enda skrivning, t.ex. `live/phase = "quiz"` eller `live/tasting/vanlig/serving = 3`. Firebase skickar ändringen till alla anslutna klienter på under en sekund. Tappar en mobil nätet återansluter SDK:n själv och hämtar senaste läget.
+**Tre oberoende lägen.** Provningen (`live/tasting`) och quizet (`live/quiz`) har var sitt läge och kan vara aktiva samtidigt; `live/stage` säger bara om kvällen är *innan start*, *pågår* eller i *rättning och avslöjande* (`live/wrapup` styr stegen där). Varje knapp hos admin är en enda skrivning, t.ex. `live/tasting/vanlig/serving = 4` eller `live/quiz/state = "playing"`. Firebase skickar ändringen till alla anslutna klienter på under en sekund. Gästens startsida visar provningen; en öppen fråga (`quiz.state == "open"`) läggs som ett lager ovanpå och tas bort när tiden är ute, så gästen hamnar där hen var. Inga automatiska sidbyten när något stängs – gästen ser bara ett lugnt besked, t.ex. ”Provningen är stängd – tack för dina betyg”.
 
-**Nästa fråga.** Admin skriver i ett anrop `live/quiz = { qId, openedAt: ServerValue.TIMESTAMP, durationMs }` och samma tider till `secret/quizTimes/{qId}`. Starttiden sätts alltså av Firebase, inte av admin-enhetens klocka. `live/quiz` skrivs över av nästa fråga, så det är `secret/quizTimes` som stjärnorna räknas från. Reglerna nekar `live/quiz` om tiderna inte stämmer med `secret/quizTimes`.
+**Spela låt, sedan visa fråga.** *Spela låt* skriver `live/quiz = { state: "playing", songId, qId }` och startar Spotify; mobilerna visar ”Lyssna noga … Frågan kommer strax.” utan timer, och reglerna tar inte emot svar. *Visa fråga* skriver `{ state: "open", qId, openedAt: ServerValue.TIMESTAMP, durationMs }` och samma tider till `secret/quizTimes/{qId}`. Starttiden sätts alltså av Firebase, inte av admin-enhetens klocka. `live/quiz` skrivs över av nästa fråga, så det är `secret/quizTimes` som stjärnorna räknas från. Reglerna nekar `live/quiz` om tiderna inte stämmer med `secret/quizTimes`. När tiden gått ut sätter admin `state: "closed"`; fler frågor på samma låt går direkt från `closed` till `open`, och en ny låt börjar med *Spela låt* igen.
 
 **Nedräkning på mobilen.** Mobilen läser `.info/serverTimeOffset` och räknar ned mot `openedAt + durationMs` i serverns tid. Glöggkoppen och sekunderna är bara visning; att ladda om sidan ändrar inte sluttiden.
 
@@ -129,7 +137,7 @@ kvar = (openedAt + durationMs − at) / durationMs
 
 **Poäng och topplista.** 1 poäng per rätt svar. Admin-enheten räknar när rättningen börjar, eftersom den är den enda som kan läsa `secret/correct`, och skriver `results/leaderboard`. Sortering: poäng, sedan stjärnor, sedan namn. Lika poäng och lika stjärnor ger delad placering. Beräkningen är en ren funktion (`score(answers, correct, quizConfig, guests)`, där `quizConfig` är `secret/quizTimes`) som enhetstestas.
 
-**Avslöjandet.** `live/reveal/step` går 0 → 4. Vid steg 0 skriver admin bara plats 5 och nedåt till `results/leaderboard`; vid steg 1–4 läggs 4:an, 3:an, 2:an och vinnaren till, en rad per steg. Topp 4 finns alltså inte i databasen innan de avslöjas – inte ens i nätverkstrafiken – vilket uppfyller ”ingen hint i förväg”. Hela listan hålls i admin-enhetens minne och i `secret/leaderboard`.
+**Avslöjandet.** `live/wrapup/revealStep` går 0 → 4. Vid steg 0 skriver admin bara plats 5 och nedåt till `results/leaderboard`; vid steg 1–4 läggs 4:an, 3:an, 2:an och vinnaren till, en rad per steg. Topp 4 finns alltså inte i databasen innan de avslöjas – inte ens i nätverkstrafiken – vilket uppfyller ”ingen hint i förväg”. Hela listan hålls i admin-enhetens minne och i `secret/leaderboard`.
 
 **Kvällens glögg.** Per klass: snittet av alla betyg på alla kriterier, där kriterier med `lowIsGood` räknas som 6 − värdet. Högst snitt vinner. Admin räknar och skriver `results/gloggOfEvening`.
 
@@ -144,7 +152,7 @@ All behörighet ligger i Firebase-databasreglerna; Firebase-konfigurationen i kl
 | Roll | Inloggning | Får |
 | --- | --- | --- |
 | Admin | Firebase Email/Password-konto, `uid` listat i `/admins` | Läsa och skriva allt i eventet |
-| Gäst | Anonymous Auth + kvällens `joinCode` (i QR-länken) | Läsa `config`, `assets`, `live`, `reveal`, `results`; skriva bara sina egna noder, och bara i rätt fas |
+| Gäst | Anonymous Auth + kvällens `joinCode` (i QR-länken) | Läsa `config`, `assets`, `live`, `reveal`, `results`; skriva bara sina egna noder, och bara när respektive läge är öppet |
 | Okänd | – | Ingenting |
 
 QR-koden pekar på `https://<användare>.github.io/glogg/#/?e=<eventId>&k=<joinCode>`. Gästen skriver `joinCode` i sin `guests/{uid}`-post, och regeln jämför med `secret/joinCode`, som gästen själv inte kan läsa. Den som saknar koden kommer inte in.
@@ -170,7 +178,7 @@ Utdrag ur reglerna (fullständig fil: `database.rules.json` i repot):
         "answers": {
           "$q": {
             "$uid": {
-              ".write": "auth.uid === $uid && root.child('events/' + $e + '/live/phase').val() === 'quiz' && root.child('events/' + $e + '/live/quiz/qId').val() === $q && now <= root.child('events/' + $e + '/live/quiz/openedAt').val() + root.child('events/' + $e + '/live/quiz/durationMs').val()",
+              ".write": "auth.uid === $uid && root.child('events/' + $e + '/live/quiz/state').val() === 'open' && root.child('events/' + $e + '/live/quiz/qId').val() === $q && now <= root.child('events/' + $e + '/live/quiz/openedAt').val() + root.child('events/' + $e + '/live/quiz/durationMs').val()",
               ".validate": "newData.child('at').val() === now && newData.child('choice').val().matches(/^[ABCD]$/)"
             }
           }
@@ -181,7 +189,7 @@ Utdrag ur reglerna (fullständig fil: `database.rules.json` i repot):
 }
 ```
 
-Samma mönster gäller `ratings` (bara i fas `tasting`, värde 1–5, numret finns i gästens klass) och `guesses` (bara i fas `guess`, bara om `locked` inte redan är sant, och bara glögger och nummer i gästens klass). Reglerna testas med Firebase Emulator Suite och `@firebase/rules-unit-testing` innan kvällen: en gäst utan kod, ett svar efter sluttiden, ett svar på fel fråga och en läsning av `secret/` ska alla nekas.
+Reglerna jämför med respektive läge i stället för en gemensam fas: `ratings` kräver `live/tasting/{class}/open == true` (värde 1–5, numret finns i gästens klass) och `guesses` kräver `live/wrapup/step == "guess"` (bara om `locked` inte redan är sant, och bara glögger och nummer i gästens klass). Därför kan en gäst ranka och svara på en quizfråga under samma minut. Reglerna testas med Firebase Emulator Suite och `@firebase/rules-unit-testing` innan kvällen: en gäst utan kod, ett svar efter sluttiden, ett svar medan låten spelas men frågan inte visats, ett svar på fel fråga och en läsning av `secret/` ska alla nekas – och en rankning medan en fråga är öppen ska godkännas.
 
 **Missbruk.** Anonymous Auth kan i teorin användas för att skapa många konton, men utan `joinCode` går det inte att skriva något. Admin stänger registreringen (`config/joinOpen = false`) när alla är inne. Firebase App Check med reCAPTCHA är ett tillval som inte behövs för en privat fest.
 
@@ -191,8 +199,9 @@ Admin-enheten styr Spotify direkt från webbläsaren med Spotify Web API; ingen 
 
 - **Inloggning:** Authorization Code med PKCE, som är gjort för appar utan server och saknar client secret. Redirect-URI: `https://<användare>.github.io/glogg/` (plus `http://127.0.0.1:5173/` för utveckling). Token sparas i admin-enhetens `sessionStorage` och förnyas med refresh token.
 - **Scopes:** `user-read-playback-state` och `user-modify-playback-state`.
-- **Välj enhet:** `GET /v1/me/player/devices` → admin väljer t.ex. ”MacBook” eller ”Vardagsrum” på *Förbered kvällen*.
-- **Ny låt:** `PUT /v1/me/player/play?device_id=…` med `{ uris: [spotifyUri], position_ms: startMs }`. Anropas bara när första frågan på en ny låt öppnas; övriga frågor på samma låt rör inte uppspelningen.
+- **Välj enhet:** `GET /v1/me/player/devices` → admin väljer t.ex. ”MacBook” eller ”Fredriks iPad” under *Spela på*, med knappen *Uppdatera enheter*. Vald enhet sparas så att `play` alltid skickar `device_id`.
+- **Spela låt:** `PUT /v1/me/player/play?device_id=…` med `{ uris: [spotifyUri], position_ms: startMs }`. Anropas av knappen *Spela låt*, innan frågan visas; övriga frågor på samma låt rör inte uppspelningen.
+- **Enheter som inte syns:** listan visar bara enheter där Spotify-appen är vaken och inloggad på samma konto – en iPad försvinner när iOS söver appen. Vid *Uppdatera enheter* visas instruktionen ”Öppna Spotify på enheten, spela och pausa en låt, stäng av automatisk låsning”. Syns enheten men är inaktiv flyttas uppspelningen dit med `PUT /v1/me/player` och `{ device_ids: [id], play: false }`.
 - **Spela låten igen** (rättningsläge): samma anrop.
 - **Spotify-länkar:** admin klistrar in `https://open.spotify.com/track/<id>`; appen gör om den till `spotify:track:<id>` och spelar inte upp något förrän kvällen.
 

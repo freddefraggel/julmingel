@@ -11,80 +11,83 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&amp;family=Nunito:wght@400;600;700;800&amp;display=swap">
 <style>
 body{margin:0;font-family:'Nunito',sans-serif;color:#F7ECDC}
-a{color:#E8B04B}a:hover{color:#F3C873}
+a{color:#F7ECDC;text-decoration:none}a:hover{color:#FFFFFF}
 button{font-family:'Nunito',sans-serif;cursor:pointer}
 </style>
 </helmet>
 <div style="width: 1280px; height: 800px; box-sizing: border-box; background: #2B1015; padding: 28px 32px; display: flex; flex-direction: column; gap: 24px">
-<div style="display: flex; align-items: center; justify-content: space-between">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 16px">
 <div style="display: flex; align-items: center; gap: 12px">
 <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#E8B04B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"></path></svg>
 <span style="font-family: 'Fraunces', serif; font-size: 26px; font-weight: 700">Glöggmingel</span>
-<span style="font-size: 13px; font-weight: 800; padding: 5px 10px; border-radius: 999px; background: #4A222A; color: #D9C3AE; letter-spacing: 0.08em; text-transform: uppercase">Admin</span>
 </div>
-<div style="display: flex; align-items: center; gap: 12px">
-<span style="font-size: 16px; font-weight: 700; color: #D9C3AE">18 gäster inne</span>
-<button type="button" style="height: 48px; padding: 0 18px; border-radius: 14px; border: 2px solid #5A2C34; background: #3D1A20; color: #F7ECDC; font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px">
-<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"></path></svg>
-Visa QR-kod
-</button>
-<a href="AdminKonfig.dc.html" style="height: 48px; padding: 0 18px; border-radius: 14px; border: 2px solid #5A2C34; background: #3D1A20; color: #F7ECDC; font-size: 16px; font-weight: 800; display: flex; align-items: center; text-decoration: none">Inställningar</a>
+<div role="group" aria-label="Kvällens läge" style="display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: #3D1A20">
+<button type="button" style="height: 40px; padding: 0 16px; border: none; border-radius: 10px; background: transparent; color: #8FBF9A; font-size: 15px; font-weight: 800">Innan start ✓</button>
+<button type="button" aria-pressed="true" style="height: 40px; padding: 0 16px; border: none; border-radius: 10px; background: #E8B04B; color: #2B1015; font-size: 15px; font-weight: 800">Kvällen pågår</button>
+<button type="button" style="height: 40px; padding: 0 16px; border: none; border-radius: 10px; background: transparent; color: #D9C3AE; font-size: 15px; font-weight: 800">Rättning och avslöjande</button>
+</div>
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="font-size: 15px; font-weight: 700; color: #D9C3AE">18 gäster</span>
+<a href="QRSkarm.dc.html" style="height: 44px; padding: 0 14px; border-radius: 12px; border: 2px solid #5A2C34; background: #3D1A20; font-size: 15px; font-weight: 800; display: flex; align-items: center">Visa QR</a>
+<a href="AdminKonfig.dc.html" style="height: 44px; padding: 0 14px; border-radius: 12px; border: 2px solid #5A2C34; background: #3D1A20; font-size: 15px; font-weight: 800; display: flex; align-items: center">Inställningar</a>
 </div>
 </div>
-<div style="flex-grow: 1; display: flex; gap: 24px; min-height: 0">
-<div style="width: 260px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px">
-<span style="font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #B89C88">Kvällens flöde</span>
-<sc-for list="{{ phases }}" as="p" hint-placeholder-count="5">
-<button type="button" style="{{ p.style }}">
-<span style="{{ p.dot }}">{{ p.n }}</span>
-<span style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px"><span style="font-size: 16px; font-weight: 800">{{ p.label }}</span><span style="font-size: 13px; opacity: 0.85">{{ p.sub }}</span></span>
-</button>
-</sc-for>
+<div style="flex-grow: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; min-height: 0">
+<div style="display: flex; flex-direction: column; gap: 16px; padding: 24px; border-radius: 24px; background: #3D1A20; border: 1px solid #5A2C34">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h2 style="margin: 0; font-family: 'Fraunces', serif; font-size: 26px; font-weight: 700">Glöggprovning</h2>
+<span style="font-size: 13px; font-weight: 800; padding: 5px 10px; border-radius: 999px; background: #2B1015; color: #8FBF9A">Öppen</span>
 </div>
-<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 20px; padding: 28px; border-radius: 24px; background: #3D1A20; border: 1px solid #5A2C34">
-<div style="display: flex; justify-content: space-between; align-items: center">
-<span style="font-size: 15px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #E8B04B">Låt 2 · fråga 1 av 3 · visas nu</span>
-<span style="font-size: 15px; font-weight: 700; color: #D9C3AE">Totalt fråga 4 av 12 · Svar: 14 / 18 · <span style="color: #F7ECDC; font-weight: 800">18 s kvar</span></span>
+<div role="tablist" aria-label="Klass" style="display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: #2B1015; align-self: flex-start">
+<button type="button" role="tab" aria-selected="true" style="height: 36px; padding: 0 14px; border: none; border-radius: 8px; background: #E8B04B; color: #2B1015; font-size: 14px; font-weight: 800">Vanlig · nr 3 av 6</button>
+<button type="button" role="tab" aria-selected="false" style="height: 36px; padding: 0 14px; border: none; border-radius: 8px; background: transparent; color: #D9C3AE; font-size: 14px; font-weight: 800">Alkoholfri · nr 2 av 4</button>
 </div>
-<h1 style="margin: 0; font-family: 'Fraunces', serif; font-size: 40px; line-height: 1.1; font-weight: 700">Vilket år släpptes låten?</h1>
-<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
-<div style="padding: 14px 16px; border-radius: 14px; background: #4A222A; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; font-weight: 800; color: #B89C88">A · 2 svar</span><span style="font-size: 22px; font-weight: 800">1984</span></div>
-<div style="padding: 14px 16px; border-radius: 14px; background: #4A222A; border: 2px solid #8FBF9A; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; font-weight: 800; color: #8FBF9A">B · rätt · 8 svar</span><span style="font-size: 22px; font-weight: 800">1994</span></div>
-<div style="padding: 14px 16px; border-radius: 14px; background: #4A222A; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; font-weight: 800; color: #B89C88">C · 3 svar</span><span style="font-size: 22px; font-weight: 800">2003</span></div>
-<div style="padding: 14px 16px; border-radius: 14px; background: #4A222A; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; font-weight: 800; color: #B89C88">D · 1 svar</span><span style="font-size: 22px; font-weight: 800">2011</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 18px; border-radius: 18px; background: #2B1015; border: 2px solid #E8B04B">
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #E8B04B">Serveras nu</span>
+<div style="display: flex; align-items: baseline; gap: 12px"><span style="font-family: 'Fraunces', serif; font-size: 44px; line-height: 1; font-weight: 700">Nr 3</span><span style="font-size: 20px; font-weight: 800">Hemmagjord kryddglögg</span></div>
+<div style="display: flex; justify-content: space-between"><span style="font-size: 14px; color: #D9C3AE">Har rankat</span><span style="font-size: 14px; font-weight: 800">9 av 14</span></div>
+<div style="height: 8px; border-radius: 4px; background: #4A222A; overflow: hidden"><div style="width: 64%; height: 8px; background: #E8B04B"></div></div>
 </div>
-<div style="display: flex; align-items: center; gap: 16px; padding: 16px 18px; border-radius: 16px; background: #2B1015">
-<button type="button" aria-label="Pausa låten" style="width: 52px; height: 52px; border-radius: 26px; border: none; background: #F7ECDC; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
-<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2B1015" stroke-width="2.6" stroke-linecap="round"><path d="M8 5v14M16 5v14"></path></svg>
-</button>
-<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 8px">
-<div style="display: flex; justify-content: space-between"><span style="font-size: 15px; font-weight: 800">Spelar på Spotify · [Låt] – [Artist] <span style="font-weight: 700; color: #D9C3AE">· spelar vidare genom 3 frågor</span></span><span style="font-size: 14px; color: #D9C3AE">0:42</span></div>
-<div style="height: 6px; border-radius: 3px; background: #5A2C34; overflow: hidden"><div style="width: 35%; height: 6px; background: #E8B04B"></div></div>
-</div>
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 14px 18px; border-radius: 16px; border: 2px dashed #5A2C34">
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #B89C88">Förbered härnäst</span>
+<span style="font-size: 18px; font-weight: 800">Nr 4 · Portvinsglögg</span>
+<span style="font-size: 14px; color: #D9C3AE">Sätt på värmen nu.</span>
 </div>
 <div style="flex-grow: 1"></div>
-<div style="display: flex; gap: 12px">
-<button type="button" style="height: 72px; padding: 0 28px; border-radius: 18px; border: 2px solid #5A2C34; background: #2B1015; color: #F7ECDC; font-size: 18px; font-weight: 800">Visa rätt svar</button>
-<button type="button" style="flex-grow: 1; height: 72px; border-radius: 18px; border: none; background: #E8B04B; color: #2B1015; font-size: 22px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 14px">
-<span style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px"><span>Nästa fråga</span><span style="font-size: 14px; font-weight: 700; color: #4A222A">Samma låt fortsätter</span></span>
-<svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2B1015" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
-</button>
+<button type="button" style="height: 68px; border-radius: 18px; border: none; background: #E8B04B; color: #2B1015; font-size: 21px; font-weight: 800">Servera nr 4</button>
+<div style="display: flex; justify-content: space-between; align-items: center">
+<a href="AdminGlogg.dc.html" style="min-height: 44px; display: flex; align-items: center; font-size: 15px; font-weight: 700; color: #D9C3AE; text-decoration: underline; text-underline-offset: 3px">Visa hela serveringsordningen</a>
+<button type="button" style="height: 44px; padding: 0 16px; border-radius: 12px; border: 2px solid #5A2C34; background: transparent; color: #D9C3AE; font-size: 15px; font-weight: 800">Stäng provningen</button>
 </div>
 </div>
-<div style="width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px">
-<span style="font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #B89C88">Härnäst</span>
-<sc-for list="{{ next }}" as="q" hint-placeholder-count="3">
-<div style="{{ q.boxStyle }}">
-<span style="{{ q.tagStyle }}">{{ q.tag }}</span>
-<span style="font-size: 15px; font-weight: 700">{{ q.text }}</span>
+<div style="display: flex; flex-direction: column; gap: 16px; padding: 24px; border-radius: 24px; background: #3D1A20; border: 1px solid #5A2C34">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h2 style="margin: 0; font-family: 'Fraunces', serif; font-size: 26px; font-weight: 700">Musikquiz</h2>
+<span style="font-size: 13px; font-weight: 800; padding: 5px 10px; border-radius: 999px; background: #2B1015; color: #D9C3AE">{{ progress }}</span>
 </div>
-</sc-for>
-<span style="margin-top: 14px; font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #B89C88">Väntar på svar</span>
-<div style="display: flex; flex-wrap: wrap; gap: 8px">
-<span style="font-size: 14px; font-weight: 700; padding: 6px 12px; border-radius: 999px; background: #4A222A">Johan</span>
-<span style="font-size: 14px; font-weight: 700; padding: 6px 12px; border-radius: 999px; background: #4A222A">Lisa</span>
-<span style="font-size: 14px; font-weight: 700; padding: 6px 12px; border-radius: 999px; background: #4A222A">Oskar</span>
-<span style="font-size: 14px; font-weight: 700; padding: 6px 12px; border-radius: 999px; background: #4A222A">Maja</span>
+<div style="display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 16px; background: #2B1015">
+<span style="{{ songDot }}">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+</span>
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0">
+<span style="font-size: 16px; font-weight: 800">{{ songTitle }}</span>
+<span style="font-size: 14px; color: #D9C3AE">{{ songState }}</span>
+</div>
+</div>
+<div style="{{ qBox }}">
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: {{ qLabelColor }}">{{ qLabel }}</span>
+<span style="font-family: 'Fraunces', serif; font-size: 26px; line-height: 1.15; font-weight: 700">{{ qText }}</span>
+<span style="font-size: 15px; color: #D9C3AE">{{ qMeta }}</span>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; padding: 0 4px">
+<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B89C88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"></rect><path d="M11 18h2"></path></svg>
+<span style="font-size: 15px; color: #D9C3AE">{{ guestsSee }}</span>
+</div>
+<div style="flex-grow: 1"></div>
+<button type="button" onClick="{{ primary }}" aria-disabled="{{ primaryDisabled }}" style="{{ primaryStyle }}">{{ primaryLabel }}</button>
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span style="font-size: 14px; color: #B89C88">{{ nextHint }}</span>
+<button type="button" onClick="{{ secondary }}" style="{{ secondaryStyle }}">{{ secondaryLabel }}</button>
 </div>
 </div>
 </div>
@@ -92,38 +95,97 @@ Visa QR-kod
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
 class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { si: 0, qi: 0, mode: 'open', t: 18 };
+}
+componentDidMount() {
+this.iv = setInterval(() => {
+if (this.state.mode === 'open') {
+const t = this.state.t - 1;
+this.setState(t <= 0 ? { t: 0, mode: 'closed' } : { t: t });
+}
+}, 1000);
+}
+componentWillUnmount() {
+clearInterval(this.iv);
+}
 renderVals() {
-const list = [
-['Registrering', 'QR-kod på skärmen', 'done'],
-['Glöggprovning', 'Ranka öppen', 'done'],
-['Musikquiz', 'Låt 2 av 5 · fråga 4 av 12', 'active'],
-['Rättning', 'Gå igenom rätt svar', 'todo'],
-['Gissa glöggen', 'Öppna gissningar', 'todo'],
-['Avslöjande', 'Topplista, 4:an → 1:an', 'todo']
+const songs = [
+{ n: 2, title: '[Låt] – [Artist]', qs: [[4, 'Vilket år släpptes låten?'], [5, 'Vem sjunger?'], [6, 'Vilken film är låten från?']] },
+{ n: 3, title: '[Låt] – [Artist]', qs: [[7, 'Vad heter låten?'], [8, 'Vilket land kommer artisten från?']] }
 ];
-const phases = list.map((p, i) => {
-const active = p[2] === 'active';
-const done = p[2] === 'done';
+const s = this.state;
+const song = songs[s.si];
+const q = song.qs[s.qi];
+const nextInSong = song.qs[s.qi + 1];
+const nextSong = songs[s.si + 1];
+const gold = 'height: 72px; border-radius: 18px; border: none; background: #E8B04B; color: #2B1015; font-size: 22px; font-weight: 800';
+const waiting = 'height: 72px; border-radius: 18px; border: 2px solid #5A2C34; background: #2B1015; color: #D9C3AE; font-size: 20px; font-weight: 800; cursor: default';
+const ghost = 'height: 44px; padding: 0 16px; border-radius: 12px; border: 2px solid #5A2C34; background: transparent; color: #D9C3AE; font-size: 15px; font-weight: 800';
+let primaryLabel = '', primary = () => {}, primaryStyle = gold, primaryDisabled = 'false';
+let secondaryLabel = 'Pausa låten', secondary = () => this.setState({ mode: 'idle' });
+let qLabel = 'Fråga ' + q[0] + ' · nästa att visa', qText = q[1], qMeta = 'Visas när du trycker – tiden börjar då', guestsSee = '', songState = '';
+const open = s.mode === 'open';
+if (s.mode === 'idle') {
+primaryLabel = 'Spela låt ' + song.n;
+primary = () => this.setState({ mode: 'playing' });
+secondaryLabel = 'Hoppa över låten';
+guestsSee = 'Gästerna ser provningen – ingen fråga';
+songState = 'Inte startad · börjar på 0:30';
+} else if (s.mode === 'playing') {
+primaryLabel = 'Visa fråga ' + q[0];
+primary = () => this.setState({ mode: 'open', t: 20 });
+guestsSee = 'Gästerna ser ”Lyssna noga …” – ingen timer';
+songState = 'Spelar på Fredriks iPad';
+} else if (open) {
+primaryLabel = 'Fråga ' + q[0] + ' är öppen · ' + s.t + ' s kvar';
+primaryStyle = waiting;
+primaryDisabled = 'true';
+secondaryLabel = 'Stäng frågan nu';
+secondary = () => this.setState({ mode: 'closed', t: 0 });
+qLabel = 'Fråga ' + q[0] + ' · öppen';
+qMeta = s.t + ' s kvar · 14 av 18 har svarat';
+guestsSee = 'Gästerna ser frågan – de kan byta svar tills tiden är ute';
+songState = 'Spelar på Fredriks iPad';
+} else {
+qLabel = 'Fråga ' + q[0] + ' · stängd';
+qMeta = '16 av 18 svarade';
+guestsSee = 'Gästerna är tillbaka i provningen';
+songState = 'Spelar på Fredriks iPad';
+if (nextInSong) {
+primaryLabel = 'Visa fråga ' + nextInSong[0] + ' · samma låt';
+primary = () => this.setState({ qi: s.qi + 1, mode: 'open', t: 20 });
+} else if (nextSong) {
+primaryLabel = 'Spela låt ' + nextSong.n;
+primary = () => this.setState({ si: s.si + 1, qi: 0, mode: 'playing' });
+} else {
+primaryLabel = 'Alla frågor klara – starta rättningen när ni vill';
+primaryStyle = waiting;
+primaryDisabled = 'true';
+primary = () => this.setState({ si: 0, qi: 0, mode: 'idle' });
+}
+}
+const later = nextInSong ? 'Sedan: fråga ' + nextInSong[0] + ' – ' + nextInSong[1] : nextSong ? 'Sedan: låt ' + nextSong.n + ' (' + nextSong.qs.length + ' frågor)' : 'Sista frågan';
 return {
-n: i + 1,
-label: p[0],
-sub: p[1],
-style: 'display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 14px; border-radius: 16px; text-align: left; border: 2px solid ' + (active ? '#E8B04B' : '#3D1A20') + '; background: ' + (active ? '#E8B04B' : '#3D1A20') + '; color: ' + (active ? '#2B1015' : done ? '#D9C3AE' : '#F7ECDC'),
-dot: 'width: 32px; height: 32px; border-radius: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; background: ' + (active ? '#2B1015' : done ? '#8FBF9A' : '#4A222A') + '; color: ' + (active ? '#E8B04B' : done ? '#1F3A28' : '#D9C3AE')
-};
-});
-return {
-phases: phases,
-next: [
-['Låt 2 · fråga 2 av 3', 'Vem sjunger?', false],
-['Låt 2 · fråga 3 av 3', 'Vilken film är låten från?', false],
-['Ny låt · Låt 3 startar', 'Vad heter låten?', true]
-].map((q) => ({
-tag: q[0],
-text: q[1],
-tagStyle: 'font-size: 13px; font-weight: 800; color: ' + (q[2] ? '#8FBF9A' : '#E8B04B'),
-boxStyle: 'padding: 14px 16px; border-radius: 14px; background: #3D1A20; display: flex; flex-direction: column; gap: 4px; border: 2px ' + (q[2] ? 'dashed #8FBF9A' : 'solid #3D1A20')
-}))
+progress: 'Låt ' + song.n + ' av 5 · fråga ' + q[0] + ' av 12',
+songTitle: 'Låt ' + song.n + ' · ' + song.title,
+songState: songState,
+songDot: 'width: 44px; height: 44px; border-radius: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: ' + (s.mode === 'idle' ? '#4A222A' : '#E8B04B') + '; color: ' + (s.mode === 'idle' ? '#D9C3AE' : '#2B1015'),
+qBox: 'display: flex; flex-direction: column; gap: 6px; padding: 18px; border-radius: 18px; background: #2B1015; border: 2px ' + (open ? 'solid #E8B04B' : 'dashed #5A2C34'),
+qLabelColor: open ? '#E8B04B' : '#B89C88',
+qLabel: qLabel,
+qText: qText,
+qMeta: qMeta,
+guestsSee: guestsSee,
+primaryLabel: primaryLabel,
+primary: primary,
+primaryStyle: primaryStyle,
+primaryDisabled: primaryDisabled,
+secondaryLabel: secondaryLabel,
+secondary: secondary,
+secondaryStyle: ghost,
+nextHint: later
 };
 }
 }
