@@ -90,6 +90,11 @@ describe('registrering', () => {
     await assertFails(join('bertil', 'hemlig'))
   })
 
+  it('inloggad användare får läsa kvällens namn innan hen har gått med', async () => {
+    await assertSucceeds(get(ref(db('bertil'), `${E}/config/name`)))
+    await assertFails(get(ref(db(), `${E}/config/name`)))
+  })
+
   it('inloggad användare får läsa om registreringen är öppen, men inte resten av config', async () => {
     await assertSucceeds(get(ref(db('bertil'), `${E}/config/joinOpen`)))
     await assertFails(get(ref(db('bertil'), `${E}/config`)))

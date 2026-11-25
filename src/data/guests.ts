@@ -1,5 +1,6 @@
 import { get, ref, serverTimestamp, set } from 'firebase/database'
 import type { Guest, GuestClass } from '../types'
+import { signInGuest } from './auth'
 import { eventPath, subscribe, type OnError } from './db'
 import { isPermissionDenied } from './errors'
 import { firebase } from './firebase'
@@ -58,4 +59,19 @@ export function subscribeOwnGuest(
   onError?: OnError,
 ): () => void {
   return subscribe<Guest>(eventPath(eventId, 'guests', uid), callback, onError)
+}
+
+/**
+ * Kvällens namn till registreringen, innan gästen har gått med. Loggar in
+ * anonymt (eller återanvänder inloggningen) och läser `config/name`, som alla
+ * inloggade får läsa. null om namnet saknas eller inte går att läsa.
+ */
+export async function getEventName(eventId: string): Promise<string | null> {
+  try {
+    await signInGuest()
+    const snapshot = await get(ref(firebase().db, eventPath(eventId, 'config', 'name')))
+    return snapshot.exists() ? String(snapshot.val()) : null
+  } catch {
+    return null
+  }
 }

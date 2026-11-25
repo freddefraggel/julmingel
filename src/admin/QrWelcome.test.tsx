@@ -59,6 +59,13 @@ describe('Välkomstskärmen', () => {
     expect(screen.getByText('Scanna för att vara med')).toBeInTheDocument()
   })
 
+  it('visar kvällens namn, och Glöggmingel när det saknas', () => {
+    renderAt('/admin/qr?e=demo')
+    expect(screen.getByText('Glöggmingel')).toBeInTheDocument()
+    act(() => pushConfig({ name: 'Gröna Villans Glöggmingel 2026', joinOpen: true }))
+    expect(screen.getByText('Gröna Villans Glöggmingel 2026')).toBeInTheDocument()
+  })
+
   it('har en länk till utskriftsvyn och tillbaka till kontrollpanelen', () => {
     renderAt('/admin/qr?e=demo')
     expect(screen.getByRole('link', { name: 'Skriv ut som A4' })).toHaveAttribute('href', '/admin/qr/print')

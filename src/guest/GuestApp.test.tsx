@@ -13,6 +13,7 @@ vi.mock('../data', () => ({
   getOwnGuest: vi.fn(),
   signInGuest: vi.fn(),
   joinEvent: vi.fn(),
+  getEventName: vi.fn(),
   subscribeLive: vi.fn(),
   subscribeConfig: vi.fn(),
   subscribeOwnGuest: vi.fn(),
@@ -43,6 +44,7 @@ beforeEach(() => {
   vi.resetAllMocks()
   localStorage.clear()
   mocked.signInGuest.mockResolvedValue({ uid: 'u1', isAnonymous: true })
+  mocked.getEventName.mockResolvedValue(null)
   // Hem prenumererar på live/, config/ och gästens egna noder; här svarar de aldrig.
   for (const subscribe of [
     mocked.subscribeLive,
@@ -104,6 +106,23 @@ describe('återvändande gäst', () => {
     mocked.getOwnGuest.mockResolvedValue(null)
     renderAt('/?e=demo&k=glogg')
     expect(await screen.findByRole('heading', { name: 'Välkommen in i värmen' })).toBeInTheDocument()
+  })
+})
+
+describe('kvällens namn', () => {
+  it('registreringen visar vilken kväll gästen går med i', async () => {
+    signedIn(null)
+    mocked.getEventName.mockResolvedValue('Gröna Villans Glöggmingel 2026')
+    renderAt('/?e=demo&k=glogg')
+    expect(await screen.findByText('Gröna Villans Glöggmingel 2026')).toBeInTheDocument()
+    expect(mocked.getEventName).toHaveBeenCalledWith('demo')
+  })
+
+  it('visar Glöggmingel när namnet inte går att läsa', async () => {
+    signedIn(null)
+    renderAt('/?e=demo&k=glogg')
+    await screen.findByRole('heading', { name: 'Välkommen in i värmen' })
+    expect(screen.getByText('Glöggmingel')).toBeInTheDocument()
   })
 })
 
