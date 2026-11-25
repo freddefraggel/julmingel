@@ -31,7 +31,7 @@ const preparation: Preparation = {
   joinCode: 'glogg',
   numbers: { vanlig: { '1': 'g1', '2': 'g2' }, alkfri: { '1': 'g3' } },
   correct: null,
-  phase: 'registration',
+  stage: 'lobby',
 }
 
 async function open(prep: Preparation = preparation) {
@@ -167,7 +167,7 @@ describe('Förbered kvällen', () => {
   })
 
   it('varnar för att byta ordning när provningen har börjat', async () => {
-    await open({ ...preparation, phase: 'tasting' })
+    await open({ ...preparation, stage: 'evening' })
     expect(screen.getByRole('note')).toHaveTextContent('Provningen har börjat')
   })
 

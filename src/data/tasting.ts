@@ -1,4 +1,4 @@
-import { ref, set } from 'firebase/database'
+import { ref, set, update } from 'firebase/database'
 import type { EventSecret, GuestClass, GuestRatings, TastingState } from '../types'
 import { eventPath, subscribe, type OnError } from './db'
 import { firebase } from './firebase'
@@ -20,9 +20,15 @@ export function subscribeAllRatings(
 }
 
 /**
- * Vad som serveras och förbereds i en klass: en skrivning till `live/tasting/{class}`.
+ * Vad som serveras och förbereds i en klass: en skrivning till
+ * `live/tasting/{class}`. Att servera öppnar också rankningen i klassen.
  * Gästernas mobiler hoppar till numret i `serving`.
  */
-export function setTasting(eventId: string, guestClass: GuestClass, state: TastingState): Promise<void> {
-  return set(ref(firebase().db, eventPath(eventId, 'live', 'tasting', guestClass)), state)
+export function setTasting(eventId: string, guestClass: GuestClass, state: Omit<TastingState, 'open'>): Promise<void> {
+  return update(ref(firebase().db, eventPath(eventId, 'live', 'tasting', guestClass)), { ...state, open: true })
+}
+
+/** Öppnar eller stänger rankningen i en klass, oberoende av quizet. */
+export function setTastingOpen(eventId: string, guestClass: GuestClass, open: boolean): Promise<void> {
+  return set(ref(firebase().db, eventPath(eventId, 'live', 'tasting', guestClass, 'open')), open)
 }

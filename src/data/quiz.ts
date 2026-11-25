@@ -4,17 +4,30 @@ import { eventPath, subscribe, type OnError } from './db'
 import { firebase } from './firebase'
 
 /**
- * Öppnar en fråga genom att skriva `live/quiz` och `secret/quizTimes/{qId}` i
- * samma anrop. Båda får samma `ServerValue.TIMESTAMP`, och databasreglerna
- * nekar `live/quiz` om tiderna inte stämmer med `secret/quizTimes`. Öppnas
- * samma fråga igen gäller den nya tiden.
+ * *Spela låt*: låten startar, men frågan visas inte och tiden går inte.
+ * Reglerna tar inte emot svar i det här läget.
  */
-export function openQuestion(eventId: string, qId: string, durationMs: number): Promise<void> {
+export function playSong(eventId: string, songId: string, qId: string): Promise<void> {
+  return set(ref(firebase().db, eventPath(eventId, 'live', 'quiz')), { state: 'playing', songId, qId })
+}
+
+/**
+ * *Visa fråga*: skriver `live/quiz` och `secret/quizTimes/{qId}` i samma
+ * anrop. Båda får samma `ServerValue.TIMESTAMP`, och databasreglerna nekar
+ * `live/quiz` om tiderna inte stämmer med `secret/quizTimes`. Öppnas samma
+ * fråga igen gäller den nya tiden.
+ */
+export function openQuestion(eventId: string, qId: string, songId: string, durationMs: number): Promise<void> {
   const timing = { openedAt: serverTimestamp(), durationMs }
   return update(ref(firebase().db, eventPath(eventId)), {
-    'live/quiz': { qId, ...timing },
+    'live/quiz': { state: 'open', songId, qId, ...timing },
     [`secret/quizTimes/${qId}`]: timing,
   })
+}
+
+/** Stänger frågan när tiden är ute. Svaren är redan låsta av reglerna; mobilerna tar bort frågan. */
+export function closeQuestion(eventId: string): Promise<void> {
+  return set(ref(firebase().db, eventPath(eventId, 'live', 'quiz', 'state')), 'closed')
 }
 
 /** Tiderna för alla frågor som har öppnats, till score(). Bara admin får läsa dem. */
@@ -72,7 +85,7 @@ export function setAnsweredCount(eventId: string, answered: AnsweredCount): Prom
  */
 export function showReview(eventId: string, qId: string, correct: Choice): Promise<void> {
   return update(ref(firebase().db, eventPath(eventId)), {
-    'live/review': { qId },
+    'live/wrapup/qId': qId,
     [`reveal/correct/${qId}`]: correct,
   })
 }

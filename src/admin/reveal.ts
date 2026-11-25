@@ -28,7 +28,7 @@ export function startChanges(rows: readonly ScoreRow[]): Record<string, unknown>
     'secret/leaderboard': toLeaderboard([...rows]),
     'results/leaderboard': toLeaderboard(rows.slice(TOP)),
     'results/gloggOfEvening': null,
-    'live/reveal': { step: 0 },
+    'live/wrapup/revealStep': 0,
   }
 }
 
@@ -41,7 +41,7 @@ export function stepChanges(
   step: Exclude<RevealStep, 0>,
   gloggOfEvening: Partial<Record<GuestClass, GloggOfEvening>>,
 ): Record<string, unknown> {
-  const changes: Record<string, unknown> = { 'live/reveal': { step } }
+  const changes: Record<string, unknown> = { 'live/wrapup/revealStep': step }
   const row = rowForStep(rows, step)
   if (row) changes[`results/leaderboard/${row.uid}`] = entry(row)
   if (step === TOP) changes['results/gloggOfEvening'] = gloggOfEvening

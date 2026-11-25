@@ -43,7 +43,7 @@ afterEach(cleanup)
 
 describe('Rättning på mobilen', () => {
   it('visar rätt svar och gästens eget svar', () => {
-    render(<Review eventId="demo" uid="u1" config={config} live={{ phase: 'review', review: { qId: 'q1' } }} />)
+    render(<Review eventId="demo" uid="u1" config={config} live={{ stage: 'wrapup', wrapup: { step: 'review', qId: 'q1' } }} />)
     expect(screen.getByText('Låt 1 · fråga 1 av 3')).toBeInTheDocument()
     const rows = within(screen.getByRole('list', { name: 'Svar' })).getAllByRole('listitem')
     expect(rows.map((r) => r.textContent)).toEqual(['A1984Ditt svar', 'B1994Rätt svar', 'C2003', 'D2011'])
@@ -51,13 +51,13 @@ describe('Rättning på mobilen', () => {
   })
 
   it('säger Rätt när gästen hade rätt', () => {
-    render(<Review eventId="demo" uid="u1" config={config} live={{ phase: 'review', review: { qId: 'q2' } }} />)
+    render(<Review eventId="demo" uid="u1" config={config} live={{ stage: 'wrapup', wrapup: { step: 'review', qId: 'q2' } }} />)
     expect(screen.getByText('Rätt · ditt svar')).toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent('Rätt! +1 poäng.')
   })
 
   it('räknar poängen bara bland frågorna som har rättats', () => {
-    render(<Review eventId="demo" uid="u1" config={config} live={{ phase: 'review', review: { qId: 'q2' } }} />)
+    render(<Review eventId="demo" uid="u1" config={config} live={{ stage: 'wrapup', wrapup: { step: 'review', qId: 'q2' } }} />)
     expect(screen.getByText('1 p')).toBeInTheDocument()
     act(() => pushReveal({ correct: { q1: 'B', q2: 'A', q3: 'C' } }))
     expect(screen.getByText('2 p')).toBeInTheDocument()
@@ -68,13 +68,13 @@ describe('Rättning på mobilen', () => {
       callback(null)
       return () => {}
     })
-    render(<Review eventId="demo" uid="u1" config={config} live={{ phase: 'review', review: { qId: 'q1' } }} />)
+    render(<Review eventId="demo" uid="u1" config={config} live={{ stage: 'wrapup', wrapup: { step: 'review', qId: 'q1' } }} />)
     expect(screen.getByRole('status')).toHaveTextContent('Du svarade inte på den här.')
     expect(screen.getByText('0 p')).toBeInTheDocument()
   })
 
   it('väntar innan första frågan visas, och visar inte rätt svar innan det är kopierat till reveal/', () => {
-    render(<Review eventId="demo" uid="u1" config={config} live={{ phase: 'review', review: { qId: 'q3' } }} />)
+    render(<Review eventId="demo" uid="u1" config={config} live={{ stage: 'wrapup', wrapup: { step: 'review', qId: 'q3' } }} />)
     expect(screen.getByRole('heading', { name: 'Rättningen börjar snart' })).toBeInTheDocument()
     expect(screen.queryByText('Rätt svar')).not.toBeInTheDocument()
   })

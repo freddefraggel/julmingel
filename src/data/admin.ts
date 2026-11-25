@@ -1,5 +1,6 @@
 import { get, ref, set, update } from 'firebase/database'
-import type { Guest, GuestClass, Phase } from '../types'
+import { phaseChanges, type Phase } from '../live'
+import type { Guest, GuestClass, Stage, WrapupStep } from '../types'
 import { eventPath, subscribe, type OnError } from './db'
 import { firebase } from './firebase'
 import { isPermissionDenied } from './errors'
@@ -34,15 +35,22 @@ export function subscribeGuests(
   return subscribe<Record<string, Guest>>(eventPath(eventId, 'guests'), (guests) => callback(guests ?? {}), onError)
 }
 
-/** Kvällens flöde: en enda skrivning till `live/phase`. */
-export function setPhase(eventId: string, phase: Phase): Promise<void> {
-  return set(ref(firebase().db, eventPath(eventId, 'live', 'phase')), phase)
+/** Kvällens läge: `live/stage`. */
+export function setStage(eventId: string, stage: Stage): Promise<void> {
+  return set(ref(firebase().db, eventPath(eventId, 'live', 'stage')), stage)
 }
 
-/** ”Just nu: …” på gästernas startsida. Tom text tar bort raden. */
-export function setNowText(eventId: string, text: string): Promise<void> {
-  const trimmed = text.trim()
-  return set(ref(firebase().db, eventPath(eventId, 'live', 'nowText')), trimmed === '' ? null : trimmed)
+/** Steget i rättning och avslöjande: `live/wrapup/step`. */
+export function setWrapupStep(eventId: string, step: WrapupStep): Promise<void> {
+  return set(ref(firebase().db, eventPath(eventId, 'live', 'wrapup', 'step')), step)
+}
+
+/**
+ * Den gamla faslistan i kontrollpanelen, översatt till de tre lägena i ett
+ * anrop (se phaseChanges i src/live.ts). Ersätts när kontrollpanelen byggs om (#57).
+ */
+export function setPhase(eventId: string, phase: Phase): Promise<void> {
+  return update(ref(firebase().db, eventPath(eventId)), phaseChanges(phase))
 }
 
 /** Öppnar eller stänger registreringen (`config/joinOpen`). */

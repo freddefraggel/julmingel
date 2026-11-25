@@ -38,7 +38,7 @@ export function Review({ eventId, uid, config, live }: Props) {
   const [reveal, setReveal] = useState<EventReveal>({})
   useEffect(() => subscribeReveal(eventId, setReveal), [eventId])
 
-  const qId = live.review?.qId
+  const qId = live.wrapup?.qId
   const answers = useOwnAnswers(eventId, uid, Object.keys(reveal.correct ?? {}))
   const position = qId ? questionPosition(config, qId) : null
   const right = qId ? reveal.correct?.[qId] : undefined

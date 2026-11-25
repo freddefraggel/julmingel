@@ -75,14 +75,14 @@ afterEach(cleanup)
 
 describe('Rättning hos admin', () => {
   it('börjar med fråga 1 och kopierar rätt svar till reveal/ i samma anrop', async () => {
-    renderPanel({ phase: 'review' })
+    renderPanel({ stage: 'wrapup', wrapup: { step: 'review' } })
     expect(screen.getByText('Rättningen har inte börjat')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /Börja med fråga 1/ }))
     await waitFor(() => expect(mocked.showReview).toHaveBeenCalledWith('demo', 'q1', 'B'))
   })
 
   it('visar hur många som hade rätt och svarsfördelningen', () => {
-    renderPanel({ phase: 'review', review: { qId: 'q1' } })
+    renderPanel({ stage: 'wrapup', wrapup: { step: 'review', qId: 'q1' } })
     act(() => pushAnswers({ u1: { choice: 'B', at: 1 }, u2: { choice: 'A', at: 2 }, u3: { choice: 'B', at: 3 } }))
     expect(screen.getByText('Låt 1 · fråga 1 av 2 · totalt 1 av 3')).toBeInTheDocument()
     expect(screen.getByText('2 av 3 hade rätt')).toBeInTheDocument()
@@ -91,7 +91,7 @@ describe('Rättning hos admin', () => {
   })
 
   it('bläddrar med Föregående och Nästa, och direkt i listan', async () => {
-    renderPanel({ phase: 'review', review: { qId: 'q2' } })
+    renderPanel({ stage: 'wrapup', wrapup: { step: 'review', qId: 'q2' } })
     fireEvent.click(screen.getByRole('button', { name: 'Föregående' }))
     await waitFor(() => expect(mocked.showReview).toHaveBeenLastCalledWith('demo', 'q1', 'B'))
     expect(screen.getByRole('button', { name: /Nästa fråga/ })).toHaveTextContent('Ny låt: Jingle Bells')
@@ -104,18 +104,18 @@ describe('Rättning hos admin', () => {
   })
 
   it('kan inte visa en fråga som saknar rätt svar', () => {
-    renderPanel({ phase: 'review' })
+    renderPanel({ stage: 'wrapup', wrapup: { step: 'review' } })
     act(() => pushCorrect({ q1: 'B' }))
     expect(screen.getByRole('button', { name: 'Fråga 2, saknar rätt svar' })).toBeDisabled()
   })
 
   it('efter sista frågan pekar den vidare', () => {
-    renderPanel({ phase: 'review', review: { qId: 'q3' } })
+    renderPanel({ stage: 'wrapup', wrapup: { step: 'review', qId: 'q3' } })
     expect(screen.getByText(/Sista frågan är rättad/)).toBeInTheDocument()
   })
 
   it('Spela låten igen spelar frågans låt', async () => {
-    renderPanel({ phase: 'review', review: { qId: 'q2' } })
+    renderPanel({ stage: 'wrapup', wrapup: { step: 'review', qId: 'q2' } })
     expect(screen.getByText('Spelar från 0:30')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Spela låten igen' }))
     await waitFor(() => expect(mockedSpotify.replaySong).toHaveBeenCalled())

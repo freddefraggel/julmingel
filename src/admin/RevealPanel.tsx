@@ -45,7 +45,7 @@ export function RevealPanel({ eventId, config, live, guests, disabled, save }: P
   // Samma indata ger samma lista, så en omladdning mitt i avslöjandet hamnar rätt.
   const rows = score(input.answers, input.correct, input.quizTimes, guests)
   const glogg = gloggOfEvening(input.ratings, guests, config?.criteria, input.numbers)
-  const step = (live?.reveal?.step ?? null) as RevealStep | null
+  const step = (live?.wrapup?.revealStep ?? null) as RevealStep | null
   const top = rows.slice(0, TOP)
   const rest = rows.slice(TOP)
 

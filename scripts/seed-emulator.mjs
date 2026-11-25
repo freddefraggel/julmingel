@@ -75,8 +75,12 @@ const demoEvent = {
     },
   },
   live: {
-    phase: 'registration',
-    nowText: 'Välkommen! Glöggprovningen börjar snart.',
+    stage: 'lobby',
+    tasting: {
+      vanlig: { open: false, serving: null, next: null },
+      alkfri: { open: false, serving: null, next: null },
+    },
+    quiz: { state: 'idle' },
   },
 }
 

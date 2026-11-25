@@ -18,7 +18,6 @@ vi.mock('../data', () => ({
   subscribeConfig: vi.fn(),
   subscribeGuests: vi.fn(),
   setPhase: vi.fn(),
-  setNowText: vi.fn(),
   setJoinOpen: vi.fn(),
   changeGuestClass: vi.fn(),
   removeGuest: vi.fn(),
@@ -73,7 +72,7 @@ function renderAt(url: string) {
 beforeEach(() => {
   vi.resetAllMocks()
   localStorage.clear()
-  for (const write of [mocked.setPhase, mocked.setNowText, mocked.setJoinOpen, mocked.changeGuestClass, mocked.removeGuest]) {
+  for (const write of [mocked.setPhase, mocked.setJoinOpen, mocked.changeGuestClass, mocked.removeGuest]) {
     write.mockResolvedValue(undefined)
   }
 })
@@ -122,7 +121,7 @@ describe('inloggning', () => {
 describe('välj kväll', () => {
   it('frågar efter kvällen och kommer ihåg den', async () => {
     signedIn(admin)
-    eventData({ phase: 'registration' })
+    eventData({ stage: 'lobby' })
     renderAt('/admin')
     fireEvent.change(await screen.findByLabelText('Vilken kväll vill du styra?'), { target: { value: 'demo' } })
     fireEvent.click(screen.getByRole('button', { name: 'Öppna' }))
@@ -147,7 +146,7 @@ describe('välj kväll', () => {
 })
 
 describe('kontrollpanelen', () => {
-  async function openPanel(live: LiveState | null = { phase: 'tasting', nowText: 'Glögg 1 serveras' }, config?: Partial<EventConfig>) {
+  async function openPanel(live: LiveState | null = { stage: 'evening' }, config?: Partial<EventConfig>) {
     signedIn(admin)
     eventData(live, config)
     renderAt('/admin?e=demo')
@@ -179,18 +178,9 @@ describe('kontrollpanelen', () => {
   })
 
   it('går till nästa fas', async () => {
-    await openPanel({ phase: 'registration' })
+    await openPanel({ stage: 'lobby' })
     fireEvent.click(screen.getByRole('button', { name: 'Nästa: Glöggprovning' }))
     await waitFor(() => expect(mocked.setPhase).toHaveBeenCalledWith('demo', 'tasting'))
-  })
-
-  it('sparar Just nu-texten', async () => {
-    await openPanel()
-    const input = screen.getByLabelText('Just nu-text till gästerna')
-    expect(input).toHaveValue('Glögg 1 serveras')
-    fireEvent.change(input, { target: { value: 'Glögg 2 serveras' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Spara' }))
-    await waitFor(() => expect(mocked.setNowText).toHaveBeenCalledWith('demo', 'Glögg 2 serveras'))
   })
 
   it('stänger och öppnar registreringen', async () => {

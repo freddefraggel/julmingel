@@ -4,6 +4,7 @@ import * as data from '../data'
 import type { EventConfig, EventReveal, Guess as GuessData, Guest, LiveState } from '../types'
 import { cleanMap, Guess, guessScore, pick } from './Guess'
 import { GuestLive } from './GuestLive'
+import type { Phase } from '../live'
 
 vi.mock('../data', () => ({
   saveGuess: vi.fn(),
@@ -32,7 +33,7 @@ const config: EventConfig = {
 let pushGuess: (guess: GuessData | null) => void
 let pushReveal: (reveal: EventReveal) => void
 
-function renderGuess(phase: LiveState['phase'] = 'guess') {
+function renderGuess(phase: Phase = 'guess') {
   return render(<Guess eventId="demo" uid="u1" config={config} guestClass="vanlig" phase={phase} onBack={() => {}} />)
 }
 
@@ -151,7 +152,7 @@ describe('Gissa glöggen i kvällens flöde', () => {
     })
     mocked.getAssets.mockResolvedValue({})
     render(<GuestLive eventId="demo" uid="u1" guest={anna} />)
-    act(() => pushLive({ phase: 'guess' }))
+    act(() => pushLive({ stage: 'wrapup', wrapup: { step: 'guess' } }))
     expect(screen.getByRole('heading', { name: 'Vilken glögg är vilken?' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Tillbaka' }))
     expect(screen.getByRole('heading', { name: 'Hej Anna!' })).toBeInTheDocument()

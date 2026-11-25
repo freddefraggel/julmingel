@@ -1,4 +1,4 @@
-import type { Phase } from '../types'
+import type { Phase } from '../live'
 
 export type PhaseInfo = { phase: Phase; label: string; sub: string }
 

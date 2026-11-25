@@ -11,6 +11,7 @@ import { getDeviceId, getPlaybackMode, isLoggedIn, pause, replaySong, songLabel,
 import type { Answer, Choice, EventConfig, Guest, LiveState } from '../types'
 import { Button } from '../ui'
 import { answerStats, CHOICES, nextQuestion, positionLabel, quizPlan, secondsLeft, type PlannedQuestion } from './quiz'
+import { quizTiming } from '../live'
 import './quiz.css'
 
 type Props = {
@@ -64,8 +65,8 @@ export function QuizPanel({ eventId, config, live, guests, disabled, save }: Pro
     return () => window.clearInterval(timer)
   }, [])
 
-  const quiz = live?.quiz
-  const left = quiz && current ? secondsLeft(quiz.openedAt, quiz.durationMs, now + offset) : null
+  const timing = quizTiming(live)
+  const left = timing && current ? secondsLeft(timing.openedAt, timing.durationMs, now + offset) : null
   const stats = answerStats(answers, guests)
   const guestCount = guests ? Object.keys(guests).length : 0
   const right = current ? correct[current.qId] : undefined
@@ -79,7 +80,7 @@ export function QuizPanel({ eventId, config, live, guests, disabled, save }: Pro
   }, [eventId, currentId, guests, stats.answered, guestCount, shown?.qId, shown?.count, shown?.total])
 
   async function openNext(target: PlannedQuestion) {
-    const ok = await save(() => openQuestion(eventId, target.qId, target.durationMs))
+    const ok = await save(() => openQuestion(eventId, target.qId, target.cue.songId, target.durationMs))
     // Låten startas bara på första frågan till en ny låt; den spelar vidare mellan frågorna.
     if (ok && target.startsSong) setPlayback(await startSong(target.cue))
   }

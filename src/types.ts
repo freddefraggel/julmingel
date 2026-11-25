@@ -3,8 +3,17 @@
 /** Gästens klass: vanlig glögg eller alkoholfri. */
 export type GuestClass = 'vanlig' | 'alkfri'
 
-/** Kvällens fas, som admin skriver till `live/phase`. */
-export type Phase = 'registration' | 'tasting' | 'quiz' | 'review' | 'guess' | 'reveal' | 'done'
+/**
+ * Kvällens läge, `live/stage`: innan start, pågår (provning och quiz var för
+ * sig), rättning och avslöjande, klart.
+ */
+export type Stage = 'lobby' | 'evening' | 'wrapup' | 'done'
+
+/** Quizets läge: inget, låten spelar (inga svar), frågan är öppen (tiden går), frågan är stängd. */
+export type QuizState = 'idle' | 'playing' | 'open' | 'closed'
+
+/** Stegen i rättning och avslöjande, `live/wrapup/step`. */
+export type WrapupStep = 'review' | 'guess' | 'reveal'
 
 /** Svarsalternativ i en quizfråga. */
 export type Choice = 'A' | 'B' | 'C' | 'D'
@@ -83,24 +92,37 @@ export type EventSecret = {
 
 // ── live/: admin skriver, alla läser ────────────────────────────────────────
 
+/** Provningen i en klass, oberoende av quizet. */
 export type TastingState = {
+  /** Gästerna i klassen får ranka. */
+  open: boolean
   serving: number | null
   next: number | null
 }
 
-export type LiveQuiz = QuestionTiming & {
-  qId: string
+/**
+ * Quizet, oberoende av provningen. `openedAt` och `durationMs` sätts bara när
+ * frågan visas (`state: "open"`), med samma tider i `secret/quizTimes/{qId}`.
+ */
+export type LiveQuiz = Partial<QuestionTiming> & {
+  state: QuizState
+  songId?: string
+  qId?: string
+}
+
+export type LiveWrapup = {
+  step: WrapupStep
+  /** Frågan som gås igenom i rättningen. */
+  qId?: string
+  /** 0–4: vid steg 1–4 avslöjas 4:an, 3:an, 2:an och vinnaren. */
+  revealStep?: 0 | 1 | 2 | 3 | 4
 }
 
 export type LiveState = {
-  phase: Phase
-  /** ”Just nu: …” */
-  nowText?: string
+  stage: Stage
   tasting?: Partial<Record<GuestClass, TastingState>>
   quiz?: LiveQuiz
-  review?: { qId: string }
-  /** 0–4: vid steg 1–4 avslöjas 4:an, 3:an, 2:an och vinnaren. */
-  reveal?: { step: 0 | 1 | 2 | 3 | 4 }
+  wrapup?: LiveWrapup
   /** Hur många som har svarat på frågan som visas. Admin skriver det, eftersom gäster inte får läsa andras svar. */
   answered?: AnsweredCount
 }

@@ -57,14 +57,14 @@ afterEach(cleanup)
 
 describe('Avslöja topplistan hos admin', () => {
   it('räknar ut listan och visar plats 5 och nedåt, men döljer topp 4', async () => {
-    renderPanel({ phase: 'reveal' })
+    renderPanel({ stage: 'wrapup', wrapup: { step: 'reveal' } })
     const top = await screen.findByRole('region', { name: 'Topp 4' })
     expect(within(top).getAllByText('?')).toHaveLength(4)
     expect(within(screen.getByRole('region', { name: 'Plats 5 och nedåt' })).getByText('Eva')).toBeInTheDocument()
   })
 
   it('steg 0 skriver hela listan i secret/ och plats 5 och nedåt i results/', async () => {
-    renderPanel({ phase: 'reveal' })
+    renderPanel({ stage: 'wrapup', wrapup: { step: 'reveal' } })
     fireEvent.click(await screen.findByRole('button', { name: 'Visa plats 5 och nedåt' }))
     await waitFor(() => expect(mocked.writeResults).toHaveBeenCalled())
     const changes = mocked.writeResults.mock.calls[0]![1]
@@ -73,20 +73,20 @@ describe('Avslöja topplistan hos admin', () => {
   })
 
   it('nästa steg avslöjar 4:an, och sista steget vinnaren och Kvällens glögg', async () => {
-    const { unmount } = renderPanel({ phase: 'reveal', reveal: { step: 0 } })
+    const { unmount } = renderPanel({ stage: 'wrapup', wrapup: { step: 'reveal', revealStep: 0 } })
     fireEvent.click(await screen.findByRole('button', { name: 'Avslöja 4:an' }))
     await waitFor(() =>
       expect(mocked.writeResults).toHaveBeenLastCalledWith('demo', {
-        'live/reveal': { step: 1 },
+        'live/wrapup/revealStep': 1,
         'results/leaderboard/u4': { points: 1, stars: 3, rank: 4, name: 'Dan' },
       }),
     )
     unmount()
-    renderPanel({ phase: 'reveal', reveal: { step: 3 } })
+    renderPanel({ stage: 'wrapup', wrapup: { step: 'reveal', revealStep: 3 } })
     fireEvent.click(await screen.findByRole('button', { name: 'Avslöja vinnaren' }))
     await waitFor(() =>
       expect(mocked.writeResults).toHaveBeenLastCalledWith('demo', {
-        'live/reveal': { step: 4 },
+        'live/wrapup/revealStep': 4,
         'results/leaderboard/u1': { points: 4, stars: 12, rank: 1, name: 'Anna' },
         'results/gloggOfEvening': { vanlig: { gId: 'g1', avg: 5 } },
       }),
@@ -94,7 +94,7 @@ describe('Avslöja topplistan hos admin', () => {
   })
 
   it('visar avslöjade platser och Kvällens glögg när allt är klart', async () => {
-    renderPanel({ phase: 'reveal', reveal: { step: 4 } })
+    renderPanel({ stage: 'wrapup', wrapup: { step: 'reveal', revealStep: 4 } })
     const top = await screen.findByRole('region', { name: 'Topp 4' })
     expect(within(top).getByText('Anna')).toBeInTheDocument()
     expect(within(top).getByText('4 poäng · 12 stjärnor')).toBeInTheDocument()

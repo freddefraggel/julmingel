@@ -7,6 +7,7 @@ import {
 import { get, ref, serverTimestamp, set, update } from 'firebase/database'
 import { readFileSync } from 'node:fs'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { phaseChanges } from '../../src/live'
 
 const E = 'events/test'
 let env: RulesTestEnvironment
@@ -42,7 +43,7 @@ beforeEach(async () => {
             gloggs: { g1: { class: 'vanlig', name: 'A', description: '' } },
           },
           secret: { joinCode: 'hemlig', correct: { q1: 'B' }, numbers: { vanlig: { 1: 'g1' } } },
-          live: { phase: 'quiz', quiz: { qId: 'q1', openedAt: Date.now(), durationMs: 60_000 } },
+          live: { stage: 'evening', quiz: { state: 'open', songId: 's1', qId: 'q1', openedAt: Date.now(), durationMs: 60_000 } },
           guests: { anna: { name: 'Anna', class: 'vanlig', joinCode: 'hemlig', joinedAt: 1 } },
         },
       },
@@ -158,7 +159,7 @@ describe('svar i quizet', () => {
   })
 
   it('nekar svar efter sluttiden', async () => {
-    await setLive({ phase: 'quiz', quiz: { qId: 'q1', openedAt: Date.now() - 120_000, durationMs: 60_000 } })
+    await setLive({ stage: 'evening', quiz: { state: 'open', songId: 's1', qId: 'q1', openedAt: Date.now() - 120_000, durationMs: 60_000 } })
     await assertFails(answer('q1'))
   })
 
@@ -192,48 +193,55 @@ describe('frågetider i secret/quizTimes', () => {
   const timing = () => ({ openedAt: serverTimestamp(), durationMs: 20_000 })
 
   it('admin öppnar en fråga och sparar tiden i samma anrop', async () => {
-    await assertSucceeds(open('admin', { qId: 'q2', ...timing() }, timing()))
+    await assertSucceeds(open('admin', { state: 'open', songId: 's1', qId: 'q2', ...timing() }, timing()))
     const saved = await read(E)
     expect(saved.secret.quizTimes.q2).toEqual({ openedAt: saved.live.quiz.openedAt, durationMs: 20_000 })
   })
 
   it('nekar live/quiz utan matchande tid i secret/quizTimes', async () => {
-    await assertFails(set(ref(db('admin'), `${E}/live/quiz`), { qId: 'q2', ...timing() }))
-    await assertFails(open('admin', { qId: 'q2', openedAt: serverTimestamp(), durationMs: 30_000 }, timing()))
+    await assertFails(set(ref(db('admin'), `${E}/live/quiz`), { state: 'open', songId: 's1', qId: 'q2', ...timing() }))
+    await assertFails(open('admin', { state: 'open', songId: 's1', qId: 'q2', openedAt: serverTimestamp(), durationMs: 30_000 }, timing()))
   })
 
   it('nekar starttid från klientens klocka', async () => {
     const t = { openedAt: Date.now(), durationMs: 20_000 }
-    await assertFails(open('admin', { qId: 'q2', ...t }, t))
+    await assertFails(open('admin', { state: 'open', songId: 's1', qId: 'q2', ...t }, t))
   })
 
   it('godkänner att admin skriver om secret/ med befintliga tider', async () => {
-    await assertSucceeds(open('admin', { qId: 'q2', ...timing() }, timing()))
+    await assertSucceeds(open('admin', { state: 'open', songId: 's1', qId: 'q2', ...timing() }, timing()))
     const secret = await read(`${E}/secret`)
     await assertSucceeds(set(ref(db('admin'), `${E}/secret`), secret))
   })
 
+  it('Spela låt behöver inga tider; Visa fråga utan tider nekas', async () => {
+    await assertSucceeds(set(ref(db('admin'), `${E}/live/quiz`), { state: 'playing', songId: 's1', qId: 'q2' }))
+    await assertSucceeds(set(ref(db('admin'), `${E}/live/quiz/state`), 'closed'))
+    await assertFails(set(ref(db('admin'), `${E}/live/quiz`), { state: 'open', songId: 's1', qId: 'q2' }))
+    await assertFails(set(ref(db('admin'), `${E}/live/quiz`), { state: 'paus', songId: 's1', qId: 'q2' }))
+  })
+
   it('gäst får varken läsa eller skriva tiderna', async () => {
     await assertFails(get(ref(db('anna'), `${E}/secret/quizTimes`)))
-    await assertFails(open('anna', { qId: 'q2', ...timing() }, timing()))
+    await assertFails(open('anna', { state: 'open', songId: 's1', qId: 'q2', ...timing() }, timing()))
   })
 })
 
 describe('betyg och gissningar', () => {
   it('godkänner betyg 1–5 under glöggprovningen', async () => {
-    await setLive({ phase: 'tasting' })
+    await setLive({ stage: 'evening', tasting: { vanlig: { open: true, serving: 1, next: null } } })
     await assertSucceeds(set(ref(db('anna'), `${E}/ratings/anna/1/c1`), 4))
   })
 
   it('nekar betyg utanför fasen, utanför 1–5 och på nummer som inte finns', async () => {
     await assertFails(set(ref(db('anna'), `${E}/ratings/anna/1/c1`), 4))
-    await setLive({ phase: 'tasting' })
+    await setLive({ stage: 'evening', tasting: { vanlig: { open: true, serving: 1, next: null } } })
     await assertFails(set(ref(db('anna'), `${E}/ratings/anna/1/c1`), 6))
     await assertFails(set(ref(db('anna'), `${E}/ratings/anna/9/c1`), 3))
   })
 
   it('sparar ett nummers betyg i ett anrop, som saveRatings(), men inte på okända kriterier', async () => {
-    await setLive({ phase: 'tasting' })
+    await setLive({ stage: 'evening', tasting: { vanlig: { open: true, serving: 1, next: null } } })
     await assertSucceeds(update(ref(db('anna'), `${E}/ratings/anna/1`), { c1: 4 }))
     await assertFails(update(ref(db('anna'), `${E}/ratings/anna/1`), { c1: 4, okänd: 3 }))
     await assertFails(update(ref(db('anna'), `${E}/ratings/bertil/1`), { c1: 4 }))
@@ -242,7 +250,7 @@ describe('betyg och gissningar', () => {
   it('gissningar sparas olåsta under gissningen, med glögger som finns, och inte utanför fasen', async () => {
     const guesses = ref(db('anna'), `${E}/guesses/anna`)
     await assertFails(set(guesses, { map: { 1: 'g1' }, locked: false }))
-    await setLive({ phase: 'guess' })
+    await setLive({ stage: 'wrapup', wrapup: { step: 'guess' } })
     await assertSucceeds(set(guesses, { map: { 1: 'g1' }, locked: false }))
     await assertFails(set(guesses, { map: { 1: 'finns-inte' }, locked: false }))
     await assertFails(set(ref(db('anna'), `${E}/guesses/bertil`), { map: { 1: 'g1' }, locked: false }))
@@ -255,7 +263,7 @@ describe('betyg och gissningar', () => {
   })
 
   it('låsta gissningar kan inte ändras', async () => {
-    await setLive({ phase: 'guess' })
+    await setLive({ stage: 'wrapup', wrapup: { step: 'guess' } })
     const guesses = ref(db('anna'), `${E}/guesses/anna`)
     await assertSucceeds(set(guesses, { map: { 1: 'g1' }, locked: true }))
     await assertFails(update(guesses, { locked: false }))
@@ -263,14 +271,23 @@ describe('betyg och gissningar', () => {
 })
 
 describe('admin styr kvällen', () => {
-  it('admin byter fas, Just nu-text och registrering', async () => {
-    await assertSucceeds(set(ref(db('admin'), `${E}/live/phase`), 'tasting'))
-    await assertSucceeds(set(ref(db('admin'), `${E}/live/nowText`), 'Glögg 1 serveras'))
+  it('admin byter läge, öppnar provningen och stänger registreringen', async () => {
+    await assertSucceeds(set(ref(db('admin'), `${E}/live/stage`), 'evening'))
+    await assertSucceeds(set(ref(db('admin'), `${E}/live/tasting/vanlig/open`), true))
+    await assertSucceeds(set(ref(db('admin'), `${E}/live/wrapup`), { step: 'reveal', revealStep: 2 }))
     await assertSucceeds(set(ref(db('admin'), `${E}/config/joinOpen`), false))
   })
 
-  it('gäst får inte byta fas eller öppna registreringen', async () => {
-    await assertFails(set(ref(db('anna'), `${E}/live/phase`), 'reveal'))
+  it('nekar okända lägen, även för admin', async () => {
+    await assertFails(set(ref(db('admin'), `${E}/live/stage`), 'quiz'))
+    await assertFails(set(ref(db('admin'), `${E}/live/tasting/stark/open`), true))
+    await assertFails(set(ref(db('admin'), `${E}/live/tasting/vanlig/open`), 'ja'))
+    await assertFails(set(ref(db('admin'), `${E}/live/wrapup/step`), 'quiz'))
+    await assertFails(set(ref(db('admin'), `${E}/live/wrapup/revealStep`), 5))
+  })
+
+  it('gäst får inte byta läge eller öppna registreringen', async () => {
+    await assertFails(set(ref(db('anna'), `${E}/live/stage`), 'done'))
     await assertFails(set(ref(db('anna'), `${E}/config/joinOpen`), true))
   })
 
@@ -404,7 +421,7 @@ describe('fullständiga regler', () => {
   }
 
   describe('bara admin skriver kvällen', () => {
-    const areas = ['config/name', 'secret/joinCode', 'live/phase', 'reveal/correct/q1', 'results/leaderboard/anna', 'assets/i1']
+    const areas = ['config/name', 'secret/joinCode', 'live/stage', 'reveal/correct/q1', 'results/leaderboard/anna', 'assets/i1']
 
     it.each(areas)('gäst får inte skriva %s', async (path) => {
       await assertFails(set(ref(db('anna'), `${E}/${path}`), 'x'))
@@ -422,7 +439,7 @@ describe('fullständiga regler', () => {
     })
 
     it('ett inloggat konto som inte står under /admins är inte admin', async () => {
-      await assertFails(set(ref(db('okand'), `${E}/live/phase`), 'reveal'))
+      await assertFails(set(ref(db('okand'), `${E}/live/stage`), 'done'))
       await assertFails(get(ref(db('okand'), `${E}/secret`)))
     })
 
@@ -457,14 +474,17 @@ describe('fullständiga regler', () => {
 
     it('nekar extra fält och svar utanför quizfasen', async () => {
       await assertFails(set(ref(db('anna'), `${E}/answers/q1/anna`), { choice: 'A', at: serverTimestamp(), stars: 3 }))
-      await setLive({ phase: 'review', quiz: { qId: 'q1', openedAt: Date.now(), durationMs: 60_000 } })
+      await setLive({ stage: 'evening', quiz: { state: 'closed', songId: 's1', qId: 'q1', openedAt: Date.now(), durationMs: 60_000 } })
       await assertFails(set(ref(db('anna'), `${E}/answers/q1/anna`), { choice: 'A', at: serverTimestamp() }))
     })
   })
 
   describe('ratings', () => {
     beforeEach(async () => {
-      await setLive({ phase: 'tasting' })
+      await setLive({
+        stage: 'evening',
+        tasting: { vanlig: { open: true, serving: 1, next: null }, alkfri: { open: true, serving: 1, next: null } },
+      })
     })
 
     it('nekar decimaltal och nummer som inte finns i gästens klass', async () => {
@@ -481,7 +501,7 @@ describe('fullständiga regler', () => {
 
   describe('guesses', () => {
     beforeEach(async () => {
-      await setLive({ phase: 'guess' })
+      await setLive({ stage: 'wrapup', wrapup: { step: 'guess' } })
       await seed('config/gloggs/g2', { class: 'alkfri', name: 'Äpple', description: '' })
     })
 
@@ -501,5 +521,45 @@ describe('fullständiga regler', () => {
       await assertSucceeds(set(ref(db('anna'), `${E}/guesses/anna`), { map: { 1: 'g1' }, locked: true }))
       await assertFails(set(ref(db('anna'), `${E}/guesses/anna`), null))
     })
+  })
+})
+
+describe('tre oberoende lägen', () => {
+  const answer = () => set(ref(db('anna'), `${E}/answers/q1/anna`), { choice: 'A', at: serverTimestamp() })
+  const rate = () => set(ref(db('anna'), `${E}/ratings/anna/1/c1`), 4)
+
+  it('nekar svar medan låten spelar men frågan inte visats', async () => {
+    await setLive({ stage: 'evening', quiz: { state: 'playing', songId: 's1', qId: 'q1' } })
+    await assertFails(answer())
+  })
+
+  it('godkänner rankning medan en fråga är öppen, och svar samtidigt', async () => {
+    await setLive({
+      stage: 'evening',
+      tasting: { vanlig: { open: true, serving: 1, next: null } },
+      quiz: { state: 'open', songId: 's1', qId: 'q1', openedAt: Date.now(), durationMs: 60_000 },
+    })
+    await assertSucceeds(rate())
+    await assertSucceeds(answer())
+  })
+
+  it('rankningen följer gästens egen klass', async () => {
+    await setLive({
+      stage: 'evening',
+      tasting: { vanlig: { open: false, serving: 1, next: null }, alkfri: { open: true, serving: 1, next: null } },
+    })
+    await assertFails(rate())
+  })
+
+  it.each(['registration', 'tasting', 'quiz', 'review', 'guess', 'reveal', 'done'] as const)(
+    'faslistans skrivning för %s (phaseChanges) godkänns',
+    async (phase) => {
+      await assertSucceeds(update(ref(db('admin'), E), phaseChanges(phase)))
+    },
+  )
+
+  it('gissningen kräver steget guess, inte bara att kvällen är i avslutningen', async () => {
+    await setLive({ stage: 'wrapup', wrapup: { step: 'review' } })
+    await assertFails(set(ref(db('anna'), `${E}/guesses/anna`), { map: { 1: 'g1' }, locked: false }))
   })
 })
