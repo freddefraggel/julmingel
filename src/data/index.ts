@@ -8,6 +8,7 @@ export {
   getQuizTimes,
   openQuestion,
   playSong,
+  setQuizIdle,
   sendAnswer,
   setAnsweredCount,
   showReview,

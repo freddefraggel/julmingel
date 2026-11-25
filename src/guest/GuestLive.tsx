@@ -43,6 +43,8 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
   const [view, setView] = useState<'home' | 'topplista' | HomeTarget>('home')
   const lastServing = useRef<number | null>(null)
   const lastPhase = useRef<string | undefined>(undefined)
+  // Quizläget som gästen har lämnat med *Till provningen*; nästa läge eller fråga visas igen.
+  const [leftQuiz, setLeftQuiz] = useState<string | null>(null)
 
   useEffect(() => {
     const onError = () => setLost(true)
@@ -69,6 +71,7 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
   }, [eventId])
 
   const phase = phaseOf(live)
+  const quizKey = `${live?.quiz?.state ?? ''}:${live?.quiz?.qId ?? ''}`
   const serving = guest ? (live?.tasting?.[guest.class]?.serving ?? null) : null
   // Rankningen är öppen i gästens klass; samma villkor som databasreglerna.
   const tastingOpen = guest ? live?.tasting?.[guest.class]?.open === true : false
@@ -96,8 +99,8 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
   const count = Object.values(config?.gloggs ?? {}).filter((g) => g.class === guest.class).length
   return (
     <GuestAssets.Provider value={assets}>
-      {phase === 'quiz' && live ? (
-        <Quiz eventId={eventId} uid={uid} config={config} live={live} />
+      {phase === 'quiz' && live && leftQuiz !== quizKey ? (
+        <Quiz eventId={eventId} uid={uid} config={config} live={live} onLeave={() => setLeftQuiz(quizKey)} />
       ) : phase === 'done' ? (
         view === 'topplista' ? (
           <Leaderboard

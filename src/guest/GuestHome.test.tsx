@@ -13,6 +13,8 @@ vi.mock('../data', () => ({
   subscribeOwnGuest: vi.fn(),
   subscribeOwnRatings: vi.fn(),
   getAssets: vi.fn(),
+  subscribeServerTimeOffset: vi.fn(() => () => {}),
+  subscribeOwnAnswer: vi.fn(() => () => {}),
 }))
 
 const mocked = vi.mocked(data)
@@ -159,6 +161,16 @@ describe('GuestLive', () => {
     render(<GuestLive eventId="demo" uid="u1" guest={anna} />)
     act(() => failConfig(new Error('permission_denied')))
     expect(screen.getByRole('heading', { name: 'Tappade kontakten' })).toBeInTheDocument()
+  })
+
+  it('Till provningen lämnar Lyssna noga, och nästa läge visas igen', () => {
+    render(<GuestLive eventId="demo" uid="u1" guest={anna} />)
+    act(() => pushLive({ stage: 'evening', quiz: { state: 'playing', songId: 's1', qId: 'q1' } }))
+    expect(screen.getByRole('heading', { name: 'Lyssna noga …' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Till provningen' }))
+    expect(screen.getByRole('heading', { name: 'Hej Anna!' })).toBeInTheDocument()
+    act(() => pushLive({ stage: 'evening', quiz: { state: 'idle', qId: 'q1' } }))
+    expect(screen.getByRole('heading', { name: 'Musikquizet börjar snart' })).toBeInTheDocument()
   })
 
   it('förladdar bilderna en gång, även när live/ ändras', async () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { EventConfig, Guest } from '../types'
-import { answerStats, nextQuestion, positionLabel, quizPlan, secondsLeft } from './quiz'
+import { answerStats, nextSong, positionLabel, quizControl, quizPlan, secondsLeft } from './quiz'
 
 const TRACK = 'spotify:track:2FRnf9qhLbvw8fu4IBXx78'
 const options = { A: 'a', B: 'b', C: 'c', D: 'd' }
@@ -30,13 +30,6 @@ describe('quizPlan', () => {
       ['q3', 2, 1, 1, 3, true, 20_000],
     ])
     expect(positionLabel(plan[1]!)).toBe('Låt 1 · fråga 2 av 2')
-  })
-
-  it('nästa fråga, den första när inget är öppnat, null när quizet är slut', () => {
-    expect(nextQuestion(plan, undefined)?.qId).toBe('q1')
-    expect(nextQuestion(plan, 'q1')?.qId).toBe('q2')
-    expect(nextQuestion(plan, 'q3')).toBeNull()
-    expect(nextQuestion(plan, 'okänd')?.qId).toBe('q1')
   })
 
   it('tom utan låtar', () => {
@@ -69,5 +62,51 @@ describe('secondsLeft', () => {
     expect(secondsLeft(1000, 30_000, 30_500)).toBe(1)
     expect(secondsLeft(1000, 30_000, 31_000)).toBe(0)
     expect(secondsLeft(1000, 30_000, 99_000)).toBe(0)
+  })
+})
+
+describe('quizControl: huvudknappen följer läget', () => {
+  const plan = quizPlan(quizConfig)
+  const control = (quiz: { state: string; qId?: string } | null, left: number | null = null) => quizControl(plan, quiz, left)
+
+  it('idle utan qId: Spela låt 1, med Hoppa över låten', () => {
+    const c = control({ state: 'idle' })
+    expect(c.primary).toMatchObject({ kind: 'play', label: 'Spela låt 1' })
+    expect(c.primary.kind === 'play' && c.primary.target.qId).toBe('q1')
+    expect(c.side).toEqual({ kind: 'skip', label: 'Hoppa över låten' })
+    expect(control(null).primary.label).toBe('Spela låt 1')
+  })
+
+  it('playing: Visa fråga N, med Pausa låten', () => {
+    const c = control({ state: 'playing', qId: 'q1' })
+    expect(c.primary).toMatchObject({ kind: 'open', label: 'Visa fråga 1' })
+    expect(c.side?.label).toBe('Pausa låten')
+    expect(c.later).toBe('Sedan: fråga 2 – Film?')
+  })
+
+  it('open: avstängd med sekunderna kvar, och Stäng frågan nu', () => {
+    const c = control({ state: 'open', qId: 'q2' }, 18)
+    expect(c.primary).toEqual({ kind: 'wait', label: 'Fråga 2 är öppen · 18 s kvar' })
+    expect(c.side?.kind).toBe('close')
+  })
+
+  it('closed: samma låt, ny låt, eller klart', () => {
+    expect(control({ state: 'closed', qId: 'q1' }).primary).toMatchObject({ kind: 'open', label: 'Visa fråga 2 · samma låt' })
+    expect(control({ state: 'closed', qId: 'q2' }).primary).toMatchObject({ kind: 'play', label: 'Spela låt 2' })
+    const last = control({ state: 'closed', qId: 'q3' })
+    expect(last.primary).toEqual({ kind: 'wait', label: 'Alla frågor klara – starta rättningen när ni vill' })
+    expect(last.side).toBeNull()
+  })
+
+  it('idle med qId fortsätter där quizet stannade; sista låten går inte att hoppa över', () => {
+    const c = control({ state: 'idle', qId: 'q3' })
+    expect(c.primary).toMatchObject({ kind: 'play', label: 'Spela låt 2' })
+    expect(c.side).toBeNull()
+    expect(c.later).toBe('Sista frågan')
+  })
+
+  it('nextSong ger första frågan på nästa låt', () => {
+    expect(nextSong(plan, plan[0]!)?.qId).toBe('q3')
+    expect(nextSong(plan, plan[2]!)).toBeNull()
   })
 })
