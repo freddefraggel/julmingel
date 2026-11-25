@@ -154,7 +154,7 @@ export function Quiz({ eventId, uid, config, live, onLeave }: Props) {
   const potential = starsFor(serverNow, timing)
 
   return (
-    <QuizPage label={position.label}>
+    <QuizPage label={position.label} onLeave={onLeave}>
       <div className="quiz-bar">
         <span className="quiz-bar__eq" aria-hidden="true">
           <span />
@@ -295,7 +295,7 @@ function TimeUp({ label, config, live, qId, timing, answer, sameSongNext, onLeav
         <p className="quiz-done__next">
           {sameSongNext ? 'Lyssna vidare – nästa fråga handlar om samma låt.' : 'Nästa fråga kommer med en ny låt.'}
           <br />
-          Den kommer när quizledaren trycker fram den.
+          Du kommer tillbaka till provningen om några sekunder.
         </p>
       </div>
       {answered && (

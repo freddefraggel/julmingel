@@ -6,6 +6,8 @@ import { GuestLive } from './GuestLive'
 import { cupFor, HomeAfter } from './HomeAfter'
 
 vi.mock('../data', () => ({
+  subscribeServerTimeOffset: vi.fn(() => () => {}),
+  subscribeOwnAnswer: vi.fn(() => () => {}),
   subscribeResults: vi.fn(),
   subscribeReveal: vi.fn(() => () => {}),
   subscribeOwnGuess: vi.fn(() => () => {}),

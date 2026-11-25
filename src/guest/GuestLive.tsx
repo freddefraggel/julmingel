@@ -8,7 +8,7 @@ import { Guess } from './Guess'
 import { HomeAfter } from './HomeAfter'
 import { Leaderboard } from './Leaderboard'
 import { GuestMessage } from './GuestMessage'
-import { Quiz } from './Quiz'
+import { useQuizLayer } from './QuizLayer'
 import { Rate } from './Rate'
 import { phaseOf } from '../live'
 import { Review } from './Review'
@@ -28,8 +28,8 @@ const OPENABLE: readonly HomeTarget[] = ['ranka', 'glogger', 'gissa']
  * gästens egna noder, och renderar läget som står i `live/`. Ingen
  * mobil styr sitt eget flöde, så en omladdad mobil hamnar alltid rätt.
  *
- * Under musikquizet visar mobilen frågan som quizledaren har öppnat, och
- * under rättningen frågan som gås igenom.
+ * En quizfråga läggs som ett lager över sidan gästen står på (useQuizLayer).
+ * Under rättningen visas frågan som gås igenom.
  * Ranka glögg öppnas från Hem, och av sig själv när värden serverar en ny
  * glögg i gästens klass. Den stängs när provningen är slut.
  */
@@ -43,8 +43,6 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
   const [view, setView] = useState<'home' | 'topplista' | HomeTarget>('home')
   const lastServing = useRef<number | null>(null)
   const lastPhase = useRef<string | undefined>(undefined)
-  // Quizläget som gästen har lämnat med *Till provningen*; nästa läge eller fråga visas igen.
-  const [leftQuiz, setLeftQuiz] = useState<string | null>(null)
 
   useEffect(() => {
     const onError = () => setLost(true)
@@ -71,7 +69,6 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
   }, [eventId])
 
   const phase = phaseOf(live)
-  const quizKey = `${live?.quiz?.state ?? ''}:${live?.quiz?.qId ?? ''}`
   const serving = guest ? (live?.tasting?.[guest.class]?.serving ?? null) : null
   // Rankningen är öppen i gästens klass; samma villkor som databasreglerna.
   const tastingOpen = guest ? live?.tasting?.[guest.class]?.open === true : false
@@ -90,6 +87,9 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
     if (phase === 'guess') setView('gissa')
   }, [phase])
 
+  // Quizfrågan läggs som ett lager över sidan gästen står på; sidan under ligger kvar.
+  const quiz = useQuizLayer({ eventId, uid, config, live: live ?? null })
+
   if (!guest) {
     return <GuestMessage title="Du är inte med längre" text="Värden har tagit bort dig från kvällen. Fråga värden om du vill vara med igen." />
   }
@@ -99,9 +99,8 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
   const count = Object.values(config?.gloggs ?? {}).filter((g) => g.class === guest.class).length
   return (
     <GuestAssets.Provider value={assets}>
-      {phase === 'quiz' && live && leftQuiz !== quizKey ? (
-        <Quiz eventId={eventId} uid={uid} config={config} live={live} onLeave={() => setLeftQuiz(quizKey)} />
-      ) : phase === 'done' ? (
+      <div className="guest-base" aria-hidden={quiz.open || undefined}>
+      {phase === 'done' ? (
         view === 'topplista' ? (
           <Leaderboard
             eventId={eventId}
@@ -126,7 +125,7 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
         />
       ) : phase === 'review' && live ? (
         <Review eventId={eventId} uid={uid} config={config} live={live} />
-      ) : view === 'ranka' && tastingOpen ? (
+      ) : view === 'ranka' ? (
         <Rate
           eventId={eventId}
           uid={uid}
@@ -134,6 +133,7 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
           criteria={config?.criteria}
           ratings={ratings}
           serving={serving}
+          open={tastingOpen}
           onBack={() => setView('home')}
         />
       ) : view === 'gissa' ? (
@@ -150,6 +150,9 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
           onOpen={(target) => setView(target)}
         />
       )}
+      </div>
+      {quiz.pill}
+      {quiz.layer}
     </GuestAssets.Provider>
   )
 }

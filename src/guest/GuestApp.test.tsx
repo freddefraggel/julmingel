@@ -7,6 +7,8 @@ import type { Guest } from '../types'
 import GuestApp from './GuestApp'
 
 vi.mock('../data', () => ({
+  subscribeServerTimeOffset: vi.fn(() => () => {}),
+  subscribeOwnAnswer: vi.fn(() => () => {}),
   onUserChanged: vi.fn(),
   getOwnGuest: vi.fn(),
   signInGuest: vi.fn(),

@@ -7,6 +7,8 @@ import { GuestLive } from './GuestLive'
 import type { Phase } from '../live'
 
 vi.mock('../data', () => ({
+  subscribeServerTimeOffset: vi.fn(() => () => {}),
+  subscribeOwnAnswer: vi.fn(() => () => {}),
   saveGuess: vi.fn(),
   subscribeOwnGuess: vi.fn(),
   subscribeReveal: vi.fn(),
