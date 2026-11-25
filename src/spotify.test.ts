@@ -81,6 +81,23 @@ describe('låtar och instruktioner', () => {
   })
 })
 
+
+/** Låtsas-Spotify som svarar efter adress. `play` tar ett svar per anrop, i ordning. */
+function spotifyApi(fetchMock: ReturnType<typeof vi.fn<typeof fetch>>, opts: { devices?: object[]; play?: Response[] } = {}) {
+  const devices = opts.devices ?? [{ id: 'vardagsrum', name: 'Vardagsrum', type: 'Speaker', is_active: true, is_restricted: false }]
+  const plays = [...(opts.play ?? [])]
+  fetchMock.mockImplementation(async (url) => {
+    const u = String(url)
+    if (u.includes('accounts.spotify.com')) return json({ access_token: 'ny', expires_in: 3600 })
+    if (u.endsWith('/me/player/devices')) return json({ devices })
+    if (u.includes('/me/player/play')) return plays.shift() ?? json(null, 204)
+    return json(null, 204)
+  })
+}
+
+const calls = (fetchMock: ReturnType<typeof vi.fn<typeof fetch>>) =>
+  fetchMock.mock.calls.map(([url, init]) => `${init?.method ?? 'GET'} ${String(url).replace('https://api.spotify.com/v1', '')}`)
+
 describe('startSong', () => {
   const fetchMock = vi.fn<typeof fetch>()
 
@@ -111,10 +128,11 @@ describe('startSong', () => {
   it('startar låten på vald enhet från startMs', async () => {
     storeToken(Date.now() + 60_000)
     setDeviceId('vardagsrum')
-    fetchMock.mockResolvedValue(json(null, 204))
+    spotifyApi(fetchMock)
 
     expect(await startSong(cue)).toEqual({ kind: 'played', cue })
-    const [url, init] = fetchMock.mock.calls[0]!
+    expect(calls(fetchMock)).toEqual(['GET /me/player/devices', 'PUT /me/player/play?device_id=vardagsrum'])
+    const [url, init] = fetchMock.mock.calls[1]!
     expect(url).toBe('https://api.spotify.com/v1/me/player/play?device_id=vardagsrum')
     expect(init?.method).toBe('PUT')
     expect(JSON.parse(init?.body as string)).toEqual({ uris: [cue.spotifyUri], position_ms: 45_000 })
@@ -124,22 +142,67 @@ describe('startSong', () => {
   it('”Spela låten igen” gör samma anrop', async () => {
     storeToken(Date.now() + 60_000)
     setDeviceId('vardagsrum')
-    fetchMock.mockResolvedValue(json(null, 204))
+    spotifyApi(fetchMock)
     await startSong(cue)
     await replaySong(cue)
-    expect(fetchMock.mock.calls[1]).toEqual(fetchMock.mock.calls[0])
+    expect(fetchMock.mock.calls.slice(2)).toEqual(fetchMock.mock.calls.slice(0, 2))
   })
 
   it('faller tillbaka på instruktionen när Spotify nekar', async () => {
     storeToken(Date.now() + 60_000)
     setDeviceId('vardagsrum')
-    fetchMock.mockResolvedValue(json({ error: { status: 403, message: 'Forbidden' } }, 403))
+    spotifyApi(fetchMock, { play: [json({ error: { status: 403, message: 'Forbidden' } }, 403)] })
 
     expect(await startSong(cue)).toMatchObject({
       kind: 'manual',
       instruction: 'Starta låt 2 – Last Christmas från 0:45',
       reason: 'Spotify tillåter inte uppspelningen: Forbidden',
     })
+  })
+
+  it('flyttar uppspelningen till en enhet som syns men är inaktiv, innan play', async () => {
+    storeToken(Date.now() + 60_000)
+    setDeviceId('ipad')
+    spotifyApi(fetchMock, { devices: [{ id: 'ipad', name: 'iPad', type: 'Tablet', is_active: false, is_restricted: false }] })
+
+    expect(await startSong(cue)).toEqual({ kind: 'played', cue })
+    expect(calls(fetchMock)).toEqual(['GET /me/player/devices', 'PUT /me/player', 'PUT /me/player/play?device_id=ipad'])
+    expect(JSON.parse(fetchMock.mock.calls[1]![1]!.body as string)).toEqual({ device_ids: ['ipad'], play: false })
+  })
+
+  it('saknas den valda enheten blir det reservläget med instruktionen', async () => {
+    storeToken(Date.now() + 60_000)
+    setDeviceId('ipad')
+    spotifyApi(fetchMock, { devices: [] })
+
+    const result = await startSong(cue)
+    expect(result).toMatchObject({ kind: 'manual' })
+    expect(result.kind === 'manual' && result.reason).toContain('spela och pausa en låt, stäng av automatisk låsning')
+    expect(calls(fetchMock)).toEqual(['GET /me/player/devices'])
+  })
+
+  it('svarar play med 404 uppdateras listan en gång och anropet görs om', async () => {
+    storeToken(Date.now() + 60_000)
+    setDeviceId('vardagsrum')
+    spotifyApi(fetchMock, { play: [json({ error: { status: 404, message: 'No active device' } }, 404)] })
+
+    expect(await startSong(cue)).toEqual({ kind: 'played', cue })
+    expect(calls(fetchMock)).toEqual([
+      'GET /me/player/devices',
+      'PUT /me/player/play?device_id=vardagsrum',
+      'GET /me/player/devices',
+      'PUT /me/player/play?device_id=vardagsrum',
+    ])
+  })
+
+  it('svarar play med 404 två gånger blir det reservläget', async () => {
+    storeToken(Date.now() + 60_000)
+    setDeviceId('vardagsrum')
+    const notFound = () => json({ error: { status: 404, message: 'No active device' } }, 404)
+    spotifyApi(fetchMock, { play: [notFound(), notFound()] })
+
+    expect(await startSong(cue)).toMatchObject({ kind: 'manual', reason: expect.stringContaining('hittar ingen aktiv enhet') })
+    expect(calls(fetchMock).filter((c) => c.includes('/me/player/play'))).toHaveLength(2)
   })
 
   it('faller tillbaka utan inloggning eller enhet', async () => {
@@ -152,9 +215,7 @@ describe('startSong', () => {
   it('förnyar en utgången token en gång även vid samtidiga anrop', async () => {
     storeToken(Date.now() - 1)
     setDeviceId('vardagsrum')
-    fetchMock.mockImplementation(async (url) =>
-      String(url).includes('accounts.spotify.com') ? json({ access_token: 'ny', expires_in: 3600 }) : json(null, 204),
-    )
+    spotifyApi(fetchMock)
 
     await Promise.all([startSong(cue), startSong(cue)])
     const tokenCalls = fetchMock.mock.calls.filter(([url]) => String(url).includes('accounts.spotify.com'))

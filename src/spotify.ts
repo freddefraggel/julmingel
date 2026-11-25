@@ -221,6 +221,29 @@ export async function play(deviceId: string, spotifyUri: string, positionMs: num
   })
 }
 
+/**
+ * Flyttar uppspelningen till en enhet som syns i listan men inte är aktiv,
+ * t.ex. en iPad som just har vaknat. Spelar inget än (`play: false`).
+ */
+export async function transferPlayback(deviceId: string): Promise<void> {
+  await api('/me/player', { method: 'PUT', body: JSON.stringify({ device_ids: [deviceId], play: false }) })
+}
+
+/** Instruktionen när den valda enheten inte syns i Spotify. */
+export const DEVICE_HELP =
+  'Öppna Spotify på enheten, spela och pausa en låt, stäng av automatisk låsning – tryck sedan Uppdatera enheter.'
+
+/**
+ * Ser till att den valda enheten kan spela: finns den i listan men är inaktiv
+ * flyttas uppspelningen dit. Ger false om enheten inte syns alls.
+ */
+async function ensureActive(deviceId: string): Promise<boolean> {
+  const device = (await getDevices()).find((d) => d.id === deviceId)
+  if (!device) return false
+  if (!device.is_active) await transferPlayback(deviceId)
+  return true
+}
+
 export async function pause(deviceId: string): Promise<void> {
   await api(`/me/player/pause?device_id=${encodeURIComponent(deviceId)}`, { method: 'PUT' })
 }
@@ -295,9 +318,13 @@ export type StartResult =
   | { kind: 'manual'; cue: SongCue; instruction: string; reason?: string }
 
 /**
- * Startar en låt från `startMs`. Anropas när första frågan på en ny låt öppnas.
- * I reservläget, eller om uppspelningen inte går, blir resultatet en instruktion som
- * kontrollpanelen visar. Kastar aldrig: quizet ska kunna fortsätta oavsett Spotify.
+ * Startar en låt från `startMs`, när admin trycker på *Spela låt*.
+ *
+ * Först kontrolleras att den valda enheten syns i Spotify; en inaktiv enhet får
+ * uppspelningen flyttad till sig. Svarar `play` ändå med 404 (ingen aktiv enhet)
+ * uppdateras listan en gång och anropet görs om. I reservläget, eller om
+ * uppspelningen inte går, blir resultatet en instruktion som kontrollpanelen
+ * visar. Kastar aldrig: quizet ska kunna fortsätta oavsett Spotify.
  */
 export async function startSong(cue: SongCue): Promise<StartResult> {
   const manual = (reason?: string): StartResult => ({ kind: 'manual', cue, instruction: manualInstruction(cue), reason })
@@ -305,8 +332,17 @@ export async function startSong(cue: SongCue): Promise<StartResult> {
   if (!isLoggedIn()) return manual('Inte inloggad mot Spotify.')
   const deviceId = getDeviceId()
   if (!deviceId) return manual('Ingen Spotify-enhet vald.')
+  const missing = () => manual(`Spotify hittar inte den valda enheten. ${DEVICE_HELP}`)
   try {
-    await play(deviceId, cue.spotifyUri, cue.startMs)
+    if (!(await ensureActive(deviceId))) return missing()
+    try {
+      await play(deviceId, cue.spotifyUri, cue.startMs)
+    } catch (e) {
+      if (!(e instanceof SpotifyError && e.status === 404)) throw e
+      // Ingen aktiv enhet: uppdatera listan en gång och försök igen.
+      if (!(await ensureActive(deviceId))) return missing()
+      await play(deviceId, cue.spotifyUri, cue.startMs)
+    }
     return { kind: 'played', cue }
   } catch (e) {
     return manual(spotifyErrorText(e))

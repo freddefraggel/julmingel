@@ -19,6 +19,7 @@ import { GuestList } from './GuestList'
 import { QrDialog } from './QrDialog'
 import { QuizPanel } from './QuizPanel'
 import { RevealPanel } from './RevealPanel'
+import { SpotifySetup } from './SpotifySetup'
 import { ReviewPanel } from './ReviewPanel'
 import { TastingPanel } from './TastingPanel'
 
@@ -168,6 +169,7 @@ export function ControlPanel({ eventId, eventName, joinCode, onChangeEvent }: Pr
             <section className="card control__column" aria-label="Musikquiz">
               <h2 className="control__column-title">Musikquiz</h2>
               <QuizPanel eventId={eventId} config={config} live={live} guests={guests} disabled={busy} save={save} />
+              <SpotifySetup compact returnHash="#/admin" />
             </section>
           </div>
           {joinCard}

@@ -474,3 +474,11 @@
 .spotify-setup__device {
   flex: 1 1 260px;
 }
+
+.spotify-setup--compact {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
