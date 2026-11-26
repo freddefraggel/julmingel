@@ -7,6 +7,7 @@ import {
 import { get, ref, serverTimestamp, set, update } from 'firebase/database'
 import { readFileSync } from 'node:fs'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { createChanges } from '../../src/admin/events'
 import { resetChanges, stageChanges, wrapupStepChanges } from '../../src/live'
 
 const E = 'events/test'
@@ -606,5 +607,40 @@ describe('nollställ kvällen', () => {
 
   it('gäster får inte nollställa kvällen', async () => {
     await assertFails(update(ref(db('anna'), E), resetChanges(false)))
+  })
+})
+
+describe('kvällar', () => {
+  it('admin läser och skriver registret, gäster och okända får inte', async () => {
+    await assertSucceeds(set(ref(db('admin'), 'eventIndex/test'), { name: 'Test', updatedAt: serverTimestamp() }))
+    await assertSucceeds(get(ref(db('admin'), 'eventIndex')))
+    await assertFails(get(ref(db('anna'), 'eventIndex')))
+    await assertFails(set(ref(db('anna'), 'eventIndex/test'), { name: 'Hack' }))
+    await assertFails(get(ref(db(), 'eventIndex')))
+  })
+
+  it('registret tar bara emot giltiga id och ett namn', async () => {
+    await assertFails(set(ref(db('admin'), 'eventIndex/Ogiltigt Id'), { name: 'X' }))
+    await assertFails(set(ref(db('admin'), 'eventIndex/ok-id'), { updatedAt: 1 }))
+  })
+
+  it('admin skapar en ny kväll med kopierade förberedelser i ett anrop från roten', async () => {
+    const source = await read(E)
+    const changes = createChanges(
+      { eventId: 'ny-kvall', name: 'Ny kväll', joinCode: 'ny-kod' },
+      { config: source.config, assets: null, numbers: source.secret.numbers, correct: source.secret.correct },
+      1,
+    )
+    await assertSucceeds(update(ref(db('admin')), changes))
+    const created = await read('events/ny-kvall')
+    expect(created.config.name).toBe('Ny kväll')
+    expect(created.config.joinOpen).toBe(false)
+    expect(created.secret).toEqual({ joinCode: 'ny-kod', numbers: source.secret.numbers, correct: source.secret.correct })
+    expect(created.guests).toBeUndefined()
+  })
+
+  it('gäster får inte skapa kvällar', async () => {
+    const changes = createChanges({ eventId: 'hack', name: 'Hack', joinCode: 'x' }, null, 1)
+    await assertFails(update(ref(db('anna')), changes))
   })
 })

@@ -4,6 +4,16 @@
       ".read": false,
       ".write": false
     },
+    "eventIndex": {
+      ".read": "root.child('admins/' + auth.uid).exists()",
+      ".write": "root.child('admins/' + auth.uid).exists()",
+      "$e": {
+        ".validate": "newData.hasChild('name') && $e.matches(/^[a-z0-9][a-z0-9-]{1,39}$/)",
+        "name": {
+          ".validate": "newData.isString()"
+        }
+      }
+    },
     "events": {
       "$e": {
         ".read": "root.child('admins/' + auth.uid).exists()",

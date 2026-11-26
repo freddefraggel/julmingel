@@ -228,7 +228,7 @@ export function ControlPanel({ eventId, eventName, onChangeEvent }: Props) {
 
       <footer className="control__footer">
         <button type="button" className="link-button" onClick={onChangeEvent}>
-          Byt kväll
+          Alla kvällar
         </button>
         <Link to="/admin/spotify">Testa Spotify</Link>
       </footer>
