@@ -28,6 +28,18 @@ function useOwnAnswers(eventId: string, uid: string, qIds: readonly string[]): R
   return answers
 }
 
+/**
+ * Låten som frågan gäller: ”Last Christmas – Wham!”. Visas bara i rättningen,
+ * så att inget avslöjas under quizet. Saknas titel blir det ”Låt N”.
+ */
+export function songTitle(config: EventConfig | null, songId: string, songNumber: number): string {
+  const song = config?.songs?.[songId]
+  const title = song?.title?.trim()
+  if (!title) return `Låt ${songNumber > 0 ? songNumber : '?'}`
+  const artist = song?.artist?.trim()
+  return artist ? `${title} – ${artist}` : title
+}
+
 /** Poäng hittills: 1 per rätt svar bland frågorna som har rättats. */
 export function pointsSoFar(correct: Record<string, Choice> | undefined, answers: Record<string, Answer | null>): number {
   return Object.entries(correct ?? {}).filter(([qId, right]) => answers[qId]?.choice === right).length
@@ -65,7 +77,10 @@ export function Review({ eventId, uid, config, live }: Props) {
               <span />
               <span />
             </span>
-            <span className="muted">Låten spelas igen</span>
+            <span className="review__song-text">
+              <strong className="review__song-title">{songTitle(config, position.question.songId, position.songNumber)}</strong>
+              <span className="muted">Låten spelas igen</span>
+            </span>
           </div>
           <h1 className="quiz-question">{position.question.text}</h1>
           <ul className="review-options" aria-label="Svar">

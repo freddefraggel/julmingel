@@ -2,7 +2,7 @@ import { act, cleanup, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as data from '../data'
 import type { Answer, EventConfig, EventReveal } from '../types'
-import { pointsSoFar, Review } from './Review'
+import { pointsSoFar, Review, songTitle } from './Review'
 
 vi.mock('../data', () => ({
   subscribeReveal: vi.fn(),
@@ -15,7 +15,7 @@ const TRACK = 'spotify:track:2FRnf9qhLbvw8fu4IBXx78'
 const config: EventConfig = {
   name: 'Test',
   joinOpen: true,
-  songs: { s1: { order: 1, spotifyUri: TRACK, startMs: 0, secondsPerQuestion: 20 } },
+  songs: { s1: { order: 1, spotifyUri: TRACK, title: 'Last Christmas', artist: 'Wham!', startMs: 0, secondsPerQuestion: 20 } },
   questions: {
     q1: { songId: 's1', order: 1, text: 'Vilket år släpptes låten?', answerType: 'text', options: { A: '1984', B: '1994', C: '2003', D: '2011' } },
     q2: { songId: 's1', order: 2, text: 'Vem sjunger?', answerType: 'text', options: { A: 'Wham!', B: 'ABBA', C: 'Toto', D: 'Queen' } },
@@ -77,6 +77,20 @@ describe('Rättning på mobilen', () => {
     render(<Review eventId="demo" uid="u1" config={config} live={{ stage: 'wrapup', wrapup: { step: 'review', qId: 'q3' } }} />)
     expect(screen.getByRole('heading', { name: 'Rättningen börjar snart' })).toBeInTheDocument()
     expect(screen.queryByText('Rätt svar')).not.toBeInTheDocument()
+  })
+
+  it('visar vilken låt det var: titel och artist', () => {
+    render(<Review eventId="demo" uid="u1" config={config} live={{ stage: 'wrapup', wrapup: { step: 'review', qId: 'q1' } }} />)
+    expect(screen.getByText('Last Christmas – Wham!')).toBeInTheDocument()
+  })
+
+  it('songTitle: titel och artist, bara titel, eller Låt N', () => {
+    const song = (title?: string, artist?: string) =>
+      ({ name: 'T', joinOpen: true, songs: { s1: { order: 1, spotifyUri: TRACK, title, artist, startMs: 0, secondsPerQuestion: 20 } } }) as EventConfig
+    expect(songTitle(song('Last Christmas', 'Wham!'), 's1', 2)).toBe('Last Christmas – Wham!')
+    expect(songTitle(song('Last Christmas'), 's1', 2)).toBe('Last Christmas')
+    expect(songTitle(song(undefined, 'Wham!'), 's1', 2)).toBe('Låt 2')
+    expect(songTitle(null, 's1', 0)).toBe('Låt ?')
   })
 
   it('pointsSoFar', () => {
