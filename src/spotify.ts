@@ -312,8 +312,53 @@ export async function seek(deviceId: string, positionMs: number): Promise<void> 
   })
 }
 
-/** Väntan innan seek, så att enheten hinner börja spela. */
-const SEEK_DELAY_MS = 400
+/** Vad som spelar just nu, eller null om inget spelar. */
+export type PlaybackState = { uri: string | null; progressMs: number; isPlaying: boolean }
+
+export async function getPlayback(): Promise<PlaybackState | null> {
+  const response = await api('/me/player')
+  if (response.status === 204) return null
+  const data = (await response.json().catch(() => null)) as {
+    item?: { uri?: string } | null
+    progress_ms?: number | null
+    is_playing?: boolean
+  } | null
+  if (!data) return null
+  return { uri: data.item?.uri ?? null, progressMs: data.progress_ms ?? 0, isPlaying: data.is_playing === true }
+}
+
+/** Hur ofta appen frågar var låten är efter play. */
+const POSITION_POLL_MS = 150
+/** Så många frågor (cirka 3 s) innan appen hoppar ändå. */
+const POSITION_POLL_TRIES = 20
+/** Startade låten mer än så här före positionen hoppar appen dit. */
+const POSITION_TOLERANCE_MS = 1_500
+
+/**
+ * Spotify ignorerar ibland position_ms i play, särskilt på mobiler och enheter
+ * som just har aktiverats (#85). Appen frågar därför var låten är tills den
+ * spelar, och hoppar till positionen så fort den syns ha startat för tidigt.
+ * Startade den rätt görs inget. Syns låten aldrig spela hoppar appen ändå.
+ * Körs i bakgrunden; fel här stoppar inte uppspelningen.
+ */
+function ensurePosition(deviceId: string, uri: string, positionMs: number) {
+  let tries = 0
+  const check = async () => {
+    tries += 1
+    try {
+      const state = await getPlayback()
+      if (state?.isPlaying && state.uri === uri) {
+        if (state.progressMs < positionMs - POSITION_TOLERANCE_MS) await seek(deviceId, positionMs)
+        return
+      }
+    } catch {
+      // Prova igen nedan.
+    }
+    if (tries < POSITION_POLL_TRIES) setTimeout(() => void check(), POSITION_POLL_MS)
+    else await seek(deviceId, positionMs).catch(() => {})
+  }
+  setTimeout(() => void check(), POSITION_POLL_MS)
+}
 
 export async function pause(deviceId: string): Promise<void> {
   await api(`/me/player/pause?device_id=${encodeURIComponent(deviceId)}`, { method: 'PUT' })
@@ -426,9 +471,7 @@ export async function startSong(cue: SongCue, options: StartOptions = {}): Promi
       if (!(await ensureActive(deviceId))) return missing()
       await play(deviceId, cue.spotifyUri, position)
     }
-    // Spotify ignorerar ibland position_ms i play, särskilt på mobiler och enheter som
-    // just har aktiverats. Hoppa dit en gång till när låten har börjat; fel här stoppar inget.
-    if (position > 0) setTimeout(() => void seek(deviceId, position).catch(() => {}), SEEK_DELAY_MS)
+    if (position > 0) ensurePosition(deviceId, cue.spotifyUri, position)
     if (fade) fadeIn(deviceId, target * 0.1, target, options.fadeInMs!)
     return { kind: 'played', cue }
   } catch (e) {
