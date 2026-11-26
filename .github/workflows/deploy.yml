@@ -10,15 +10,20 @@ permissions:
   pages: write
   id-token: write
 
-# En deploy åt gången; en ny push avbryter inte en pågående deploy.
-concurrency:
-  group: pages
-  cancel-in-progress: false
-
+# Flera merges i rad ska bara ge en deploy, av den sista:
+# - build väntar en stund och avbryts av en nyare push till main
+# - deploy körs en åt gången och avbryts aldrig mitt i
 jobs:
   build:
     runs-on: ubuntu-latest
+    concurrency:
+      group: pages-build
+      cancel-in-progress: true
     steps:
+      - name: Vänta på fler merges
+        if: github.event_name == 'push'
+        run: sleep 120
+
       - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v7
@@ -50,6 +55,9 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    concurrency:
+      group: pages-deploy
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
