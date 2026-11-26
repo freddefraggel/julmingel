@@ -207,6 +207,40 @@ async function api(path: string, init: RequestInit = {}): Promise<Response> {
   return response
 }
 
+/** Titel och artist för en låt, till fälten på Förbered kvällen. */
+export type TrackInfo = { title: string; artist: string | null }
+
+/**
+ * Hämtar låtens titel och artist från en `spotify:track:<id>`.
+ *
+ * Inloggad: Web API (`GET /v1/tracks/{id}`) ger titel och artist. Annars, eller
+ * om det inte går: Spotifys öppna oEmbed, som bara ger titeln. Kastar aldrig;
+ * null betyder att inget gick att hämta.
+ */
+export async function getTrackInfo(spotifyUri: string): Promise<TrackInfo | null> {
+  const id = /^spotify:track:([A-Za-z0-9]{22})$/.exec(spotifyUri)?.[1]
+  if (!id) return null
+  if (isLoggedIn()) {
+    try {
+      const response = await api(`/tracks/${id}`)
+      const data = (await response.json()) as { name?: string; artists?: { name?: string }[] }
+      const artist = (data.artists ?? []).map((a) => a.name).filter(Boolean).join(', ')
+      if (data.name) return { title: data.name, artist: artist || null }
+    } catch {
+      // Prova oEmbed i stället.
+    }
+  }
+  try {
+    const url = `https://open.spotify.com/oembed?url=${encodeURIComponent(`https://open.spotify.com/track/${id}`)}`
+    const response = await fetch(url)
+    if (!response.ok) return null
+    const data = (await response.json()) as { title?: string }
+    return data.title ? { title: data.title, artist: null } : null
+  } catch {
+    return null
+  }
+}
+
 export async function getDevices(): Promise<SpotifyDevice[]> {
   const response = await api('/me/player/devices')
   const data = (await response.json()) as { devices: SpotifyDevice[] }

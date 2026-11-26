@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   codeChallenge,
   formatPosition,
+  getTrackInfo,
   isLoggedIn,
   manualInstruction,
   parseTrackLink,
@@ -237,5 +238,47 @@ describe('startSong', () => {
       reason: 'Kunde inte hämta token: Refresh token revoked',
     })
     expect(isLoggedIn()).toBe(false)
+  })
+})
+
+describe('getTrackInfo', () => {
+  const fetchMock = vi.fn<typeof fetch>()
+  const uri = 'spotify:track:2FRnf9qhLbvw8fu4IBXx78'
+
+  beforeEach(() => {
+    sessionStorage.clear()
+    fetchMock.mockReset()
+    vi.stubGlobal('fetch', fetchMock)
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('inloggad: titel och artist från Web API', async () => {
+    storeToken(Date.now() + 60_000)
+    fetchMock.mockResolvedValue(json({ name: 'Last Christmas', artists: [{ name: 'Wham!' }, { name: 'George Michael' }] }))
+    expect(await getTrackInfo(uri)).toEqual({ title: 'Last Christmas', artist: 'Wham!, George Michael' })
+    expect(String(fetchMock.mock.calls[0]![0])).toBe('https://api.spotify.com/v1/tracks/2FRnf9qhLbvw8fu4IBXx78')
+  })
+
+  it('inte inloggad: bara titeln från oEmbed', async () => {
+    fetchMock.mockResolvedValue(json({ title: 'Last Christmas' }))
+    expect(await getTrackInfo(uri)).toEqual({ title: 'Last Christmas', artist: null })
+    expect(String(fetchMock.mock.calls[0]![0])).toContain('https://open.spotify.com/oembed?url=')
+  })
+
+  it('går Web API inte att använda provas oEmbed', async () => {
+    storeToken(Date.now() + 60_000)
+    fetchMock
+      .mockResolvedValueOnce(json({ error: { status: 403, message: 'Forbidden' } }, 403))
+      .mockResolvedValueOnce(json({ title: 'Last Christmas' }))
+    expect(await getTrackInfo(uri)).toEqual({ title: 'Last Christmas', artist: null })
+  })
+
+  it('kastar aldrig: null när inget går att hämta eller länken är fel', async () => {
+    fetchMock.mockRejectedValue(new TypeError('Failed to fetch'))
+    expect(await getTrackInfo(uri)).toBeNull()
+    expect(await getTrackInfo('spotify:album:x')).toBeNull()
   })
 })
