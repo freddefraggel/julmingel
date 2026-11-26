@@ -89,6 +89,7 @@ await waitFor(DB, 'Databasemulatorn')
 const uid = await adminUid()
 await put(`admins/${uid}`, true)
 await put(`events/${EVENT_ID}`, demoEvent)
+await put(`eventIndex/${EVENT_ID}`, { name: demoEvent.config.name, updatedAt: Date.now() })
 
 console.log(`Emulatorn är fylld med testdata.
   Admin: ${ADMIN.email} / ${ADMIN.password}

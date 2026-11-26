@@ -13,6 +13,7 @@ vi.mock('../data', () => ({
   subscribeAssets: vi.fn(),
   removeAsset: vi.fn(),
   saveAsset: vi.fn(),
+  touchEventIndex: vi.fn(() => Promise.resolve()),
 }))
 
 const mocked = vi.mocked(data)
@@ -156,6 +157,7 @@ describe('Förbered kvällen', () => {
     save()
     await screen.findByText('Sparat')
     expect(savedChanges()).toMatchObject({ 'config/name': 'Glöggkväll', 'secret/joinCode': 'tomte' })
+    expect(mocked.touchEventIndex).toHaveBeenCalledWith('demo', 'Glöggkväll')
   })
 
   it('säger till när sparandet misslyckas', async () => {

@@ -8,6 +8,7 @@ import {
   setAnswerImage,
   setGloggImage,
   subscribeAssets,
+  touchEventIndex,
 } from '../data'
 import type { Choice, GuestClass, Stage } from '../types'
 import { Button, Card, Tabs } from '../ui'
@@ -142,6 +143,7 @@ function Prepare({ eventId }: { eventId: string }) {
     try {
       const payload = toPayload(draft)
       await savePreparation(eventId, payload)
+      touchEventIndex(eventId, payload['config/name']).catch(() => {})
       for (const imageId of unusedImages(saved, draft)) removeAsset(eventId, imageId).catch(() => {})
       const nextSaved: Saved = {
         config: {

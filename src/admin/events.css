@@ -1,0 +1,71 @@
+/* Kvällar: välj, skapa och redigera */
+.events {
+  gap: 20px;
+}
+
+.events__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.events__body {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .events__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.events__list-card,
+.events__new {
+  gap: 16px;
+}
+
+.events__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.events__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-2);
+}
+
+.events__name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.events__name strong {
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+
+.events__open {
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.events__open .input {
+  flex: 1 1 200px;
+}

@@ -1,10 +1,11 @@
-import { useEffect, useId, useState, type FormEvent } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { openAdminEvent, type AdminEventResult } from '../data'
+import { openAdminEvent, touchEventIndex, type AdminEventResult } from '../data'
 import { Button, Card } from '../ui'
 import { SignOutButton } from './AdminGate'
 import { readAdminEventId, rememberAdminEventId } from './adminEvent'
 import { ControlPanel } from './ControlPanel'
+import { EventsPanel } from './EventsPanel'
 
 type FailReason = Extract<AdminEventResult, { ok: false }>['reason']
 
@@ -34,6 +35,8 @@ export default function AdminPanel() {
     let active = true
     openAdminEvent(loadingId).then((result) => {
       if (!active) return
+      // Kvällen hamnar i registret första gången den öppnas, så att den syns i listan.
+      if (result.ok) touchEventIndex(loadingId, result.name).catch(() => {})
       setState(
         result.ok
           ? { kind: 'ready', eventId: loadingId, name: result.name, joinCode: result.joinCode }
@@ -60,6 +63,8 @@ export default function AdminPanel() {
     )
   }
 
+  if (state.kind === 'choose') return <EventsPanel onChoose={chooseEvent} />
+
   return (
     <main className="page page--admin admin-center">
       <Card className="admin-login">
@@ -75,47 +80,13 @@ export default function AdminPanel() {
                 Försök igen
               </Button>
               <Button variant="secondary" size="small" onClick={() => chooseEvent(null)}>
-                Välj en annan kväll
+                Till kvällarna
               </Button>
               <SignOutButton />
             </div>
           </>
         )}
-        {state.kind === 'choose' && <ChooseEvent onChoose={chooseEvent} />}
       </Card>
     </main>
-  )
-}
-
-function ChooseEvent({ onChoose }: { onChoose: (eventId: string) => void }) {
-  const inputId = useId()
-  const [value, setValue] = useState('')
-
-  function onSubmit(event: FormEvent) {
-    event.preventDefault()
-    const eventId = value.trim()
-    if (eventId) onChoose(eventId)
-  }
-
-  return (
-    <form className="admin-form" onSubmit={onSubmit}>
-      <label htmlFor={inputId}>Vilken kväll vill du styra?</label>
-      <input
-        id={inputId}
-        className="input"
-        type="text"
-        placeholder="Kvällens id, t.ex. demo"
-        autoCapitalize="off"
-        spellCheck={false}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-      />
-      <div className="admin-row">
-        <Button type="submit" size="small" disabled={!value.trim()}>
-          Öppna
-        </Button>
-        <SignOutButton />
-      </div>
-    </form>
   )
 }

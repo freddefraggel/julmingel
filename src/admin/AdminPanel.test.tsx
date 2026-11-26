@@ -14,6 +14,10 @@ vi.mock('../data', () => ({
   signOut: vi.fn(),
   isWrongCredentials: (error: unknown) => (error as { code?: string }).code === 'auth/invalid-credential',
   openAdminEvent: vi.fn(),
+  touchEventIndex: vi.fn(() => Promise.resolve()),
+  subscribeEventIndex: vi.fn(() => () => {}),
+  createEvent: vi.fn(),
+  eventExists: vi.fn(),
   subscribeLive: vi.fn(),
   subscribeConfig: vi.fn(),
   subscribeGuests: vi.fn(),
@@ -131,11 +135,28 @@ describe('välj kväll', () => {
     signedIn(admin)
     eventData({ stage: 'lobby' })
     renderAt('/admin')
-    fireEvent.change(await screen.findByLabelText('Vilken kväll vill du styra?'), { target: { value: 'demo' } })
+    fireEvent.change(await screen.findByLabelText('Öppna kväll med id'), { target: { value: 'demo' } })
     fireEvent.click(screen.getByRole('button', { name: 'Öppna' }))
     expect(await screen.findByRole('group', { name: 'Kvällens läge' })).toBeInTheDocument()
     expect(mocked.openAdminEvent).toHaveBeenCalledWith('demo')
     expect(localStorage.getItem('julmingel.adminEvent')).toBe('demo')
+  })
+
+  it('lägger kvällen i registret när den öppnas', async () => {
+    signedIn(admin)
+    eventData({ stage: 'lobby' })
+    renderAt('/admin?e=demo')
+    await screen.findByRole('group', { name: 'Kvällens läge' })
+    expect(mocked.touchEventIndex).toHaveBeenCalledWith('demo', 'Glöggmingel (test)')
+  })
+
+  it('Alla kvällar går tillbaka till listan', async () => {
+    signedIn(admin)
+    eventData({ stage: 'lobby' })
+    renderAt('/admin?e=demo')
+    fireEvent.click(await screen.findByRole('button', { name: 'Alla kvällar' }))
+    expect(await screen.findByRole('heading', { name: 'Kvällar' })).toBeInTheDocument()
+    expect(localStorage.getItem('julmingel.adminEvent')).toBeNull()
   })
 
   it('säger till när kontot inte är admin', async () => {
