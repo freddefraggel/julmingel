@@ -305,6 +305,16 @@ function fadeIn(deviceId: string, from: number, to: number, ms: number) {
   setTimeout(next, ms / FADE_STEPS)
 }
 
+/** Hoppar till en position i låten som spelar. */
+export async function seek(deviceId: string, positionMs: number): Promise<void> {
+  await api(`/me/player/seek?position_ms=${Math.max(0, Math.round(positionMs))}&device_id=${encodeURIComponent(deviceId)}`, {
+    method: 'PUT',
+  })
+}
+
+/** Väntan innan seek, så att enheten hinner börja spela. */
+const SEEK_DELAY_MS = 400
+
 export async function pause(deviceId: string): Promise<void> {
   await api(`/me/player/pause?device_id=${encodeURIComponent(deviceId)}`, { method: 'PUT' })
 }
@@ -416,6 +426,9 @@ export async function startSong(cue: SongCue, options: StartOptions = {}): Promi
       if (!(await ensureActive(deviceId))) return missing()
       await play(deviceId, cue.spotifyUri, position)
     }
+    // Spotify ignorerar ibland position_ms i play, särskilt på mobiler och enheter som
+    // just har aktiverats. Hoppa dit en gång till när låten har börjat; fel här stoppar inget.
+    if (position > 0) setTimeout(() => void seek(deviceId, position).catch(() => {}), SEEK_DELAY_MS)
     if (fade) fadeIn(deviceId, target * 0.1, target, options.fadeInMs!)
     return { kind: 'played', cue }
   } catch (e) {
