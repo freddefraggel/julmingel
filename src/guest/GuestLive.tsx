@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { getAssets, subscribeConfig, subscribeLive, subscribeOwnGuest, subscribeOwnRatings } from '../data'
 import type { EventConfig, Guest, GuestRatings, LiveState } from '../types'
+import { useWakeLock } from '../ui'
 import { GuestAssets } from './assets'
 import { GuestHome, type HomeTarget } from './GuestHome'
 import { Gloggs } from './Gloggs'
@@ -87,6 +88,8 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
 
   // Quizfrågan läggs som ett lager över sidan gästen står på; sidan under ligger kvar.
   const quiz = useQuizLayer({ eventId, uid, config, live: live ?? null })
+  // Skärmen hålls vaken medan kvällen pågår, inte i lobbyn eller efteråt.
+  useWakeLock(stage === 'evening' || stage === 'wrapup')
 
   if (!guest) {
     return <GuestMessage title="Du är inte med längre" text="Värden har tagit bort dig från kvällen. Fråga värden om du vill vara med igen." />
