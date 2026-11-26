@@ -271,11 +271,38 @@ export const DEVICE_HELP =
  * Ser till att den valda enheten kan spela: finns den i listan men är inaktiv
  * flyttas uppspelningen dit. Ger false om enheten inte syns alls.
  */
-async function ensureActive(deviceId: string): Promise<boolean> {
+async function ensureActive(deviceId: string): Promise<SpotifyDevice | null> {
   const device = (await getDevices()).find((d) => d.id === deviceId)
-  if (!device) return false
+  if (!device) return null
   if (!device.is_active) await transferPlayback(deviceId)
-  return true
+  return device
+}
+
+/** Volymen på en enhet, 0–100. Alla enheter tillåter inte att appar styr den (t.ex. iPhone och iPad). */
+export async function setVolume(deviceId: string, percent: number): Promise<void> {
+  const volume = Math.max(0, Math.min(100, Math.round(percent)))
+  await api(`/me/player/volume?volume_percent=${volume}&device_id=${encodeURIComponent(deviceId)}`, { method: 'PUT' })
+}
+
+/** Antal steg i en fade-in. */
+const FADE_STEPS = 6
+
+/**
+ * Höjer volymen stegvis från `from` till `to` under `ms`. Körs i bakgrunden och
+ * slutar tyst om enheten inte tar emot volymändringar.
+ */
+function fadeIn(deviceId: string, from: number, to: number, ms: number) {
+  let step = 0
+  const next = () => {
+    step += 1
+    const volume = from + ((to - from) * step) / FADE_STEPS
+    setVolume(deviceId, volume)
+      .then(() => {
+        if (step < FADE_STEPS) setTimeout(next, ms / FADE_STEPS)
+      })
+      .catch(() => {})
+  }
+  setTimeout(next, ms / FADE_STEPS)
 }
 
 export async function pause(deviceId: string): Promise<void> {
@@ -340,9 +367,9 @@ export function songLabel(cue: SongCue): string {
 }
 
 /** Instruktionen i reservläget: ”Starta låt 2 – Last Christmas från 0:45”. */
-export function manualInstruction(cue: SongCue): string {
+export function manualInstruction(cue: SongCue, positionMs: number = cue.startMs): string {
   const title = cue.title ? ` – ${cue.title}` : ''
-  return `Starta låt ${cue.number}${title} från ${formatPosition(cue.startMs)}`
+  return `Starta låt ${cue.number}${title} från ${formatPosition(positionMs)}`
 }
 
 export type StartResult =
@@ -360,31 +387,47 @@ export type StartResult =
  * uppspelningen inte går, blir resultatet en instruktion som kontrollpanelen
  * visar. Kastar aldrig: quizet ska kunna fortsätta oavsett Spotify.
  */
-export async function startSong(cue: SongCue): Promise<StartResult> {
-  const manual = (reason?: string): StartResult => ({ kind: 'manual', cue, instruction: manualInstruction(cue), reason })
+export type StartOptions = {
+  /** Var i låten uppspelningen börjar. Standard: låtens starttid i quizet. */
+  positionMs?: number
+  /** Fade-in över så här många millisekunder. Utan värde börjar låten på full volym. */
+  fadeInMs?: number
+}
+
+export async function startSong(cue: SongCue, options: StartOptions = {}): Promise<StartResult> {
+  const position = options.positionMs ?? cue.startMs
+  const manual = (reason?: string): StartResult => ({ kind: 'manual', cue, instruction: manualInstruction(cue, position), reason })
   if (getPlaybackMode() === 'manual') return manual()
   if (!isLoggedIn()) return manual('Inte inloggad mot Spotify.')
   const deviceId = getDeviceId()
   if (!deviceId) return manual('Ingen Spotify-enhet vald.')
   const missing = () => manual(`Spotify hittar inte den valda enheten. ${DEVICE_HELP}`)
   try {
-    if (!(await ensureActive(deviceId))) return missing()
+    const device = await ensureActive(deviceId)
+    if (!device) return missing()
+    // Fade-in: börja lågt, om enheten tillåter volymstyrning. Annars spelas låten som vanligt.
+    const target = device.volume_percent ?? 70
+    const fade = !!options.fadeInMs && (await setVolume(deviceId, target * 0.1).then(() => true, () => false))
     try {
-      await play(deviceId, cue.spotifyUri, cue.startMs)
+      await play(deviceId, cue.spotifyUri, position)
     } catch (e) {
       if (!(e instanceof SpotifyError && e.status === 404)) throw e
       // Ingen aktiv enhet: uppdatera listan en gång och försök igen.
       if (!(await ensureActive(deviceId))) return missing()
-      await play(deviceId, cue.spotifyUri, cue.startMs)
+      await play(deviceId, cue.spotifyUri, position)
     }
+    if (fade) fadeIn(deviceId, target * 0.1, target, options.fadeInMs!)
     return { kind: 'played', cue }
   } catch (e) {
     return manual(spotifyErrorText(e))
   }
 }
 
-/** ”Spela låten igen” i rättningsläget: samma anrop som när låten startade. */
+/** ”Spela låten igen”: samma anrop som när låten startade. */
 export const replaySong = startSong
+
+/** I rättningen spelas låten 30 sekunder in, med en kort fade-in. */
+export const REVIEW_PLAYBACK: Required<StartOptions> = { positionMs: 30_000, fadeInMs: 1_500 }
 
 function spotifyErrorText(e: unknown): string {
   if (!(e instanceof Error)) return String(e)
