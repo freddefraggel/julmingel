@@ -12,7 +12,7 @@ import {
 } from '../data'
 import { stageIndex, STAGES, WRAPUP_STEPS } from '../live'
 import type { EventConfig, Guest, GuestClass, LiveState, Stage } from '../types'
-import { Button, Card, Chip } from '../ui'
+import { Button, Card, Chip, useWakeLock } from '../ui'
 import { SignOutButton } from './AdminGate'
 import { GuessPanel } from './GuessPanel'
 import { GuestList } from './GuestList'
@@ -39,6 +39,8 @@ export function ControlPanel({ eventId, eventName, onChangeEvent }: Props) {
   const [guests, setGuests] = useState<Record<string, Guest> | null>(null)
   const [lostConnection, setLostConnection] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  // Admin-enheten styr kvällen, så skärmen ska inte somna.
+  useWakeLock(true)
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {

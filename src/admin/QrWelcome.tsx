@@ -2,7 +2,7 @@ import QRCode from 'qrcode'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { openAdminEvent, subscribeConfig } from '../data'
-import { Garland, Snow } from '../ui'
+import { Garland, Snow, useWakeLock } from '../ui'
 import { readAdminEventId } from './adminEvent'
 import { guestUrl } from './guestUrl'
 import './qr.css'
@@ -42,6 +42,8 @@ export default function QrWelcome({ print = false }: { print?: boolean }) {
   const [state, setState] = useState<State>({ kind: 'loading' })
   const [joinOpen, setJoinOpen] = useState<boolean | null>(null)
   const [eventName, setEventName] = useState<string | null>(null)
+  // QR-sidan visas på en skärm hela kvällen; utskriften behöver inget lås.
+  useWakeLock(!print)
 
   useEffect(() => {
     if (!eventId) return
