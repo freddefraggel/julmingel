@@ -295,7 +295,7 @@ function TimeUp({ label, config, live, qId, timing, answer, sameSongNext, onLeav
         <p className="quiz-done__next">
           {sameSongNext ? 'Lyssna vidare – nästa fråga handlar om samma låt.' : 'Nästa fråga kommer med en ny låt.'}
           <br />
-          Du kommer tillbaka till provningen om några sekunder.
+          Tryck på Till provningen när du vill.
         </p>
       </div>
       {answered && (
