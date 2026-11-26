@@ -65,26 +65,65 @@ export function Leaderboard({ eventId, uid, guestClass, config, step, final, onB
         <div className="candy" aria-hidden="true" />
       </div>
 
-      {done && results.gloggOfEvening && (
-        <section className="leaderboard__glogg" aria-label="Kvällens glögg">
-          <span className="eyebrow">Kvällens glögg</span>
-          {CLASSES.map((c) => {
-            const winner = results.gloggOfEvening?.[c]
-            if (!winner) return null
-            const number = Object.entries(cleanMap(reveal.numbers?.[c])).find(([, gId]) => gId === winner.gId)?.[0]
-            const name = config?.gloggs?.[winner.gId]?.name ?? 'Okänd glögg'
-            return (
-              <div key={c} className="leaderboard__glogg-row">
-                <span className="leaderboard__glogg-number">{number ?? '?'}</span>
-                <span className="leaderboard__glogg-text">
-                  <span className="leaderboard__glogg-class">{CLASS_LABEL[c]}</span>
-                  <strong>
-                    {name} · {winner.avg.toLocaleString('sv-SE', { maximumFractionDigits: 1 })}
-                  </strong>
-                </span>
-              </div>
-            )
-          })}
+      {done && (results.gloggOfEvening || guessed) && (
+        <section className="card leaderboard__section" aria-label="Glöggprovning">
+          <h2>Glöggprovning</h2>
+          {results.gloggOfEvening && (
+            <div className="leaderboard__part">
+              <span className="eyebrow">Kvällens glögg</span>
+              <ul className="leaderboard__winners">
+                {CLASSES.map((c) => {
+                  const winner = results.gloggOfEvening?.[c]
+                  if (!winner) return null
+                  const number = Object.entries(cleanMap(reveal.numbers?.[c])).find(([, gId]) => gId === winner.gId)?.[0]
+                  const name = config?.gloggs?.[winner.gId]?.name ?? 'Okänd glögg'
+                  const avg = winner.avg.toLocaleString('sv-SE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+                  return (
+                    <li key={c} className="leaderboard__winner">
+                      <span className="leaderboard__class">{CLASS_LABEL[c]}</span>
+                      <span className="leaderboard__winner-text">
+                        <strong>{name}</strong>
+                        <span className="muted">
+                          {number ? `nr ${number} · ` : ''}snitt {avg} av 5
+                        </span>
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )}
+          {guessed && revealedNumbers && (
+            <div className="leaderboard__part">
+              <span className="eyebrow">Gissa glöggen</span>
+              <p className="leaderboard__guess">
+                Du gissade {guessed.right} av {guessed.total} rätt
+                {guessed.total > 0 && guessed.right / guessed.total >= 0.5 ? ' – snyggt!' : '.'}
+              </p>
+              <details className="leaderboard__facit">
+                <summary>Visa facit</summary>
+                <ol>
+                  {Object.keys(revealedNumbers)
+                    .sort((a, b) => Number(a) - Number(b))
+                    .map((n) => {
+                      const right = revealedNumbers[n]
+                      const mine = cleanMap(guess?.map)[n]
+                      const nameOf = (gId: string | undefined) => (gId ? (config?.gloggs?.[gId]?.name ?? 'Okänd glögg') : '–')
+                      return (
+                        <li key={n} className={mine === right ? 'leaderboard__facit-row--right' : 'leaderboard__facit-row--wrong'}>
+                          <span className="leaderboard__facit-number">nr {n}</span>
+                          <span>
+                            <strong>{nameOf(right)}</strong>
+                            {mine !== right && <span className="muted"> · du gissade {nameOf(mine)}</span>}
+                          </span>
+                          <span className="leaderboard__facit-mark">{mine === right ? 'Rätt' : 'Fel'}</span>
+                        </li>
+                      )
+                    })}
+                </ol>
+              </details>
+            </div>
+          )}
         </section>
       )}
 
@@ -94,8 +133,8 @@ export function Leaderboard({ eventId, uid, guestClass, config, step, final, onB
           <p className="muted">Quizledaren avslöjar topplistan. Håll i glöggen.</p>
         </div>
       ) : (
-        <section aria-label={done ? 'Musikquiz · poäng' : 'Topplistan'}>
-          {done && <span className="eyebrow">Musikquiz · poäng</span>}
+        <section className="card leaderboard__section" aria-label="Musikquiz">
+          <h2>Musikquiz</h2>
           <ol className="leaderboard__list">
             {Array.from({ length: hidden }, (_, i) => (
               <li key={`hidden-${i}`} className="leaderboard__row leaderboard__row--hidden">
@@ -120,16 +159,6 @@ export function Leaderboard({ eventId, uid, guestClass, config, step, final, onB
               )
             })}
           </ol>
-        </section>
-      )}
-
-      {done && guessed && (
-        <section className="leaderboard__guess" aria-label="Dina gissningar">
-          <strong>Dina gissningar</strong>
-          <span className="muted">
-            Du gissade {guessed.right} av {guessed.total} rätt
-            {guessed.total > 0 && guessed.right / guessed.total >= 0.5 ? ' – snyggt!' : '.'}
-          </span>
         </section>
       )}
     </main>

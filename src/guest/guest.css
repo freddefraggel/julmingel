@@ -1187,9 +1187,9 @@ button.guess-row {
   border-color: var(--color-gold);
 }
 
-.leaderboard__row--winner {
-  background: var(--color-gold);
-  color: var(--color-on-gold);
+.leaderboard__row--winner .leaderboard__pos,
+.leaderboard__row--winner .leaderboard__points {
+  color: var(--color-gold);
 }
 
 .leaderboard__row--hidden {
@@ -1198,7 +1198,7 @@ button.guess-row {
   color: var(--color-text-subtle);
 }
 
-.leaderboard__row--me:not(.leaderboard__row--winner) {
+.leaderboard__row--me:not(.leaderboard__row--top) {
   border-color: var(--color-rose);
 }
 
@@ -1226,61 +1226,6 @@ button.guess-row {
 .leaderboard__points {
   font-size: 17px;
   font-weight: 800;
-}
-
-.leaderboard__glogg {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 16px;
-  border-radius: var(--radius-xl);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-}
-
-.leaderboard__glogg-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.leaderboard__glogg-number {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-pill);
-  background: var(--color-gold);
-  color: var(--color-on-gold);
-  font-family: var(--font-heading);
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.leaderboard__glogg-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.leaderboard__glogg-class {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-text-subtle);
-}
-
-.leaderboard__guess {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 14px 16px;
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
 }
 
 /* 8. Hem efter kvällen – med pokal */
@@ -1697,4 +1642,117 @@ button.guess-row {
   font-weight: 800;
   color: var(--color-text);
   overflow-wrap: anywhere;
+}
+
+/* Slutbilden: två avsnitt, Glöggprovning och Musikquiz (#90) */
+.leaderboard__section {
+  gap: 16px;
+}
+
+.leaderboard__section h2 {
+  font-size: 24px;
+}
+
+.leaderboard__section .leaderboard__list {
+  margin: 0;
+}
+
+.leaderboard__section .leaderboard__row:not(.leaderboard__row--hidden) {
+  background: var(--color-surface-2);
+}
+
+.leaderboard__part {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.leaderboard__part + .leaderboard__part {
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+}
+
+.leaderboard__winners {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.leaderboard__winner {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.leaderboard__class {
+  flex-shrink: 0;
+  width: 92px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-subtle);
+}
+
+.leaderboard__winner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.leaderboard__winner-text strong {
+  font-family: var(--font-heading);
+  font-size: 20px;
+}
+
+.leaderboard__guess {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.leaderboard__facit summary {
+  font-weight: 800;
+  color: var(--color-gold);
+  cursor: pointer;
+}
+
+.leaderboard__facit ol {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.leaderboard__facit li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 15px;
+}
+
+.leaderboard__facit-number {
+  flex-shrink: 0;
+  width: 44px;
+  font-weight: 800;
+  color: var(--color-text-subtle);
+}
+
+.leaderboard__facit-mark {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.leaderboard__facit-row--right .leaderboard__facit-mark {
+  color: var(--color-green);
+}
+
+.leaderboard__facit-row--wrong .leaderboard__facit-mark {
+  color: var(--color-rose);
 }

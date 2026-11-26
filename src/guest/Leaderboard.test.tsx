@@ -47,7 +47,10 @@ beforeEach(() => {
 
 afterEach(cleanup)
 
-const names = () => within(screen.getByRole('list')).getAllByRole('listitem').map((li) => li.textContent)
+const names = () =>
+  within(within(screen.getByRole('region', { name: 'Musikquiz' })).getByRole('list'))
+    .getAllByRole('listitem')
+    .map((li) => li.textContent)
 
 describe('Topplistan på mobilen', () => {
   it('väntar tills avslöjandet börjar', () => {
@@ -65,7 +68,7 @@ describe('Topplistan på mobilen', () => {
     expect(names()).toEqual(['1?', '2?', '3?', '4Dan3 p', '5Eva · du2 p', '6Fia1 p'])
   })
 
-  it('efter sista steget: Kvällens glögg med nummer och Dina gissningar', () => {
+  it('efter sista steget: avsnitten Glöggprovning och Musikquiz', () => {
     reveal = { numbers: { vanlig: { '1': 'g2', '2': 'g1' }, alkfri: { '1': 'g3' } } }
     guess = { map: { '1': 'g2', '2': 'g1' }, locked: true }
     render(<Leaderboard eventId="demo" uid="u5" guestClass="vanlig" config={config} step={4} final={false} />)
@@ -75,11 +78,27 @@ describe('Topplistan på mobilen', () => {
         gloggOfEvening: { vanlig: { gId: 'g1', avg: 4.6 }, alkfri: { gId: 'g3', avg: 4.83 } },
       }),
     )
-    const glogg = screen.getByRole('region', { name: 'Kvällens glögg' })
-    expect(glogg).toHaveTextContent('2VanligPortvinsglögg · 4,6')
-    expect(glogg).toHaveTextContent('1AlkoholfriÄppelglögg · 4,8')
-    expect(screen.getByRole('region', { name: 'Dina gissningar' })).toHaveTextContent('Du gissade 2 av 2 rätt – snyggt!')
+    const tasting = screen.getByRole('region', { name: 'Glöggprovning' })
+    expect(within(tasting).getByRole('heading', { name: 'Glöggprovning' })).toBeInTheDocument()
+    expect(tasting).toHaveTextContent('VanligPortvinsglöggnr 2 · snitt 4,6 av 5')
+    expect(tasting).toHaveTextContent('AlkoholfriÄppelglöggnr 1 · snitt 4,8 av 5')
+    expect(tasting).toHaveTextContent('Gissa glöggen')
+    expect(tasting).toHaveTextContent('Du gissade 2 av 2 rätt – snyggt!')
+    expect(within(screen.getByRole('region', { name: 'Musikquiz' })).getByRole('heading', { name: 'Musikquiz' })).toBeInTheDocument()
     expect(names()).toEqual(['1Anna9 p', '2Eva · du2 p'])
+  })
+
+  it('facit för Gissa glöggen visar varje nummer, rätt glögg och vad gästen gissade', () => {
+    reveal = { numbers: { vanlig: { '1': 'g2', '2': 'g1' } } }
+    guess = { map: { '1': 'g1', '2': 'g2' }, locked: true }
+    render(<Leaderboard eventId="demo" uid="u5" guestClass="vanlig" config={config} step={4} final />)
+    act(() => pushResults({ leaderboard: { u5: entry('Eva', 1, 2) }, gloggOfEvening: { vanlig: { gId: 'g1', avg: 4 } } }))
+    expect(screen.getByText('Du gissade 0 av 2 rätt.')).toBeInTheDocument()
+    const facit = screen.getByText('Visa facit').closest('details')!
+    expect(within(facit).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+      'nr 1Vit glögg · du gissade PortvinsglöggFel',
+      'nr 2Portvinsglögg · du gissade Vit glöggFel',
+    ])
   })
 
   it('sortedRows: placering, sedan poäng, stjärnor och namn', () => {
