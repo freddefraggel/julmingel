@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { parseTrackLink } from '../spotify'
+import { getTrackInfo, parseTrackLink } from '../spotify'
 import type { Choice } from '../types'
 import { Button, Card } from '../ui'
 import { ImageField } from './ImageField'
@@ -44,6 +44,36 @@ export function QuizCard({ eventId, draft, assets, onEdit, onAnswerImage, newId 
   function setSong(id: string, change: (s: DraftSong) => DraftSong) {
     setSongs((songs) => songs.map((s) => (s.songId === id ? change(s) : s)))
   }
+  // Låtar vars titel och artist hämtas från Spotify just nu.
+  const [looking, setLooking] = useState<Record<string, boolean>>({})
+
+  /**
+   * En ny giltig Spotify-länk: hämta titel och artist och fyll i de fält som
+   * är tomma. Det admin har skrivit skrivs aldrig över, och svaret används bara
+   * om länken fortfarande är densamma.
+   */
+  function changeLink(sId: string, link: string) {
+    const before = draft.songs.find((s) => s.songId === sId)
+    setSong(sId, (s) => ({ ...s, link }))
+    const uri = parseTrackLink(link)
+    if (!uri || uri === parseTrackLink(before?.link ?? '')) return
+    if (before && before.title.trim() && before.artist.trim()) return
+    setLooking((l) => ({ ...l, [sId]: true }))
+    void getTrackInfo(uri).then((info) => {
+      setLooking((l) => ({ ...l, [sId]: false }))
+      if (!info) return
+      setSong(sId, (s) =>
+        parseTrackLink(s.link) !== uri
+          ? s
+          : {
+              ...s,
+              title: s.title.trim() ? s.title : info.title,
+              artist: s.artist.trim() || !info.artist ? s.artist : info.artist,
+            },
+      )
+    })
+  }
+
   function setQuestion(sId: string, id: string, change: (q: DraftQuestion) => DraftQuestion) {
     setSong(sId, (s) => ({ ...s, questions: s.questions.map((q) => (q.qId === id ? change(q) : q)) }))
   }
@@ -125,7 +155,9 @@ export function QuizCard({ eventId, draft, assets, onEdit, onAnswerImage, newId 
             <span className="song-editor__title">
               Låt {songIndex + 1} · {song.questions.length === 1 ? '1 fråga' : `${song.questions.length} frågor`}
             </span>
-            <span className="prepare__hint">Låten spelar vidare mellan frågorna</span>
+            <span className="prepare__hint" role="status">
+              {looking[song.songId] ? 'Hämtar låtinfo …' : 'Låten spelar vidare mellan frågorna'}
+            </span>
           </div>
           <div className="song-editor__fields">
             <Field label="Spotify-länk" className="song-editor__link" invalid={song.link.trim() !== '' && !parseTrackLink(song.link)}>
@@ -137,7 +169,7 @@ export function QuizCard({ eventId, draft, assets, onEdit, onAnswerImage, newId 
                   autoCapitalize="off"
                   spellCheck={false}
                   value={song.link}
-                  onChange={(e) => setSong(song.songId, (s) => ({ ...s, link: e.target.value }))}
+                  onChange={(e) => changeLink(song.songId, e.target.value)}
                 />
               )}
             </Field>

@@ -1,9 +1,16 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as data from '../data'
+import * as spotify from '../spotify'
 import type { Preparation } from '../data'
 import PrepareEvening from './PrepareEvening'
+
+// Låtinfo hämtas från Spotify när en länk klistras in; här svarar ingen.
+vi.mock('../spotify', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../spotify')>()),
+  getTrackInfo: vi.fn(() => Promise.resolve(null)),
+}))
 
 vi.mock('../data', () => ({
   loadPreparation: vi.fn(),
@@ -302,6 +309,42 @@ describe('Musikquiz', () => {
     save()
     await screen.findByText('Sparat')
     expect(savedChanges()).toMatchObject({ 'config/songs': {}, 'config/questions': {}, 'secret/correct': {} })
+  })
+})
+
+describe('Låtinfo från Spotify-länken', () => {
+  const link = 'https://open.spotify.com/track/2FRnf9qhLbvw8fu4IBXx78?si=x'
+
+  it('fyller i titel och artist när en ny länk klistras in', async () => {
+    vi.mocked(spotify.getTrackInfo).mockResolvedValue({ title: 'Last Christmas', artist: 'Wham!' })
+    await open()
+    fireEvent.click(within(screen.getByRole('heading', { name: /^Musikquiz/ }).closest('.card') as HTMLElement).getByRole('button', { name: '+ Ny låt' }))
+    fireEvent.change(screen.getByLabelText('Spotify-länk'), { target: { value: link } })
+    expect(spotify.getTrackInfo).toHaveBeenCalledWith('spotify:track:2FRnf9qhLbvw8fu4IBXx78')
+    await waitFor(() => expect(screen.getByLabelText('Titel (för reservläget)')).toHaveValue('Last Christmas'))
+    expect(screen.getByLabelText('Artist')).toHaveValue('Wham!')
+    // Låtlistan visar titeln i stället för Låt 1.
+    expect(screen.getByRole('button', { name: /Last Christmas/ })).toBeInTheDocument()
+  })
+
+  it('skriver aldrig över det admin har skrivit', async () => {
+    vi.mocked(spotify.getTrackInfo).mockResolvedValue({ title: 'Last Christmas', artist: 'Wham!' })
+    await open()
+    fireEvent.click(within(screen.getByRole('heading', { name: /^Musikquiz/ }).closest('.card') as HTMLElement).getByRole('button', { name: '+ Ny låt' }))
+    fireEvent.change(screen.getByLabelText('Titel (för reservläget)'), { target: { value: 'Min titel' } })
+    fireEvent.change(screen.getByLabelText('Spotify-länk'), { target: { value: link } })
+    await waitFor(() => expect(screen.getByLabelText('Artist')).toHaveValue('Wham!'))
+    expect(screen.getByLabelText('Titel (för reservläget)')).toHaveValue('Min titel')
+  })
+
+  it('gör inget med en ogiltig länk, eller när inget gick att hämta', async () => {
+    await open()
+    fireEvent.click(within(screen.getByRole('heading', { name: /^Musikquiz/ }).closest('.card') as HTMLElement).getByRole('button', { name: '+ Ny låt' }))
+    fireEvent.change(screen.getByLabelText('Spotify-länk'), { target: { value: 'last christmas' } })
+    expect(spotify.getTrackInfo).not.toHaveBeenCalled()
+    fireEvent.change(screen.getByLabelText('Spotify-länk'), { target: { value: link } })
+    await waitFor(() => expect(spotify.getTrackInfo).toHaveBeenCalled())
+    expect(screen.getByLabelText('Titel (för reservläget)')).toHaveValue('')
   })
 })
 
