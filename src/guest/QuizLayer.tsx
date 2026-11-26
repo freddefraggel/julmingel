@@ -4,9 +4,6 @@ import { quizTiming } from '../live'
 import type { EventConfig, LiveState } from '../types'
 import { Quiz } from './Quiz'
 
-/** Hur länge *Tiden är ute!* visas innan gästen är tillbaka där hen var. */
-export const TIME_UP_MS = 5_000
-
 /** Frågans nummer i hela quizet (1, 2, …), i `order`. */
 export function questionNumber(config: EventConfig | null, qId: string): number {
   const ids = Object.entries(config?.questions ?? {})
@@ -31,16 +28,15 @@ type Props = {
  * - Låten spelar: *Lyssna noga …*
  * - Frågan är öppen: frågan. *Till provningen* stänger lagret, och en flytande
  *   ruta *Ny quizfråga!* öppnar det igen så länge tiden går.
- * - Tiden är ute (eller admin stängde frågan): *Tiden är ute!* i några
- *   sekunder, sedan stängs lagret av sig självt.
+ * - Tiden är ute (eller admin stängde frågan): *Tiden är ute!* ligger kvar
+ *   tills gästen går *Till provningen*, eller tills nästa låt eller fråga börjar.
+ *   Inga automatiska sidbyten.
  */
 export function useQuizLayer({ eventId, uid, config, live }: Props): { open: boolean; layer: ReactNode; pill: ReactNode } {
   const [offset, setOffset] = useState(0)
   const [now, setNow] = useState(() => Date.now())
   // Lagret som gästen har stängt med Till provningen.
   const [dismissed, setDismissed] = useState<string | null>(null)
-  // När mobilen först såg att tiden var ute för en fråga.
-  const [timeUpSince, setTimeUpSince] = useState<{ key: string; at: number } | null>(null)
 
   useEffect(() => subscribeServerTimeOffset(setOffset), [])
   useEffect(() => {
@@ -57,14 +53,10 @@ export function useQuizLayer({ eventId, uid, config, live }: Props): { open: boo
   const msLeft = timing ? timing.openedAt + timing.durationMs - (now + offset) : 0
   const ended = !!qId && !!timing && (quiz?.state === 'closed' || (quiz?.state === 'open' && msLeft <= 0))
 
-  useEffect(() => {
-    if (ended && timeUpSince?.key !== key) setTimeUpSince({ key, at: Date.now() })
-  }, [ended, key, timeUpSince?.key])
-
   let mode: Mode = 'none'
   if (qId && quiz?.state === 'playing') mode = 'listen'
   else if (qId && quiz?.state === 'open' && timing && msLeft > 0) mode = 'question'
-  else if (ended && (timeUpSince?.key !== key || now - timeUpSince.at < TIME_UP_MS)) mode = 'timeup'
+  else if (ended) mode = 'timeup'
 
   const open = mode !== 'none' && dismissed !== key
   const layer =

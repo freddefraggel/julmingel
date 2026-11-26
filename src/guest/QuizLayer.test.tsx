@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as data from '../data'
 import type { EventConfig, Guest, LiveState } from '../types'
 import { GuestLive } from './GuestLive'
-import { questionNumber, TIME_UP_MS } from './QuizLayer'
+import { questionNumber } from './QuizLayer'
 
 vi.mock('../data', () => ({
   subscribeLive: vi.fn(),
@@ -119,26 +119,34 @@ describe('Quizfrågan som lager', () => {
     expect(mocked.saveRatings).toHaveBeenCalledWith('demo', 'u1', '1', { c1: 4 })
   })
 
-  it('Tiden är ute visas några sekunder, sedan är gästen tillbaka där hen var', () => {
+  it('Tiden är ute ligger kvar tills gästen går Till provningen, och gästen är då där hen var', () => {
     render(<GuestLive eventId="demo" uid="u1" guest={anna} />)
     act(() => pushLive({ stage: 'evening', tasting }))
     act(() => pushLive(openQuestion))
     act(() => vi.advanceTimersByTime(18_500))
     expect(screen.getByRole('heading', { name: 'Tiden är ute!' })).toBeInTheDocument()
-    expect(screen.getByText(/Du kommer tillbaka till provningen om några sekunder/)).toBeInTheDocument()
-    act(() => vi.advanceTimersByTime(TIME_UP_MS + 500))
+    expect(screen.getByText(/Tryck på Till provningen när du vill/)).toBeInTheDocument()
+    // Ingen automatisk flytt, inte ens efter en lång stund.
+    act(() => vi.advanceTimersByTime(60_000))
+    expect(screen.getByRole('heading', { name: 'Tiden är ute!' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Till provningen' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Glögg nr 1' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Ny quizfråga!/ })).not.toBeInTheDocument()
   })
 
-  it('när admin stänger frågan tidigt visas Tiden är ute, och lagret stängs sedan', () => {
+  it('när admin stänger frågan tidigt visas Tiden är ute, tills nästa fråga visas', () => {
     render(<GuestLive eventId="demo" uid="u1" guest={anna} />)
     act(() => pushLive(openQuestion))
     act(() => pushLive({ ...openQuestion, quiz: { ...openQuestion.quiz!, state: 'closed' } }))
     expect(screen.getByRole('heading', { name: 'Tiden är ute!' })).toBeInTheDocument()
-    act(() => vi.advanceTimersByTime(TIME_UP_MS + 500))
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    act(() => vi.advanceTimersByTime(60_000))
+    expect(screen.getByRole('heading', { name: 'Tiden är ute!' })).toBeInTheDocument()
+    act(() => {
+      vi.setSystemTime(OPENED + 90_000)
+      pushLive({ ...openQuestion, quiz: { state: 'open', songId: 's1', qId: 'q0', openedAt: OPENED + 90_000, durationMs: 20_000 } })
+    })
+    expect(screen.getByRole('heading', { name: 'Första' })).toBeInTheDocument()
   })
 
   it('en fråga som gästen redan har stängt öppnas inte igen bara för Tiden är ute', () => {
