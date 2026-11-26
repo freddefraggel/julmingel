@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { showReview, subscribeAnswers, subscribeAssets, subscribeCorrect } from '../data'
-import { formatPosition, replaySong, songLabel, type StartResult } from '../spotify'
+import { formatPosition, replaySong, REVIEW_PLAYBACK, songLabel, startSong, type StartResult } from '../spotify'
 import type { Answer, Choice, EventConfig, Guest, LiveState } from '../types'
 import { Button } from '../ui'
 import { answerStats, CHOICES, positionLabel, quizPlan, type PlannedQuestion } from './quiz'
@@ -43,14 +43,17 @@ export function ReviewPanel({ eventId, config, live, guests, disabled, save }: P
     return subscribeAnswers(eventId, currentId, setAnswers)
   }, [eventId, currentId])
 
-  function show(target: PlannedQuestion) {
+  async function show(target: PlannedQuestion) {
     const right = correct[target.qId]
     if (!right) return
-    void save(() => showReview(eventId, target.qId, right))
+    const ok = await save(() => showReview(eventId, target.qId, right))
+    // En ny låt i rättningen börjar spela av sig själv, 30 sekunder in med en kort fade-in.
+    // Nästa fråga på samma låt rör inte uppspelningen.
+    if (ok && target.cue.songId !== current?.cue.songId) setPlayback(await startSong(target.cue, REVIEW_PLAYBACK))
   }
 
   async function replay() {
-    if (current) setPlayback(await replaySong(current.cue))
+    if (current) setPlayback(await replaySong(current.cue, REVIEW_PLAYBACK))
   }
 
   if (plan.length === 0) return <p className="muted">Inga quizfrågor att gå igenom.</p>
@@ -80,7 +83,7 @@ export function ReviewPanel({ eventId, config, live, guests, disabled, save }: P
                     aria-current={p.qId === currentId ? 'true' : undefined}
                     aria-label={`Fråga ${p.overall}${missing ? ', saknar rätt svar' : ''}`}
                     disabled={disabled || missing}
-                    onClick={() => show(p)}
+                    onClick={() => void show(p)}
                   >
                     {p.overall}
                   </button>
@@ -136,7 +139,7 @@ export function ReviewPanel({ eventId, config, live, guests, disabled, save }: P
                 <span className="muted">
                   {playback?.cue.songId === current.cue.songId && playback.kind === 'manual'
                     ? playback.instruction
-                    : `Spelar från ${formatPosition(current.cue.startMs)}`}
+                    : `Spelar från ${formatPosition(REVIEW_PLAYBACK.positionMs)}`}
                 </span>
               </div>
               <Button variant="secondary" size="small" onClick={() => void replay()}>
@@ -153,12 +156,12 @@ export function ReviewPanel({ eventId, config, live, guests, disabled, save }: P
 
         <div className="quiz-panel__actions">
           {prev && (
-            <Button variant="secondary" size="large" disabled={disabled} onClick={() => show(prev)}>
+            <Button variant="secondary" size="large" disabled={disabled} onClick={() => void show(prev)}>
               Föregående
             </Button>
           )}
           {next ? (
-            <Button size="large" className="quiz-panel__next" disabled={disabled || !correct[next.qId]} onClick={() => show(next)}>
+            <Button size="large" className="quiz-panel__next" disabled={disabled || !correct[next.qId]} onClick={() => void show(next)}>
               <span className="quiz-panel__next-text">
                 <span>{current ? 'Nästa fråga' : 'Börja med fråga 1'}</span>
                 <span className="quiz-panel__next-sub">

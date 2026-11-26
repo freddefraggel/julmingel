@@ -241,6 +241,65 @@ describe('startSong', () => {
   })
 })
 
+describe('startSong med fade-in', () => {
+  const fetchMock = vi.fn<typeof fetch>()
+
+  beforeEach(() => {
+    sessionStorage.clear()
+    localStorage.clear()
+    fetchMock.mockReset()
+    vi.stubGlobal('fetch', fetchMock)
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.unstubAllGlobals()
+  })
+
+  const speaker = { id: 'vardagsrum', name: 'Vardagsrum', type: 'Speaker', is_active: true, is_restricted: false, volume_percent: 60 }
+
+  it('börjar lågt, spelar från vald position och höjer volymen stegvis till enhetens volym', async () => {
+    storeToken(Date.now() + 60_000)
+    setDeviceId('vardagsrum')
+    spotifyApi(fetchMock, { devices: [speaker] })
+
+    expect(await startSong(cue, { positionMs: 30_000, fadeInMs: 1_500 })).toEqual({ kind: 'played', cue })
+    expect(calls(fetchMock)).toEqual([
+      'GET /me/player/devices',
+      'PUT /me/player/volume?volume_percent=6&device_id=vardagsrum',
+      'PUT /me/player/play?device_id=vardagsrum',
+    ])
+    expect(JSON.parse(fetchMock.mock.calls[2]![1]!.body as string)).toEqual({ uris: [cue.spotifyUri], position_ms: 30_000 })
+    await vi.runAllTimersAsync()
+    const volumes = calls(fetchMock)
+      .filter((c) => c.includes('/volume'))
+      .map((c) => Number(/volume_percent=(\d+)/.exec(c)![1]))
+    expect(volumes).toEqual([6, 15, 24, 33, 42, 51, 60])
+  })
+
+  it('tillåter enheten inte volymstyrning spelas låten ändå, utan fade', async () => {
+    storeToken(Date.now() + 60_000)
+    setDeviceId('ipad')
+    const ipad = { ...speaker, id: 'ipad', name: 'iPad', type: 'Tablet' }
+    fetchMock.mockImplementation(async (url) => {
+      const u = String(url)
+      if (u.endsWith('/me/player/devices')) return json({ devices: [ipad] })
+      if (u.includes('/volume')) return json({ error: { status: 403, message: 'VOLUME_CONTROL_DISALLOW' } }, 403)
+      return json(null, 204)
+    })
+    expect(await startSong(cue, { positionMs: 30_000, fadeInMs: 1_500 })).toEqual({ kind: 'played', cue })
+    await vi.runAllTimersAsync()
+    expect(calls(fetchMock).filter((c) => c.includes('/volume'))).toHaveLength(1)
+    expect(calls(fetchMock).filter((c) => c.includes('/me/player/play'))).toHaveLength(1)
+  })
+
+  it('reservlägets instruktion använder positionen', async () => {
+    setPlaybackMode('manual')
+    expect(await startSong(cue, { positionMs: 30_000 })).toMatchObject({ instruction: 'Starta låt 2 – Last Christmas från 0:30' })
+  })
+})
+
 describe('getTrackInfo', () => {
   const fetchMock = vi.fn<typeof fetch>()
   const uri = 'spotify:track:2FRnf9qhLbvw8fu4IBXx78'

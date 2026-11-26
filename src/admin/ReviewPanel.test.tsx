@@ -15,6 +15,7 @@ vi.mock('../data', () => ({
 vi.mock('../spotify', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../spotify')>()),
   replaySong: vi.fn(),
+  startSong: vi.fn(),
 }))
 
 const mocked = vi.mocked(data)
@@ -69,6 +70,7 @@ beforeEach(() => {
     return () => {}
   })
   mockedSpotify.replaySong.mockImplementation(async (cue) => ({ kind: 'played', cue }))
+  mockedSpotify.startSong.mockImplementation(async (cue) => ({ kind: 'played', cue }))
 })
 
 afterEach(cleanup)
@@ -114,11 +116,34 @@ describe('Rättning hos admin', () => {
     expect(screen.getByText(/Sista frågan är rättad/)).toBeInTheDocument()
   })
 
+  it('en ny låt börjar spela av sig själv, 30 sekunder in med fade-in', async () => {
+    renderPanel({ stage: 'wrapup', wrapup: { step: 'review', qId: 'q2' } })
+    fireEvent.click(screen.getByRole('button', { name: /Nästa fråga/ }))
+    await waitFor(() => expect(mockedSpotify.startSong).toHaveBeenCalled())
+    expect(mockedSpotify.startSong.mock.calls[0]![0]).toMatchObject({ songId: 's2' })
+    expect(mockedSpotify.startSong.mock.calls[0]![1]).toEqual({ positionMs: 30_000, fadeInMs: 1_500 })
+  })
+
+  it('nästa fråga på samma låt startar inte om låten', async () => {
+    renderPanel({ stage: 'wrapup', wrapup: { step: 'review', qId: 'q1' } })
+    fireEvent.click(screen.getByRole('button', { name: /Nästa fråga/ }))
+    await waitFor(() => expect(mocked.showReview).toHaveBeenCalledWith('demo', 'q2', 'A'))
+    expect(mockedSpotify.startSong).not.toHaveBeenCalled()
+  })
+
+  it('första frågan i rättningen startar låten', async () => {
+    renderPanel({ stage: 'wrapup', wrapup: { step: 'review' } })
+    fireEvent.click(screen.getByRole('button', { name: /Börja med fråga 1/ }))
+    await waitFor(() => expect(mockedSpotify.startSong).toHaveBeenCalled())
+    expect(mockedSpotify.startSong.mock.calls[0]![0]).toMatchObject({ songId: 's1' })
+  })
+
   it('Spela låten igen spelar frågans låt', async () => {
     renderPanel({ stage: 'wrapup', wrapup: { step: 'review', qId: 'q2' } })
     expect(screen.getByText('Spelar från 0:30')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Spela låten igen' }))
     await waitFor(() => expect(mockedSpotify.replaySong).toHaveBeenCalled())
-    expect(mockedSpotify.replaySong.mock.calls[0]![0]).toMatchObject({ songId: 's1', startMs: 30_000 })
+    expect(mockedSpotify.replaySong.mock.calls[0]![0]).toMatchObject({ songId: 's1' })
+    expect(mockedSpotify.replaySong.mock.calls[0]![1]).toEqual({ positionMs: 30_000, fadeInMs: 1_500 })
   })
 })
