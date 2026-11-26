@@ -1685,13 +1685,6 @@ button.guess-row {
 }
 
 /* Rättning: vilken låt det var (#87) */
-.review__song-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
 .review__song-title {
   font-size: 18px;
   font-weight: 800;

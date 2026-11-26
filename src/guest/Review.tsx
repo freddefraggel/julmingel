@@ -77,10 +77,7 @@ export function Review({ eventId, uid, config, live }: Props) {
               <span />
               <span />
             </span>
-            <span className="review__song-text">
-              <strong className="review__song-title">{songTitle(config, position.question.songId, position.songNumber)}</strong>
-              <span className="muted">Låten spelas igen</span>
-            </span>
+            <strong className="review__song-title">{songTitle(config, position.question.songId, position.songNumber)}</strong>
           </div>
           <h1 className="quiz-question">{position.question.text}</h1>
           <ul className="review-options" aria-label="Svar">
