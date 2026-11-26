@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Vänta på fler merges
         if: github.event_name == 'push'
-        run: sleep 120
+        run: sleep 60
 
       - uses: actions/checkout@v7
 
