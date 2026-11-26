@@ -44,7 +44,7 @@
 .tasting-now__image img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .tasting-now__text {
@@ -291,4 +291,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.tasting-now__image {
+  padding: 8px;
 }
