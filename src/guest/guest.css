@@ -488,7 +488,7 @@
 .glogg-card__image img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .glogg-card__text {
@@ -985,7 +985,7 @@ button.guess-row {
 .guess-row__thumb img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .guess-row__text {
@@ -1123,7 +1123,7 @@ button.guess-row {
 .guess-option__image img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .guess-option__taken {
@@ -1676,4 +1676,10 @@ button.guess-row {
 
 .home-quiz strong {
   color: var(--color-text);
+}
+
+/* Glöggbilder visas hela (#77): lite luft runt flaskan i rutorna. */
+.glogg-card__image,
+.guess-option__image {
+  padding: 6px;
 }
