@@ -107,9 +107,13 @@ describe('startSong', () => {
     localStorage.clear()
     fetchMock.mockReset()
     vi.stubGlobal('fetch', fetchMock)
+    // Seek efter play körs med en timer; falska timers så att den aldrig når riktiga fetch.
+    vi.useFakeTimers({ toFake: ['setTimeout'] })
   })
 
   afterEach(() => {
+    vi.clearAllTimers()
+    vi.useRealTimers()
     vi.unstubAllGlobals()
   })
 
@@ -276,6 +280,29 @@ describe('startSong med fade-in', () => {
       .filter((c) => c.includes('/volume'))
       .map((c) => Number(/volume_percent=(\d+)/.exec(c)![1]))
     expect(volumes).toEqual([6, 15, 24, 33, 42, 51, 60])
+  })
+
+  it('hoppar till positionen efter play, eftersom Spotify ibland ignorerar position_ms', async () => {
+    storeToken(Date.now() + 60_000)
+    setDeviceId('vardagsrum')
+    spotifyApi(fetchMock, { devices: [speaker] })
+    await startSong(cue, { positionMs: 30_000 })
+    expect(calls(fetchMock)).not.toContain('PUT /me/player/seek?position_ms=30000&device_id=vardagsrum')
+    await vi.runAllTimersAsync()
+    expect(calls(fetchMock)).toContain('PUT /me/player/seek?position_ms=30000&device_id=vardagsrum')
+  })
+
+  it('ett fel på seek stoppar inte uppspelningen', async () => {
+    storeToken(Date.now() + 60_000)
+    setDeviceId('vardagsrum')
+    fetchMock.mockImplementation(async (url) => {
+      const u = String(url)
+      if (u.endsWith('/me/player/devices')) return json({ devices: [speaker] })
+      if (u.includes('/seek')) return json({ error: { status: 403, message: 'Restricted' } }, 403)
+      return json(null, 204)
+    })
+    expect(await startSong(cue, { positionMs: 30_000 })).toEqual({ kind: 'played', cue })
+    await vi.runAllTimersAsync()
   })
 
   it('tillåter enheten inte volymstyrning spelas låten ändå, utan fade', async () => {
