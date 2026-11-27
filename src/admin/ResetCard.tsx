@@ -5,7 +5,7 @@ import { Button, Card } from '../ui'
 type Status = { kind: 'idle' } | { kind: 'busy' } | { kind: 'done'; guests: boolean } | { kind: 'error' }
 
 /**
- * Nollställ kvällen efter ett testvarv: betyg, quizsvar, gissningar, topplista
+ * Nollställ kvällen efter ett testvarv: betyg, anteckningar, quizsvar, gissningar, topplista
  * och kvällens läge tas bort. Glögger, kriterier, låtar, frågor, kod och facit
  * finns kvar, så kvällen behöver inte förberedas igen.
  */
@@ -15,8 +15,8 @@ export function ResetCard({ eventId }: { eventId: string }) {
 
   async function reset() {
     const what = guests
-      ? 'Alla betyg, quizsvar, gissningar, topplistan och alla gäster tas bort. Gästerna får gå med på nytt.'
-      : 'Alla betyg, quizsvar, gissningar och topplistan tas bort. Gästerna finns kvar.'
+      ? 'Alla betyg, anteckningar, quizsvar, gissningar, topplistan och alla gäster tas bort. Gästerna får gå med på nytt.'
+      : 'Alla betyg, anteckningar, quizsvar, gissningar och topplistan tas bort. Gästerna finns kvar.'
     if (!window.confirm(`Nollställa kvällen? ${what} Det går inte att ångra.`)) return
     setStatus({ kind: 'busy' })
     try {
@@ -31,7 +31,7 @@ export function ResetCard({ eventId }: { eventId: string }) {
     <Card className="prepare__card reset-card">
       <h2>Nollställ kvällen</h2>
       <p className="muted">
-        Efter ett testvarv: tar bort betyg, quizsvar, gissningar, topplistan och kvällens läge. Glögger, kriterier, låtar,
+        Efter ett testvarv: tar bort betyg, anteckningar, quizsvar, gissningar, topplistan och kvällens läge. Glögger, kriterier, låtar,
         frågor, kod och facit finns kvar.
       </p>
       <label className="reset-card__guests">

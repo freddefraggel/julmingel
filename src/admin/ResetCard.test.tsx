@@ -58,7 +58,7 @@ describe('resetChanges', () => {
   it('tar bort kvällens resultat men inte förberedelserna', () => {
     const changes = resetChanges(false)
     expect(Object.keys(changes).sort()).toEqual(
-      ['answers', 'guesses', 'live', 'ratings', 'results', 'reveal', 'secret/leaderboard', 'secret/quizTimes'].sort(),
+      ['answers', 'guesses', 'live', 'notes', 'ratings', 'results', 'reveal', 'secret/leaderboard', 'secret/quizTimes'].sort(),
     )
     expect(Object.values(changes).every((v) => v === null)).toBe(true)
     for (const kept of ['config', 'assets', 'secret', 'secret/joinCode', 'secret/numbers', 'secret/correct', 'guests']) {

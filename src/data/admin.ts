@@ -54,19 +54,20 @@ export function setJoinOpen(eventId: string, open: boolean): Promise<void> {
 }
 
 /**
- * Byter gästens klass. Betygen gäller numren i den gamla klassen och räknas
- * inte i den nya, så de tas bort i samma skrivning.
+ * Byter gästens klass. Betygen och anteckningarna gäller numren i den gamla
+ * klassen och räknas inte i den nya, så de tas bort i samma skrivning.
  */
 export function changeGuestClass(eventId: string, uid: string, guestClass: GuestClass): Promise<void> {
   return update(ref(firebase().db, eventPath(eventId)), {
     [`guests/${uid}/class`]: guestClass,
     [`ratings/${uid}`]: null,
+    [`notes/${uid}`]: null,
   })
 }
 
 /**
  * Tar bort en gäst, t.ex. en dubblett när någon har bytt webbläsare.
- * Allt gästen har skrivit försvinner i samma skrivning: betyg, svar och gissningar.
+ * Allt gästen har skrivit försvinner i samma skrivning: betyg, anteckningar, svar och gissningar.
  */
 export async function removeGuest(eventId: string, uid: string): Promise<void> {
   const db = firebase().db
@@ -74,6 +75,7 @@ export async function removeGuest(eventId: string, uid: string): Promise<void> {
   const changes: Record<string, null> = {
     [`guests/${uid}`]: null,
     [`ratings/${uid}`]: null,
+    [`notes/${uid}`]: null,
     [`guesses/${uid}`]: null,
     [`results/leaderboard/${uid}`]: null,
   }

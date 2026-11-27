@@ -85,7 +85,7 @@ export function ControlPanel({ eventId, eventName, onChangeEvent }: Props) {
   }
 
   function onRemove(uid: string, guest: Guest) {
-    if (!window.confirm(`Ta bort ${guest.name}? Betyg, svar och gissningar tas också bort.`)) return
+    if (!window.confirm(`Ta bort ${guest.name}? Betyg, anteckningar, svar och gissningar tas också bort.`)) return
     void save(() => removeGuest(eventId, uid))
   }
 

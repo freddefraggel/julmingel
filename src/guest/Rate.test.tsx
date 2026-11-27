@@ -12,6 +12,8 @@ vi.mock('../data', () => ({
   subscribeConfig: vi.fn(),
   subscribeOwnGuest: vi.fn(),
   subscribeOwnRatings: vi.fn(),
+  subscribeNotes: vi.fn(() => () => {}),
+  saveNote: vi.fn(() => Promise.resolve()),
   getAssets: vi.fn(),
   subscribeReveal: vi.fn(() => () => {}),
   subscribeOwnAnswer: vi.fn(() => () => {}),
@@ -98,6 +100,90 @@ describe('Ranka glögg', () => {
     const { onBack } = renderRate()
     fireEvent.click(screen.getByRole('button', { name: 'Tillbaka' }))
     expect(onBack).toHaveBeenCalled()
+  })
+})
+
+describe('Egen anteckning', () => {
+  beforeEach(() => {
+    mocked.saveNote.mockResolvedValue()
+    vi.useFakeTimers()
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  const field = () => screen.getByRole('textbox', { name: /Egen anteckning/ })
+
+  it('sparas 600 ms efter senaste tangenttryck, inte före', async () => {
+    renderRate()
+    expect(field()).toHaveAttribute('placeholder', 'kanel, för söt …')
+    fireEvent.change(field(), { target: { value: 'kan' } })
+    act(() => vi.advanceTimersByTime(400))
+    fireEvent.change(field(), { target: { value: 'kanel' } })
+    act(() => vi.advanceTimersByTime(599))
+    expect(mocked.saveNote).not.toHaveBeenCalled()
+    await act(async () => vi.advanceTimersByTime(1))
+    expect(mocked.saveNote).toHaveBeenCalledTimes(1)
+    expect(mocked.saveNote).toHaveBeenCalledWith('demo', 'u1', '2', 'kanel')
+    expect(screen.getByRole('status')).toHaveTextContent('Sparat ✓')
+  })
+
+  it('sparas direkt när fältet tappar fokus', async () => {
+    renderRate()
+    fireEvent.change(field(), { target: { value: 'för söt' } })
+    await act(async () => fireEvent.blur(field()))
+    expect(mocked.saveNote).toHaveBeenCalledWith('demo', 'u1', '2', 'för söt')
+    // Ingen dubbel sparning när timern skulle ha gått.
+    await act(async () => vi.advanceTimersByTime(1_000))
+    expect(mocked.saveNote).toHaveBeenCalledTimes(1)
+  })
+
+  it('tom text sparas som tom, så att anteckningen tas bort', async () => {
+    renderRate({ notes: { '2': 'kanel' } })
+    fireEvent.change(field(), { target: { value: '' } })
+    await act(async () => vi.advanceTimersByTime(600))
+    expect(mocked.saveNote).toHaveBeenCalledWith('demo', 'u1', '2', '')
+  })
+
+  it('visar den sparade anteckningen för varje nummer', () => {
+    renderRate({ notes: { '2': 'kanel', '3': 'för söt' } })
+    expect(field()).toHaveValue('kanel')
+    fireEvent.click(screen.getByRole('button', { name: /^Glögg 3/ }))
+    expect(field()).toHaveValue('för söt')
+    fireEvent.click(screen.getByRole('button', { name: /^Glögg 4/ }))
+    expect(field()).toHaveValue('')
+  })
+
+  it('max 500 tecken, med räknare från 400', () => {
+    renderRate()
+    expect(field()).toHaveAttribute('maxLength', '500')
+    fireEvent.change(field(), { target: { value: 'x'.repeat(399) } })
+    expect(screen.queryByText(/\/ 500/)).not.toBeInTheDocument()
+    fireEvent.change(field(), { target: { value: 'x'.repeat(420) } })
+    expect(screen.getByText('420 / 500')).toBeInTheDocument()
+  })
+
+  it('en väntande anteckning sparas när gästen lämnar sidan', () => {
+    const { unmount } = renderRate()
+    fireEvent.change(field(), { target: { value: 'kanel' } })
+    unmount()
+    expect(mocked.saveNote).toHaveBeenCalledWith('demo', 'u1', '2', 'kanel')
+  })
+
+  it('stängd provning: anteckningen syns men går inte att ändra, och inget fält utan anteckning', () => {
+    const { rerender } = renderRate({ open: false, notes: { '2': 'kanel' } })
+    expect(field()).toHaveValue('kanel')
+    expect(field()).toHaveAttribute('readonly')
+    rerender(<Rate eventId="demo" uid="u1" count={4} criteria={criteria} ratings={{}} serving={2} open={false} notes={{}} onBack={() => {}} />)
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+  })
+
+  it('säger till när anteckningen inte kan sparas', async () => {
+    mocked.saveNote.mockRejectedValue(new Error('PERMISSION_DENIED'))
+    renderRate()
+    fireEvent.change(field(), { target: { value: 'kanel' } })
+    await act(async () => vi.advanceTimersByTime(600))
+    expect(screen.getByRole('alert')).toHaveTextContent('Kunde inte spara anteckningen')
   })
 })
 

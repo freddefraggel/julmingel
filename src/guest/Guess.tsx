@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { saveGuess, subscribeOwnGuess, subscribeReveal } from '../data'
-import type { EventConfig, EventReveal, GloggNumber, Guess as GuessData, GuestClass } from '../types'
+import type { EventConfig, EventReveal, GloggNumber, Guess as GuessData, GuestClass, GuestNotes } from '../types'
 import { Garland } from '../ui'
 import { useAsset } from './assets'
 import { BackButton } from './BackButton'
@@ -13,6 +13,8 @@ type Props = {
   guestClass: GuestClass
   /** Gissningen är öppen (`live/wrapup/step == "guess"`). */
   guessOpen: boolean
+  /** Gästens egna anteckningar från provningen, som stöd för minnet. */
+  notes?: GuestNotes
   onBack: () => void
 }
 
@@ -43,7 +45,7 @@ export function pick(map: NumberMap, number: GloggNumber, gId: string): NumberMa
 }
 
 /** 4. Gissa glöggen: nummer → glögg, Lås mina gissningar, och facit när värden avslöjar ordningen. */
-export function Guess({ eventId, uid, config, guestClass, guessOpen, onBack }: Props) {
+export function Guess({ eventId, uid, config, guestClass, guessOpen, notes = {}, onBack }: Props) {
   const [saved, setSaved] = useState<GuessData | null | undefined>(undefined)
   const [map, setMap] = useState<NumberMap>({})
   const [reveal, setReveal] = useState<EventReveal>({})
@@ -129,6 +131,7 @@ export function Guess({ eventId, uid, config, guestClass, guessOpen, onBack }: P
                 <span className="guess-row__text">
                   <span className={name ? 'guess-row__name' : 'guess-row__name guess-row__name--empty'}>{name ?? 'Välj glögg'}</span>
                   {right === false && <span className="guess-row__answer">Rätt: {nameOf(revealed![n])}</span>}
+                  {notes[n] && <span className="guess-row__note">Du skrev: {notes[n]}</span>}
                 </span>
                 {right !== null && (
                   <span className={`guess-row__mark guess-row__mark--${right ? 'right' : 'wrong'}`}>{right ? 'Rätt' : 'Fel'}</span>
@@ -190,7 +193,10 @@ export function Guess({ eventId, uid, config, guestClass, guessOpen, onBack }: P
             onClick={(e) => e.stopPropagation()}
           >
             <div className="guess-sheet__head">
-              <span className="guess-sheet__title">Vilken glögg är nummer {open}?</span>
+              <span className="guess-sheet__title">
+                Vilken glögg är nummer {open}?
+                {notes[open] && <span className="guess-sheet__note">Du skrev: {notes[open]}</span>}
+              </span>
               <button type="button" className="icon-close" aria-label="Stäng" onClick={() => setOpen(null)}>
                 <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
                   <path d="M6 6l12 12M18 6L6 18" />
