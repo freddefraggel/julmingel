@@ -2,9 +2,15 @@
 
 > **Avvikelse från originalet:** repot heter `julmingel`, så sajten ligger på `https://freddefraggel.github.io/julmingel/`. Överallt där specen nedan säger `/glogg/` gäller `/julmingel/` (Vite `base`, QR-länk, Spotify redirect-URI).
 
-**Status:** Spikad 2026-11-24, uppdaterad 2026-11-25 efter testvarvet · Fredrik Hedberg
+**Status:** Spikad 2026-11-24, uppdaterad 2026-11-25 efter testvarvet och 2026-11-27 · Fredrik Hedberg
 **Levande version:** https://claude.ai/artifact/MKN29w97mrS49UYqoebuZp
 **Underlag:** [Kravspec](https://claude.ai/artifact/F2woPSBydp32gg4UvoTQor) · [Designcanvas](https://claude.ai/artifact/9RMonfT3HJ84ksjJFVr3PB) · sammanfattning av designen i [design.md](design.md)
+
+## Ändrat 2026-11-27
+
+- Varje glöggbedömning får en egen anteckning i fritext. Den sparas i `notes/{uid}/{number}` (max 500 tecken) och skrivs med fördröjning medan gästen skriver. Bara gästen själv och admin kan läsa den. Anteckningen påverkar inte poäng eller Kvällens glögg.
+- Gissningen flyttas in i provningen: när gästen betygsätter en glögg kan hen direkt gissa vilken glögg det är. Gissningen sparas i samma `guesses/{uid}/map` som förut och kan ändras fram till gissningssteget i rättningen, där gästen ser alla sina gissningar, justerar och låser.
+- Ljud på gästens telefon när något kräver uppmärksamhet: ett bjällerpling när en ny glögg serveras i gästens klass och ett kort, dämpat ljud (plus vibration på Android) när en quizfråga visas. Ljudet låses upp när gästen trycker *Gå med*, och kan stängas av i menyn. Se avsnittet Ljud.
 
 ## Ändrat 2026-11-25 (efter testvarvet)
 
@@ -63,9 +69,10 @@ Mobiler och admin-enhet läser och skriver mot samma databas; bara admin-enheten
 | Data och realtid | Firebase JS SDK (modulär): `firebase/database`, `firebase/auth` | Realtid, servertid och behörighet utan server |
 | Routing | `HashRouter`: `#/` gäst, `#/admin` kontrollpanel, `#/admin/forbered` konfiguration, `#/admin/qr` välkomstskärm, `#/admin/qr/print` A4-affisch | Fungerar på GitHub Pages utan omskrivningar |
 | QR-kod | `qrcode` (npm), ritas på välkomstskärmen och A4-affischen | Liten, inga nätverksanrop |
+| Ljud | Web Audio API, två korta ljudfiler (~20 kB var) i appen; `navigator.vibrate` där det finns | Inga beroenden, laddas i förväg |
 | Test | Vitest för poängräkning, `@firebase/rules-unit-testing` för regler | De två ställen där fel syns först på kvällen |
 
-**Kodstruktur.** `src/guest/` och `src/admin/` för vyerna, `src/data/` som enda ställe som pratar med Firebase (gör Azure-bytet möjligt), `src/scoring.ts` för alla beräkningar och `src/spotify.ts` för uppspelning. Delade typer i `src/types.ts`.
+**Kodstruktur.** `src/guest/` och `src/admin/` för vyerna, `src/data/` som enda ställe som pratar med Firebase (gör Azure-bytet möjligt), `src/scoring.ts` för alla beräkningar, `src/spotify.ts` för uppspelning och `src/sound.ts` för gästens ljud. Delade typer i `src/types.ts`.
 
 ## Datamodell i Realtime Database
 
@@ -100,7 +107,8 @@ Allt för en kväll ligger under `/events/{eventId}` och är uppdelat efter vem 
   guests/{uid}: { name, class, joinCode, joinedAt }
   ratings/{uid}/{number}/{cId}: 1–5     ← numret inom gästens klass, sparas vid varje tryck
   answers/{qId}/{uid}: { choice, at }    ← at = ServerValue.TIMESTAMP
-  guesses/{uid}: { map: { number: gId }, locked }
+  notes/{uid}/{number}: "fritext"       ← egen anteckning per glögg, max 500 tecken
+  guesses/{uid}: { map: { number: gId }, locked }   ← fylls i under provningen, låses i gissningssteget
   results/                               ← admin beräknar och skriver
     leaderboard/{uid}: { points, stars, rank, name }   ← name: gäster får inte läsa guests/
     gloggOfEvening/{class}: { gId, avg }
@@ -108,9 +116,13 @@ Allt för en kväll ligger under `/events/{eventId}` och är uppdelat efter vem 
 
 **Glöggerna utan nummer.** `config/gloggs` saknar nummer, så *Kvällens glögger* kan visa bild och namn i blandad ordning (sorteras på gId, som är slumpmässigt). Ranking och gissning görs på nummer, och kopplingen nummer → glögg finns bara i `secret/` tills avslöjandet.
 
+**Anteckningar.** Under betygen för varje glögg finns ett textfält, ”Egen anteckning”. Texten sparas i `notes/{uid}/{number}` med 600 ms fördröjning efter senaste tangenttryck och när fältet tappar fokus, så inget går förlorat om gästen laddar om. Anteckningen är gästens egen: bara gästen själv och admin kan läsa den, och den visas igen vid gissningen och avslöjandet som stöd (”Du skrev: kanel, för söt”). Den ingår inte i någon beräkning. Ligger kvar under gamla numret vid klassbyte och tas bort tillsammans med betygen.
+
+**Gissning under provningen.** Sist i bedömningen av en glögg finns ”Vilken glögg tror du det är?” med bild och namn för glöggerna i gästens klass, från `config/gloggs`. Ett tryck skriver `guesses/{uid}/map/{number} = gId`; ett nytt tryck byter gissning och ”Vet inte” tar bort den. Gissningen är frivillig och påverkar inte betygen. En glögg som redan är gissad på ett annat nummer visas som ”gissad på nr 3”; väljs den ändå flyttas den hit och nr 3 blir tomt, så varje glögg bara kan vara gissad på ett nummer. Vid gissningssteget i rättningen visas alla gästens gissningar ifyllda; gästen fyller i de tomma, justerar och låser.
+
 **Gäst-id.** Varje gäst loggas in med Firebase Anonymous Auth. `uid` sparas av SDK:n i mobilens IndexedDB, så en omladdning ger samma gäst – det är sessionen kravspecen ber om. Byter gästen webbläsare blir det en ny användare; admin kan då ta bort dubbletten.
 
-**Klassbyte.** Admin skriver `guests/{uid}/class`. Eventuella betyg ligger kvar under gamla numren och räknas inte i den nya klassen (tas bort vid bytet).
+**Klassbyte.** Admin skriver `guests/{uid}/class`. Eventuella betyg, anteckningar och gissningar ligger kvar under gamla numren och räknas inte i den nya klassen (tas bort vid bytet).
 
 ## Realtid, tid och poängräkning
 
@@ -139,11 +151,26 @@ kvar = (openedAt + durationMs − at) / durationMs
 
 **Avslöjandet.** `live/wrapup/revealStep` går 0 → 4. Vid steg 0 skriver admin bara plats 5 och nedåt till `results/leaderboard`; vid steg 1–4 läggs 4:an, 3:an, 2:an och vinnaren till, en rad per steg. Topp 4 finns alltså inte i databasen innan de avslöjas – inte ens i nätverkstrafiken – vilket uppfyller ”ingen hint i förväg”. Hela listan hålls i admin-enhetens minne och i `secret/leaderboard`.
 
-**Kvällens glögg.** Per klass: snittet av alla betyg på alla kriterier, där kriterier med `lowIsGood` räknas som 6 − värdet. Högst snitt vinner. Admin räknar och skriver `results/gloggOfEvening`.
+**Kvällens glögg.** Per klass: snittet av alla betyg på alla kriterier, där kriterier med `lowIsGood` räknas som 6 − värdet. Högst snitt vinner. Admin räknar och skriver `results/gloggOfEvening`. Anteckningar och gissningar räknas inte.
 
-**Gissa glöggen.** När admin kopierat `secret/numbers` till `reveal/numbers` räknar varje mobil själv ”Du gissade 4 av 6 rätt”. Inget sparas centralt, eftersom gissningen inte är en tävling.
+**Gissa glöggen.** Gissningarna görs löpande under provningen (se Datamodell) och låses i gissningssteget. När admin kopierat `secret/numbers` till `reveal/numbers` räknar varje mobil själv ”Du gissade 4 av 6 rätt”. Inget sparas centralt, eftersom gissningen inte är en tävling.
 
 **Pokaler.** Pokalen på startsidan läses från `results/leaderboard/{uid}/rank` och ligger kvar så länge eventet finns i databasen.
+
+## Ljud
+
+Gästens telefon spelar ett kort ljud när något kräver uppmärksamhet. Allt sköts i klienten utifrån `live/`; inget nytt i databasen.
+
+| Händelse | Utlöses när | Ljud | Övrigt |
+| --- | --- | --- | --- |
+| Ny glögg serveras | `live/tasting/{gästens klass}/serving` ändras till ett nytt nummer | Mjukt bjällerpling, ~1 s | Kortet för den nya glöggen blinkar till |
+| Quizfråga visas | `live/quiz/state` går till `"open"` | Kort, dämpat ”ding”, ~0,3 s, lägre volym | `navigator.vibrate(150)` där det finns (Android) |
+
+- **Upplåsning.** Webbläsare spelar bara ljud efter att gästen tryckt på sidan. Trycket på *Gå med* skapar en `AudioContext`, spelar ett tyst ljud och avkodar båda ljudfilerna i förväg. Efter omladdning är ljudet låst igen; då visas en liten knapp ”Slå på ljud” i hörnet tills gästen trycker någonstans.
+- **Bara på ändringar.** Första värdet från `onValue` efter inloggning, omladdning eller återanslutning spelar inget ljud – bara en ändring därefter. Annars plingar alla telefoner när wifi hackar.
+- **Av/på.** Gästens meny har ”Ljud” av/på, sparat i `localStorage` (standard: på). Vibrationen följer samma inställning.
+- **Ljudfiler.** Två egna eller fritt licensierade korta filer i `public/sounds/` (OGG med MP3 som reserv), ~20 kB var.
+- **Begränsningar.** Inget ljud när telefonen är låst eller webbläsaren ligger i bakgrunden; det skulle kräva push-notiser och installerad app på iPhone, vilket inte är värt det för en kväll. Ljudlöst läge på iPhone stänger normalt av webbljudet. Vibration fungerar inte på iPhone.
 
 ## Säkerhet och behörigheter
 
@@ -152,7 +179,7 @@ All behörighet ligger i Firebase-databasreglerna; Firebase-konfigurationen i kl
 | Roll | Inloggning | Får |
 | --- | --- | --- |
 | Admin | Firebase Email/Password-konto, `uid` listat i `/admins` | Läsa och skriva allt i eventet |
-| Gäst | Anonymous Auth + kvällens `joinCode` (i QR-länken) | Läsa `config`, `assets`, `live`, `reveal`, `results`; skriva bara sina egna noder, och bara när respektive läge är öppet |
+| Gäst | Anonymous Auth + kvällens `joinCode` (i QR-länken) | Läsa `config`, `assets`, `live`, `reveal`, `results` och sina egna `notes` och `guesses`; skriva bara sina egna noder, och bara när respektive läge är öppet |
 | Okänd | – | Ingenting |
 
 QR-koden pekar på `https://<användare>.github.io/glogg/#/?e=<eventId>&k=<joinCode>`. Gästen skriver `joinCode` i sin `guests/{uid}`-post, och regeln jämför med `secret/joinCode`, som gästen själv inte kan läsa. Den som saknar koden kommer inte in.
@@ -175,6 +202,29 @@ Utdrag ur reglerna (fullständig fil: `database.rules.json` i repot):
             ".validate": "newData.child('joinCode').val() === root.child('events/' + $e + '/secret/joinCode').val() && newData.child('name').isString() && newData.child('name').val().length <= 30"
           }
         },
+        "notes": {
+          "$uid": {
+            ".read": "auth.uid === $uid",
+            "$n": {
+              ".write": "auth.uid === $uid && root.child('events/' + $e + '/live/tasting/' + root.child('events/' + $e + '/guests/' + $uid + '/class').val() + '/open').val() === true",
+              ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 500)"
+            }
+          }
+        },
+        "guesses": {
+          "$uid": {
+            ".read": "auth.uid === $uid",
+            "map": {
+              "$n": {
+                ".write": "auth.uid === $uid && data.parent().parent().child('locked').val() !== true && (root.child('events/' + $e + '/live/tasting/' + root.child('events/' + $e + '/guests/' + $uid + '/class').val() + '/open').val() === true || root.child('events/' + $e + '/live/wrapup/step').val() === 'guess')",
+                ".validate": "!newData.exists() || root.child('events/' + $e + '/config/gloggs/' + newData.val() + '/class').val() === root.child('events/' + $e + '/guests/' + $uid + '/class').val()"
+              }
+            },
+            "locked": {
+              ".write": "auth.uid === $uid && data.val() !== true && root.child('events/' + $e + '/live/wrapup/step').val() === 'guess'"
+            }
+          }
+        },
         "answers": {
           "$q": {
             "$uid": {
@@ -189,7 +239,9 @@ Utdrag ur reglerna (fullständig fil: `database.rules.json` i repot):
 }
 ```
 
-Reglerna jämför med respektive läge i stället för en gemensam fas: `ratings` kräver `live/tasting/{class}/open == true` (värde 1–5, numret finns i gästens klass) och `guesses` kräver `live/wrapup/step == "guess"` (bara om `locked` inte redan är sant, och bara glögger och nummer i gästens klass). Därför kan en gäst ranka och svara på en quizfråga under samma minut. Reglerna testas med Firebase Emulator Suite och `@firebase/rules-unit-testing` innan kvällen: en gäst utan kod, ett svar efter sluttiden, ett svar medan låten spelas men frågan inte visats, ett svar på fel fråga och en läsning av `secret/` ska alla nekas – och en rankning medan en fråga är öppen ska godkännas.
+Reglerna jämför med respektive läge i stället för en gemensam fas: `ratings` och `notes` kräver `live/tasting/{class}/open == true`, `answers` kräver `live/quiz/state == "open"` och `guesses/map` kräver att provningen i gästens klass är öppen eller att `live/wrapup/step == "guess"`. Att låsa (`locked`) går bara i gissningssteget. Därför kan en gäst ranka, gissa och svara på en fråga under samma minut.
+
+`ratings` valideras också på värde 1–5 och att numret finns i gästens klass; `notes` på sträng med max 500 tecken (tom anteckning tas bort); `guesses` på att glöggen finns i gästens klass, och alla skrivningar nekas när `locked` redan är sant. Att en glögg bara är gissad på ett nummer sköts i klienten. Reglerna testas med Firebase Emulator Suite och `@firebase/rules-unit-testing` innan kvällen: en gäst utan kod, ett svar efter sluttiden, ett svar medan låten spelas men frågan inte visats, ett svar på fel fråga, en läsning av `secret/`, en läsning av någon annans anteckning, en anteckning över 500 tecken, en gissning på en glögg i fel klass och en gissning efter låsning ska alla nekas – och en rankning eller gissning medan en fråga är öppen ska godkännas.
 
 **Missbruk.** Anonymous Auth kan i teorin användas för att skapa många konton, men utan `joinCode` går det inte att skriva något. Admin stänger registreringen (`config/joinOpen = false`) när alla är inne. Firebase App Check med reCAPTCHA är ett tillval som inte behövs för en privat fest.
 
@@ -226,7 +278,7 @@ Koden ligger i ett GitHub-repo och publiceras med GitHub Actions till GitHub Pag
 - **Routing:** hash-routing (`#/admin`), eftersom GitHub Pages saknar omskrivning till `index.html` för djuplänkar.
 - **Firebase:** ett projekt, `glogg-mingel`. `github.io`-domänen läggs till under Authorized domains. Reglerna deployas med `firebase deploy --only database` från samma repo.
 - **Lokalt:** `npm run dev` mot Firebase Emulator Suite, så att testkvällar inte skräpar ned riktig data.
-- **Generalrep:** en testkväll med 3–4 mobiler på riktiga Pages-adressen några dagar innan.
+- **Generalrep:** en testkväll med 3–4 mobiler på riktiga Pages-adressen några dagar innan. Testa ljudet på både iPhone och Android, med och utan ljudlöst läge.
 
 ## Kostnad
 
@@ -246,6 +298,7 @@ Allt ryms i gratisnivåerna: 0 kr.
 | Spotify stänger av uppspelningsanropen i Development Mode | Ingen automatisk uppspelning | Manuell spellista (se Spotify), testas i förväg |
 | Dåligt wifi hemma | Mobiler halkar efter | Firebase återansluter själv; svar sparas lokalt och skickas, men nekas efter sluttiden. Ha gästnätets QR-kod uppsatt |
 | Gäst byter webbläsare eller rensar data | Ny användare, förlorade betyg | Admin kan slå ihop eller ta bort dubbletter |
+| Ljudet hörs inte (låst skärm, ljudlöst läge, omladdad sida) | Gästen missar att en glögg serveras | Ljudet är bara en extra signal; startsidan visar alltid vad som serveras, och admin säger till högt |
 | Admin-enheten laddas om mitt i | Inget tappas: allt läge ligger i `live/` | Admin loggar in igen och fortsätter |
 | Vi vill inte ha en ny molntjänst | – | Azure-varianten nedan |
 
