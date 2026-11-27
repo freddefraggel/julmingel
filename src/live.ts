@@ -62,6 +62,7 @@ export function quizTiming(live: LiveState | null | undefined): QuestionTiming |
 export function resetChanges(includeGuests: boolean): Record<string, null> {
   const changes: Record<string, null> = {
     ratings: null,
+    notes: null,
     answers: null,
     guesses: null,
     results: null,

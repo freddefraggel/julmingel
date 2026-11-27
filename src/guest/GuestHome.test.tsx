@@ -11,6 +11,8 @@ vi.mock('../data', () => ({
   subscribeConfig: vi.fn(),
   subscribeOwnGuest: vi.fn(),
   subscribeOwnRatings: vi.fn(),
+  subscribeNotes: vi.fn(() => () => {}),
+  saveNote: vi.fn(() => Promise.resolve()),
   getAssets: vi.fn(),
   subscribeServerTimeOffset: vi.fn(() => () => {}),
   subscribeOwnAnswer: vi.fn(() => () => {}),

@@ -15,6 +15,8 @@ vi.mock('../data', () => ({
   subscribeConfig: vi.fn(),
   subscribeOwnGuest: vi.fn(),
   subscribeOwnRatings: vi.fn(),
+  subscribeNotes: vi.fn(() => () => {}),
+  saveNote: vi.fn(() => Promise.resolve()),
   getAssets: vi.fn(),
 }))
 
@@ -72,6 +74,25 @@ describe('hjälpfunktioner', () => {
 })
 
 describe('Gissa glöggen', () => {
+  it('visar gästens egna anteckningar vid numren och i arket', () => {
+    render(
+      <Guess eventId="demo" uid="u1" config={config} guestClass="vanlig" guessOpen notes={{ '1': 'kanel, för söt' }} onBack={() => {}} />,
+    )
+    const row = screen.getByRole('button', { name: /^Nummer 1/ })
+    expect(row).toHaveTextContent('Du skrev: kanel, för söt')
+    expect(screen.getByRole('button', { name: /^Nummer 2/ })).not.toHaveTextContent('Du skrev')
+    fireEvent.click(row)
+    expect(screen.getByRole('dialog', { name: 'Vilken glögg är nummer 1?' })).toHaveTextContent('Du skrev: kanel, för söt')
+  })
+
+  it('anteckningen syns också i facit när ordningen är avslöjad', () => {
+    render(
+      <Guess eventId="demo" uid="u1" config={config} guestClass="vanlig" guessOpen={false} notes={{ '2': 'för söt' }} onBack={() => {}} />,
+    )
+    act(() => pushReveal({ numbers: { vanlig: { 1: 'ga', 2: 'gb', 3: 'gc' } } }))
+    expect(screen.getByText('Du skrev: för söt')).toBeInTheDocument()
+  })
+
   it('väljer glögg till ett nummer i ett ark och sparar direkt, olåst', async () => {
     renderGuess()
     fireEvent.click(screen.getByRole('button', { name: 'Nummer 2: inte vald' }))

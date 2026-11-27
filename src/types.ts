@@ -197,3 +197,9 @@ export type GloggEvent = {
   guesses?: Record<string, Guess>
   results?: EventResults
 }
+
+/** Gästens egna anteckningar per glögg, notes/{uid}: nummer → fritext (#98). */
+export type GuestNotes = Record<GloggNumber, string>
+
+/** Längsta tillåtna anteckning, samma gräns som i databasreglerna. */
+export const NOTE_MAX_LENGTH = 500

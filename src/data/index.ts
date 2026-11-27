@@ -44,3 +44,4 @@ export { setTasting, setTastingOpen, subscribeAllRatings, subscribeNumbers } fro
 export { revealNumbers, saveGuess, subscribeAllGuesses, subscribeOwnGuess } from './guesses'
 export { loadResultsInput, subscribeResults, writeResults, type ResultsInput } from './results'
 export { createEvent, eventExists, subscribeEventIndex, touchEventIndex } from './events'
+export { saveNote, subscribeNotes } from './notes'

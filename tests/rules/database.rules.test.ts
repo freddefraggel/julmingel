@@ -276,6 +276,51 @@ describe('betyg och gissningar', () => {
   })
 })
 
+describe('anteckningar', () => {
+  const open = { stage: 'evening', tasting: { vanlig: { open: true, serving: 1, next: null } } }
+
+  it('gästen skriver, ändrar och tar bort sin anteckning medan provningen är öppen, och läser den', async () => {
+    await setLive(open)
+    const note = ref(db('anna'), `${E}/notes/anna/1`)
+    await assertSucceeds(set(note, 'kanel, för söt'))
+    await assertSucceeds(set(note, 'kanel'))
+    await assertSucceeds(get(ref(db('anna'), `${E}/notes/anna`)))
+    await assertSucceeds(set(note, null))
+    expect(await read(`${E}/notes/anna`)).toBeNull()
+  })
+
+  it('nekar att läsa någon annans anteckning, men admin får', async () => {
+    await env.withSecurityRulesDisabled((ctx) => set(ref(ctx.database(), `${E}/notes/anna/1`), 'kanel'))
+    await join('bertil', 'hemlig')
+    await assertFails(get(ref(db('bertil'), `${E}/notes/anna`)))
+    await assertFails(get(ref(db('bertil'), `${E}/notes`)))
+    await assertSucceeds(get(ref(db('admin'), `${E}/notes/anna`)))
+  })
+
+  it('nekar 501 tecken men godkänner 500', async () => {
+    await setLive(open)
+    const note = ref(db('anna'), `${E}/notes/anna/1`)
+    await assertFails(set(note, 'x'.repeat(501)))
+    await assertSucceeds(set(note, 'x'.repeat(500)))
+  })
+
+  it('nekar att skriva när provningen är stängd, annat än text och i någon annans anteckningar', async () => {
+    const note = ref(db('anna'), `${E}/notes/anna/1`)
+    await assertFails(set(note, 'kanel'))
+    await setLive({ stage: 'evening', tasting: { vanlig: { open: false, serving: 1, next: null } } })
+    await assertFails(set(note, 'kanel'))
+    await setLive(open)
+    await assertFails(set(note, 42))
+    await assertFails(set(ref(db('anna'), `${E}/notes/bertil/1`), 'kanel'))
+  })
+
+  it('admin tar bort anteckningarna vid klassbyte och när en gäst tas bort', async () => {
+    await env.withSecurityRulesDisabled((ctx) => set(ref(ctx.database(), `${E}/notes/anna`), { 1: 'kanel' }))
+    await assertSucceeds(update(ref(db('admin'), E), { 'guests/anna/class': 'alkfri', 'ratings/anna': null, 'notes/anna': null }))
+    await assertSucceeds(update(ref(db('admin'), E), { 'guests/anna': null, 'ratings/anna': null, 'notes/anna': null, 'guesses/anna': null }))
+  })
+})
+
 describe('admin styr kvällen', () => {
   it('admin byter läge, öppnar provningen och stänger registreringen', async () => {
     await assertSucceeds(set(ref(db('admin'), `${E}/live/stage`), 'evening'))
@@ -582,6 +627,7 @@ describe('nollställ kvällen', () => {
     await env.withSecurityRulesDisabled((ctx) =>
       update(ref(ctx.database(), E), {
         'ratings/anna': { 1: { c1: 4 } },
+        'notes/anna': { 1: 'kanel' },
         'answers/q1/anna': { choice: 'A', at: 1 },
         'results/leaderboard/anna': { points: 1, stars: 3, rank: 1, name: 'Anna' },
         'secret/quizTimes/q1': { openedAt: 1, durationMs: 20_000 },
@@ -590,6 +636,7 @@ describe('nollställ kvällen', () => {
     await assertSucceeds(update(ref(db('admin'), E), resetChanges(false)))
     const after = await read(E)
     expect(after.ratings).toBeUndefined()
+    expect(after.notes).toBeUndefined()
     expect(after.answers).toBeUndefined()
     expect(after.results).toBeUndefined()
     expect(after.live).toBeUndefined()

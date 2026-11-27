@@ -120,6 +120,16 @@
           }
         },
 
+        "notes": {
+          "$uid": {
+            ".read": "auth.uid === $uid",
+            "$n": {
+              ".write": "auth.uid === $uid && root.child('events/' + $e + '/live/tasting/' + root.child('events/' + $e + '/guests/' + $uid + '/class').val() + '/open').val() === true",
+              ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 500)"
+            }
+          }
+        },
+
         "answers": {
           "$q": {
             "$uid": {

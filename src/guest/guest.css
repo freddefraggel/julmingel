@@ -1749,3 +1749,56 @@ button.guess-row {
 .leaderboard__facit-row--wrong .leaderboard__facit-mark {
   color: var(--color-rose);
 }
+
+/* Egen anteckning per glögg (#98) */
+.rate-note {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 18px;
+}
+
+.rate-note__label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.rate-note__hint {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-subtle);
+}
+
+.rate-note__input {
+  height: auto;
+  min-height: 84px;
+  padding: 10px 12px;
+  line-height: 1.4;
+  resize: vertical;
+}
+
+.rate-note__input[readonly] {
+  color: var(--color-text-muted);
+}
+
+.rate-note__count {
+  align-self: flex-end;
+  font-size: 13px;
+  color: var(--color-text-subtle);
+}
+
+.guess-row__note,
+.guess-sheet__note {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.guess-sheet__note {
+  margin-top: 4px;
+}

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { getAssets, subscribeConfig, subscribeLive, subscribeOwnGuest, subscribeOwnRatings } from '../data'
-import type { EventConfig, Guest, GuestRatings, LiveState } from '../types'
+import { getAssets, subscribeConfig, subscribeLive, subscribeNotes, subscribeOwnGuest, subscribeOwnRatings } from '../data'
+import type { EventConfig, Guest, GuestNotes, GuestRatings, LiveState } from '../types'
 import { useWakeLock } from '../ui'
 import { GuestAssets } from './assets'
 import { GuestHome, type HomeTarget } from './GuestHome'
@@ -35,6 +35,7 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
   const [config, setConfig] = useState<EventConfig | null>(null)
   const [guest, setGuest] = useState<Guest | null>(initialGuest)
   const [ratings, setRatings] = useState<GuestRatings>({})
+  const [notes, setNotes] = useState<GuestNotes>({})
   const [assets, setAssets] = useState<Record<string, string>>({})
   const [lost, setLost] = useState(false)
   const [view, setView] = useState<'home' | 'topplista' | HomeTarget>('home')
@@ -48,6 +49,7 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
       subscribeConfig(eventId, setConfig, onError),
       subscribeOwnGuest(eventId, uid, setGuest, onError),
       subscribeOwnRatings(eventId, uid, setRatings, onError),
+      subscribeNotes(eventId, uid, setNotes, onError),
     ]
     return () => unsubscribers.forEach((unsubscribe) => unsubscribe())
   }, [eventId, uid])
@@ -133,12 +135,21 @@ export function GuestLive({ eventId, uid, guest: initialGuest }: Props) {
           count={count}
           criteria={config?.criteria}
           ratings={ratings}
+          notes={notes}
           serving={serving}
           open={tastingOpen}
           onBack={() => setView('home')}
         />
       ) : view === 'gissa' ? (
-        <Guess eventId={eventId} uid={uid} config={config} guestClass={guest.class} guessOpen={step === 'guess'} onBack={() => setView('home')} />
+        <Guess
+          eventId={eventId}
+          uid={uid}
+          config={config}
+          guestClass={guest.class}
+          guessOpen={step === 'guess'}
+          notes={notes}
+          onBack={() => setView('home')}
+        />
       ) : view === 'glogger' ? (
         <Gloggs gloggs={config?.gloggs} guestClass={guest.class} onBack={() => setView('home')} />
       ) : (
